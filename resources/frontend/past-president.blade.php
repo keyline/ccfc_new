@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- ?php include 'assets/inc/header.php';?> -->
+
+    <!-- header -->
+    @include('common.home_header')
+    <!-- ********|| RIGHT PART START ||******** -->
+
+    <div class="col-lg-9 col-md-7 p-0">
+        <div class="right-body">
+            <!-- ********|| BANNER PART START ||******** -->
+            <section class="banner">
+
+                <div class="banner-box">
+
+                    <div id="innerpage-banner" class="owl-carousel owl-theme">
+
+                        @foreach($galleries->where("id","14") as $key => $gallery)
+
+                        @foreach($gallery->images as $key => $media)
+
+                        <div class="item">
+
+                            <div class="about-img">
+
+                                <!-- <img class="img-fluid" src="{{ asset('img/past-president/banner1.jpg') }}" alt="" /> -->
+                                <img class="img-fluid" src="{{$media->getUrl('')}}" alt="" />
+
+                            </div>
+
+                        </div>
+                        @endforeach
+                        @endforeach
+                        <!-- <div class="item">
+
+                            <div class="about-img">
+
+                                <img class="img-fluid" src="{{ asset('img/past-president/banner2.jpg') }}" alt="" />
+
+                            </div>
+
+                        </div> -->
+
+                    </div>
+
+                </div>
+
+            </section>
+            <!-- ********|| BANNER PART END ||******** -->
+
+
+
+            <!-- ********|| HISTORY START ||******** -->
+            <section class="history-sec">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="history-inner">
+                                <div class="title-sec">
+                                    <div class="title text-left">
+                                        Past Presidents
+                                    </div>
+                                </div>
+
+                                <div class="pastpresident_imagebox">
+                                    <div class="pastpresident_item">
+                                        <div class="row">
+
+                                            <!-- @php
+                                            var_dump($pastPresidents)
+                                            @endphp -->
+
+
+
+                                            @foreach($pastPresidents as $past)
+
+
+                                            <div class="col-md-6 col-sm-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    @if($past->image)
+                                                    <div class="photoFrame">
+                                                        <img src="{{ $past->image->getUrl('') }}" alt="">
+                                                    </div>
+                                                    @endif
+                                                    <div class="passtpredi_name">
+                                                        <h2>{{$past->name}}</h2>
+                                                        <p>{{$past->duration}}</p>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @endforeach
+
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/2a.jpg') }}" alt=""></div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/frame.jpg') }}" alt="">
+                                                    </div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/4.jpg') }}" alt=""></div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame">
+                                                        <img src="{{ asset('img/past-president/5.jpg') }}" alt="">
+                                                    </div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/6.jpg') }}" alt=""></div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/frame.jpg') }}" alt="">
+                                                    </div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/p1.jpg') }}" alt=""></div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame">
+                                                        <img src="{{ asset('img/past-president/frame.jpg') }}" alt="">
+                                                    </div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/p2.jpg') }}" alt=""></div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/frame.jpg') }}" alt="">
+                                                    </div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                            <!-- <div class="col-md-6 col-lg-3">
+                                                <div class="pastpresdit_inner teamMember">
+                                                    <div class="photoFrame"><img
+                                                            src="{{ asset('img/past-president/p1.jpg') }}" alt=""></div>
+                                                    <div class="passtpredi_name">
+                                                        <h2>Mr. R. B. Lagden</h2>
+                                                        <p>Mr. R. B. Lagden</p>
+                                                    </div>
+                                                </div>
+                                            </div> -->
+                                        </div>
+
+
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+            <!-- ********|| HISTORY END ||******** -->
+
+
+
+
+            @include('common.footer')
+            <!-- ?php include 'assets/inc/footer.php';?> -->
+
+
+            </body>
+
+</html>

@@ -35,9 +35,13 @@ use App\Http\Controllers\Admin\CookingItemController;
 use App\Http\Controllers\Admin\CookingDaySpecialController;
 use App\Http\Controllers\Admin\MustReadController;
 use App\Http\Controllers\Admin\OtherFoodItemController;
+use App\Http\Controllers\Auth\MagicLinkLoginController;
+use App\Http\Controllers\Member\MemberDuesController;
 use App\Http\Controllers\Member\PaymentController;
 
 // use App\Http\Controllers\Api\V2\Member\ApiController;
+
+Route::get('/magic-login/{token}', [MagicLinkLoginController::class, 'login'])->name('magic.login')->middleware('throttle:60,1');
 
 // Route::get('/', 'FrontendHome@index')->name('index');
 
@@ -742,6 +746,9 @@ Route::group([
     #HDFC Smart payment PG routes
     Route::post('payment/hdfcsmartpg', ['as' => 'hdfcsmartpg', 'uses' => 'PaymentController@initiateJuspayPayment']);
     Route::post('payment/hdfcsmartpaycallback', ['as' => 'hdfcsmartpaycallback', 'uses' => 'PaymentController@handleJuspayResponse']);
+
+    # Magic Link
+    Route::post('send-magic-link', [MemberDuesController::class, 'sendMagicLink'])->name('send.magic.link');
 
 
 

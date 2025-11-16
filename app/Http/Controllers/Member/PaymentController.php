@@ -84,6 +84,10 @@ class PaymentController extends Controller
             );
 
             Notification::send($user, new PayUEmailNotification($emailInfo));
+
+            if (config('auth.logout_after_payment')) {
+                Auth::guard('members')->logout();
+            }
         }
 
         return view('member.paymentstatus', compact('status'));
@@ -123,6 +127,10 @@ class PaymentController extends Controller
                 'body'     => "Thank you for making payment of Rs.{$status['amount']}. Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
                 );
                 Notification::send($user, new PayUEmailNotification($emailInfo));
+
+                if (config('auth.logout_after_payment')) {
+                    Auth::guard('members')->logout();
+                }
             }
             return view('member.paymentstatusotherpgs', compact('status'));
         }
@@ -177,7 +185,9 @@ class PaymentController extends Controller
 
                 Notification::send($user, new PayUEmailNotification($emailInfo));
 
-
+                if (config('auth.logout_after_payment')) {
+                    Auth::guard('members')->logout();
+                }
 
                 $status = ['status' => 'success', 'transactionid' => $input['razorpay_payment_id'], 'amount' => $amount];
 
@@ -392,7 +402,9 @@ class PaymentController extends Controller
 
                 Notification::send($user, new PayUEmailNotification($emailInfo));
 
-
+                if (config('auth.logout_after_payment')) {
+                    Auth::guard('members')->logout();
+                }
 
                 $status = ['status' => 'success', 'transactionid' => $input['razorpay_payment_id'], 'amount' => $amount];
 
@@ -684,6 +696,9 @@ class PaymentController extends Controller
 
                 Notification::send($user, new PayUEmailNotification($emailInfo));
 
+                if (config('auth.logout_after_payment')) {
+                    Auth::guard('members')->logout();
+                }
 
                 $status = [
                             'status' =>  $response['order_status'] === "CHARGED" ? 'success' : 'failed',

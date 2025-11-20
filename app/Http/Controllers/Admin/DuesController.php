@@ -69,7 +69,7 @@ class DuesController extends Controller
         return view('admin.dues.list', compact('dues'));
     }
 
-    public function sendSms(Request $request, MemberDue $due)
+    public function sendSmsWithToken(Request $request, MemberDue $due)
     {
         $tokenData = $this->createPaymentToken($due);
         SendSms::dispatch($tokenData['model'], $tokenData['plainTextToken']);

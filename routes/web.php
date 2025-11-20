@@ -595,7 +595,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::get('dues/upload', 'DuesController@showUploadForm')->name('dues.upload.form');
     Route::post('dues/upload', 'DuesController@handleUpload')->name('dues.upload.handle');
     Route::get('dues/list', 'DuesController@listDues')->name('dues.list');
-    Route::post('dues/{due}/send-sms', 'DuesController@sendSms')->name('dues.send.sms');
+    Route::post('dues/{due}/send-sms', 'DuesController@sendSmsWithToken')->name('dues.send.sms');
     Route::post('dues/{due}/send-email', 'DuesController@sendEmail')->name('dues.send.email');
     Route::post('dues/send-sms-to-all', 'DuesController@sendSmsToAll')->name('dues.send.sms.all');
     Route::post('dues/send-email-to-all', 'DuesController@sendEmailToAll')->name('dues.send.email.all');

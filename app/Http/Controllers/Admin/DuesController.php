@@ -115,41 +115,102 @@ class DuesController extends Controller
 
     public function sendSmsWithToken(Request $request, MemberDue $due)
     {
-        $tokenData = $this->createPaymentToken($due);
-        SendSms::dispatch($tokenData['model'], $tokenData['plainTextToken']);
-        return back()->with('success', 'SMS scheduled for member ' . $due->member_code);
+        try {
+            $body = "";
+            $tokenData = $this->createPaymentToken($due);
+
+
+            $member = \App\Models\User::where('user_code', $tokenData['model']->member_code)->first();
+
+            if (!$member) {
+                Log::error("Member not found for member code: {$tokenData['model']->member_code}");
+                return;
+            }
+
+
+            $body .= 'Dear Member, your due payment link is: ' . url('/payment/' . $tokenData['plainTextToken']);
+
+            $this->sendSMS($member->phone_number_1, $body);
+
+            // Log the notification
+            NotificationLog::create([
+                'token_id' => $tokenData['model']->id,
+                'member_code' => $tokenData['model']->member_code,
+                'notification_type' => 'sms',
+                'recipient' => $member->phone_number_1,
+                'message_body' => 'Dear Member, your due payment link is: ' . url('/payment/' . $tokenData['plainTextToken']),
+                'status' => 'sent',
+            ]);
+
+            $tokenData['model']->update(['sms_sent' => true, 'sms_sent_at' => now()]);
+
+            //SendSms::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+            return back()->with('success', 'SMS scheduled for member ' . $due->user_code);
+
+        } catch (\Exception $ex) {
+
+            // Plain text log entry
+            Log::error('SMS send failed: ' . $ex->getMessage());
+
+            // Optional: in dev, you might want to see it on screen too
+            if (app()->environment('local')) {
+                dd('SMS error: ' . $ex->getMessage());
+            }
+
+        }
+
     }
 
     public function sendEmail(Request $request, MemberDue $due)
     {
-        $tokenData = $this->createPaymentToken($due);
-        //SendEmail::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+        try {
+            $body = "";
 
-        $member = \App\Models\User::where('user_code', $tokenData['model']->member_code)->first();
+            $tokenData = $this->createPaymentToken($due);
+            //SendEmail::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+
+            $member = \App\Models\User::where('user_code', $tokenData['model']->user_code)->first();
 
 
-        if (!$member) {
-            Log::error("Member not found for member code: {$tokenData['model']->member_code}");
-            return;
+            if (!$member) {
+                Log::error("Member not found for member code: {$tokenData['model']->user_code}");
+                return;
+            }
+
+
+            $body .= 'Dear Member, your due payment link is: ' . url('/payment/' . $tokenData['plainTextToken']);
+
+            Mail::to($member->email)->send(new DuesPaymentMail($tokenData['model'], $tokenData['plainTextToken']));
+
+            // Log the notification
+            NotificationLog::create([
+                'token_id' => $tokenData['model']->id,
+                'member_code' => $tokenData['model']->member_code,
+                'notification_type' => 'email',
+                'recipient' => $member->email,
+                'subject' => 'Your monthly due payment link',
+                'message_body' => $body,
+                'status' => 'sent',
+            ]);
+
+
+
+            return back()->with('success', 'Email scheduled for member ' . $due->member_code);
+
+        } catch (\Exception $ex) {
+
+            // Plain text log entry
+            Log::error('Mail send failed: ' . $ex->getMessage() . $body);
+
+            // Optional: in dev, you might want to see it on screen too
+            if (app()->environment('local')) {
+                dd('Mail error: ' . $ex->getMessage());
+            }
+
         }
 
+        return back()->with('error', 'There was an error sending the email to member ' . $due->member_code);
 
-        Mail::to($member->email)->send(new DuesPaymentMail($tokenData['model'], $tokenData['plainTextToken']));
-
-        // Log the notification
-        NotificationLog::create([
-            'token_id' => $tokenData['model']->id,
-            'member_code' => $tokenData['model']->member_code,
-            'notification_type' => 'email',
-            'recipient' => $member->email,
-            'subject' => 'Your monthly due payment link',
-            'message_body' => 'Dear Member, your due payment link is: ' . url('/payment/' . $tokenData['plainTextToken']),
-            'status' => 'sent',
-        ]);
-
-
-
-        return back()->with('success', 'Email scheduled for member ' . $due->member_code);
     }
 
     private function createPaymentToken(MemberDue $due)

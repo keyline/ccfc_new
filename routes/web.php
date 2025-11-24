@@ -591,6 +591,18 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('tenderuploads', 'TenderFileUploadController');
     Route::post('tenderuploads/media', [TenderFileUploadController::class, 'storeMedia'])->name('tenderuploads.storeMedia');
 
+    // Dues Management
+
+    Route::get('dues/index', 'DuesController@index')->name('dues.index');
+
+    Route::get('dues/upload', 'DuesController@showUploadForm')->name('dues.upload.form');
+    Route::post('dues/upload', 'DuesController@handleUpload')->name('dues.upload.handle');
+    Route::get('dues/list', 'DuesController@listDues')->name('dues.list');
+    Route::post('dues/{due}/send-sms', 'DuesController@sendSmsWithToken')->name('dues.send.sms');
+    Route::post('dues/{due}/send-email', 'DuesController@sendEmail')->name('dues.send.email');
+    Route::post('dues/send-sms-to-all', 'DuesController@sendSmsToAll')->name('dues.send.sms.all');
+    Route::post('dues/send-email-to-all', 'DuesController@sendEmailToAll')->name('dues.send.email.all');
+
 });
 Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 'middleware' => ['auth', '2fa']], function () {
     // Change password
@@ -958,3 +970,5 @@ Route::get('archives', function () {
 })->name('showme.archives');
 
 Route::get('/download/tender/{file}', [TenderDownloadController::class, 'download'])->name('download.tender');
+
+Route::get('/payment/{token}', 'PaymentController@showPaymentPage')->name('payment.page');

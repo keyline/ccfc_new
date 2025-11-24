@@ -9,14 +9,17 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Models\PaymentToken;
 use App\Models\NotificationLog;
-use App\Models\Member;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\DuesPaymentMail;
+use App\Models\User;
 
 class SendEmail implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     protected $token;
     protected $plainTextToken;
@@ -39,7 +42,7 @@ class SendEmail implements ShouldQueue
      */
     public function handle()
     {
-        $member = Member::where('member_code', $this->token->member_code)->first();
+        $member = User::where('user_code', $this->token->member_code)->first();
 
         if (!$member) {
             Log::error("Member not found for member code: {$this->token->member_code}");

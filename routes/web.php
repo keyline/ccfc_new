@@ -592,6 +592,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::post('tenderuploads/media', [TenderFileUploadController::class, 'storeMedia'])->name('tenderuploads.storeMedia');
 
     // Dues Management
+
+    Route::get('dues/index', 'DuesController@index')->name('dues.index');
+
     Route::get('dues/upload', 'DuesController@showUploadForm')->name('dues.upload.form');
     Route::post('dues/upload', 'DuesController@handleUpload')->name('dues.upload.handle');
     Route::get('dues/list', 'DuesController@listDues')->name('dues.list');

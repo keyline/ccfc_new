@@ -98,19 +98,97 @@ class DuesController extends Controller
     {
         $query = MemberDue::query();
 
-        if ($request->has('month') && $request->month != '') {
-            $query->where('month_no', $request->month);
+
+        // Get the most recent upload batch for smart defaults
+        $latestBatch = DuesUploadBatch::where('status', 'completed')
+            ->orderBy('year', 'desc')
+            ->orderBy('month_no', 'desc')
+            ->first();
+
+
+        $defaultMonth = null;
+        $defaultYear = null;
+        $isDefaultView = false;
+
+
+        if (!$request->hasAny(['month', 'year', 'member_code', 'status', 'min_balance', 'max_balance'])) {
+            if ($latestBatch) {
+                $defaultMonth = $latestBatch->month_no;
+                $defaultYear = $latestBatch->year;
+                $isDefaultView = true;
+
+                $query->where('month_no', $defaultMonth)
+                      ->where('year', $defaultYear);
+            }
+            // else: no data uploaded yet, show empty list
+        } else {
+
+            // Month filter
+            if ($request->filled('month')) {
+                $query->where('month_no', $request->month);
+            }
+
+            // Year filter
+            if ($request->filled('year')) {
+                $query->where('year', $request->year);
+            }
+
+            // Member code search filter
+            if ($request->filled('member_code')) {
+                $query->where('member_code', 'LIKE', '%' . $request->member_code . '%');
+            }
+
+            // Status filter (Advanced)
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            // Min balance filter (Advanced)
+            if ($request->filled('min_balance')) {
+                $query->where('outstanding_balance', '>=', $request->min_balance);
+            }
+
+            // Max balance filter (Advanced)
+            if ($request->filled('max_balance')) {
+                $query->where('outstanding_balance', '<=', $request->max_balance);
+            }
+
+
         }
 
-        if ($request->has('year') && $request->year != '') {
-            $query->where('year', $request->year);
-        }
+
+        /**
+         * stats improvements can be done here
+         */
+
+        // Get available months and years from actual uploads
+        /*$availableMonthsYears = DuesUploadBatch::select('month_no', 'year', 'month_name')
+            ->where('status', 'completed')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->orderBy('month_no', 'desc')
+            ->get()
+            ->groupBy('year');
+
+        // Get statistics for the current view
+        $stats = [
+            'total_members' => $dues->count(),
+            'total_outstanding' => $dues->sum('outstanding_balance'),
+            'pending_count' => $dues->where('status', 'pending')->count(),
+            'paid_count' => $dues->where('status', 'paid')->count(),
+        ];
+        */
+
+
+        // Order by ID descending
+        $query->orderBy('id', 'desc');
+
 
         //$dues = $query->paginate(20);
         $dues = $query->get();
 
 
-        return view('admin.dues.list', compact('dues'));
+        return view('admin.dues.list_v2', compact('dues'));
     }
 
     public function sendSmsWithToken(Request $request, MemberDue $due)
@@ -164,17 +242,21 @@ class DuesController extends Controller
     public function sendEmail(Request $request, MemberDue $due)
     {
         try {
+
+            //start transaction
+            //DB::beginTransaction();
+
             $body = "";
 
             $tokenData = $this->createPaymentToken($due);
             //SendEmail::dispatch($tokenData['model'], $tokenData['plainTextToken']);
 
-            $member = \App\Models\User::where('user_code', $tokenData['model']->user_code)->first();
+            $member = \App\Models\User::where('user_code', $tokenData['model']->member_code)->first();
 
 
             if (!$member) {
-                Log::error("Member not found for member code: {$tokenData['model']->user_code}");
-                return;
+                Log::error("Member not found for member code: {$tokenData['model']->member_code}");
+                throw new \Exception("Member not found for member code: {$tokenData['model']->member_code}");
             }
 
 
@@ -195,10 +277,12 @@ class DuesController extends Controller
 
 
 
+            //DB::commit();
+
             return back()->with('success', 'Email scheduled for member ' . $due->member_code);
 
         } catch (\Exception $ex) {
-
+            //DB::rollBack();
             // Plain text log entry
             Log::error('Mail send failed: ' . $ex->getMessage() . $body);
 
@@ -244,29 +328,133 @@ class DuesController extends Controller
 
     public function sendSmsToAll(Request $request)
     {
-        $dues = MemberDue::where('month_no', $request->month)
-            ->where('year', $request->year)
-            ->get();
 
-        foreach ($dues as $due) {
-            $tokenData = $this->createPaymentToken($due);
-            SendSms::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+        try {
+            // Build the same query as listDues to get filtered results
+            $query = MemberDue::query();
+
+            // Apply all filters
+            if ($request->filled('month')) {
+                $query->where('month_no', $request->month);
+            }
+
+            if ($request->filled('year')) {
+                $query->where('year', $request->year);
+            }
+
+            if ($request->filled('member_code')) {
+                $query->where('member_code', 'LIKE', '%' . $request->member_code . '%');
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('min_balance')) {
+                $query->where('outstanding_balance', '>=', $request->min_balance);
+            }
+
+            if ($request->filled('max_balance')) {
+                $query->where('outstanding_balance', '<=', $request->max_balance);
+            }
+
+            $dues = $query->get();
+
+            if ($dues->isEmpty()) {
+                return back()->with('warning', 'No members found matching the selected filters.');
+            }
+
+            $successCount = 0;
+            $errorCount = 0;
+
+            foreach ($dues as $due) {
+                try {
+                    $tokenData = $this->createPaymentToken($due);
+                    SendSms::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+                    $successCount++;
+                } catch (\Exception $e) {
+                    Log::error("Failed to schedule SMS for member {$due->member_code}: " . $e->getMessage());
+                    $errorCount++;
+                }
+            }
+
+            $message = "SMS scheduled for {$successCount} member(s).";
+            if ($errorCount > 0) {
+                $message .= " {$errorCount} failed.";
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk SMS send failed: ' . $e->getMessage());
+            return back()->with('error', 'There was an error scheduling SMS: ' . $e->getMessage());
         }
 
-        return back()->with('success', 'SMS scheduled for all members.');
     }
 
     public function sendEmailToAll(Request $request)
     {
-        $dues = MemberDue::where('month_no', $request->month)
-            ->where('year', $request->year)
-            ->get();
 
-        foreach ($dues as $due) {
-            $tokenData = $this->createPaymentToken($due);
-            SendEmail::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+        try {
+            // Build the same query as listDues to get filtered results
+            $query = MemberDue::query();
+
+            // Apply all filters
+            if ($request->filled('month')) {
+                $query->where('month_no', $request->month);
+            }
+
+            if ($request->filled('year')) {
+                $query->where('year', $request->year);
+            }
+
+            if ($request->filled('member_code')) {
+                $query->where('member_code', 'LIKE', '%' . $request->member_code . '%');
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('min_balance')) {
+                $query->where('outstanding_balance', '>=', $request->min_balance);
+            }
+
+            if ($request->filled('max_balance')) {
+                $query->where('outstanding_balance', '<=', $request->max_balance);
+            }
+
+            $dues = $query->get();
+
+            if ($dues->isEmpty()) {
+                return back()->with('warning', 'No members found matching the selected filters.');
+            }
+
+            $successCount = 0;
+            $errorCount = 0;
+
+            foreach ($dues as $due) {
+                try {
+                    $tokenData = $this->createPaymentToken($due);
+                    SendEmail::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+                    $successCount++;
+                } catch (\Exception $e) {
+                    Log::error("Failed to schedule email for member {$due->member_code}: " . $e->getMessage());
+                    $errorCount++;
+                }
+            }
+
+            $message = "Email scheduled for {$successCount} member(s).";
+            if ($errorCount > 0) {
+                $message .= " {$errorCount} failed.";
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk email send failed: ' . $e->getMessage());
+            return back()->with('error', 'There was an error scheduling emails: ' . $e->getMessage());
         }
 
-        return back()->with('success', 'Email scheduled for all members.');
     }
 }

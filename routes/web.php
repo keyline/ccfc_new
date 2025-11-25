@@ -41,7 +41,7 @@ use App\Http\Controllers\Member\PaymentController;
 
 // use App\Http\Controllers\Api\V2\Member\ApiController;
 
-Route::get('/magic-login/{token}', [MagicLinkLoginController::class, 'login'])->name('magic.login')->middleware('throttle:60,1');
+
 
 // Route::get('/', 'FrontendHome@index')->name('index');
 
@@ -670,7 +670,7 @@ Route::group([
     'prefix' => 'member',
     'as' => 'member.',
     'namespace' => 'Member',
-    'middleware' => ['member'],
+    'middleware' => ['auth.members'],
 ], function () {
     Route::get('/login', [HomeController::class, 'memberLogin'])->name('login');
 
@@ -680,6 +680,8 @@ Route::group([
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/invoice', [HomeController::class, 'invoice'])->name('invoice');
+
+    Route::get('/token/payment', [HomeController::class, 'tokenPayment'])->name('token.payment');
 
 
 
@@ -760,7 +762,10 @@ Route::group([
     Route::post('payment/hdfcsmartpaycallback', ['as' => 'hdfcsmartpaycallback', 'uses' => 'PaymentController@handleJuspayResponse']);
 
     # Magic Link
-    Route::post('send-magic-link', [MemberDuesController::class, 'sendMagicLink'])->name('send.magic.link');
+    //Route::post('send-magic-link', [MemberDuesController::class, 'sendMagicLink'])->name('send.magic.link');
+
+    Route::get('/magic-login/{token}', [MagicLinkLoginController::class, 'login'])->name('magic.login')->middleware('throttle:60,1');
+
 
 
 

@@ -29,11 +29,34 @@ class MemberDue extends Model
 
     public function member()
     {
-        return $this->belongsTo(Member::class, 'member_code', 'member_code');
+        return $this->belongsTo(MemberDue::class, 'member_code', 'member_code');
     }
 
     public function paymentTokens()
     {
         return $this->hasMany(PaymentToken::class);
+    }
+
+    public static function processPayment($dueId, $amount)
+    {
+        $due = self::find($dueId);
+
+        if (!$due) {
+            return false;
+        }
+
+        // Add amount
+        $due->paid_amount = ($due->paid_amount ?? 0) + $amount;
+
+        // Update due status
+        if ($due->outstanding_balance <= $due->paid_amount) {
+            $due->status = 'paid';
+        } else {
+            $due->status = 'partial';
+        }
+
+        $due->save();
+
+        return $due;
     }
 }

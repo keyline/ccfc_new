@@ -13,8 +13,8 @@ return [
     */
 
     'defaults' => [
-        'guard'     => 'web',
-        'passwords' => 'users',
+        'guard'     => 'members',
+        'passwords' => 'members',
     ],
 
     /*
@@ -35,9 +35,9 @@ return [
     */
 
     'guards' => [
-        'web' => [
+        'members' => [
             'driver'   => 'session',
-            'provider' => 'users',
+            'provider' => 'members',
         ],
 
         'api' => [
@@ -65,7 +65,7 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        'members' => [
             'driver' => 'eloquent',
             'model'  => App\Models\User::class,
         ],

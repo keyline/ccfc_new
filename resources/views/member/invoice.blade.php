@@ -86,6 +86,12 @@
                                         </p>
                                     </div>
                                 </div>
+                                <div class="col-md-12">
+                                    <div class="invoice_line"></div>
+                                    <h2>For the month of : {{ $balanceFortheMonth }}</h2>
+                                    <h3>Total current outstanding : INR. {{ $outstandingBalance }}</h3>
+                                    <p>(As of last usage 24 hours ago as updated from club servers)</p>
+                                </div>    
 
                             </div>
 
@@ -117,6 +123,8 @@
                                         <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
                                         <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
                                         <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+                                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="active_token_id" value="{{ session()->get('tokenPayment.active_id') }}">
                                       
                                         @csrf
 										<div class="invoice_input_bank">
@@ -441,6 +449,8 @@ function razorpaySubmit(el) {
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
 
+        let tokenPayment = document.querySelector('input[name="active_token_id"]');
+
         if (!amountValue || amountValue <= 0) {
             alert("Please enter a valid amount before choosing HDFC Smart gateway.");
             el.checked = false;
@@ -454,7 +464,7 @@ function razorpaySubmit(el) {
 			"Content-Type": "application/json;charset=UTF-8",
 			"X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
 		},
-		body: JSON.stringify({ amount: amountValue })
+		body: JSON.stringify({ amount: amountValue, token_id: tokenPayment.value})
 	})
 	.then(response => {
         if (!response.ok) {

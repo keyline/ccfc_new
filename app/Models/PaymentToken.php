@@ -14,6 +14,7 @@ class PaymentToken extends Model
     protected $fillable = [
         'token',
         'member_code',
+        'member_id',
         'member_due_id',
         'generated_at',
         'expires_at',
@@ -29,9 +30,19 @@ class PaymentToken extends Model
         'user_agent',
     ];
 
+    protected $casts = [
+    'expires_at' => 'datetime',
+    'used_at' => 'datetime',
+    ];
+
+    public function member()
+    {
+        return $this->belongsTo(User::class, 'member_code', 'user_code');
+    }
+
     public function memberDue()
     {
-        return $this->belongsTo(MemberDue::class);
+        return $this->belongsTo(MemberDue::class, 'member_due_id', 'id');
     }
 
     public function tokenPayments()
@@ -42,5 +53,26 @@ class PaymentToken extends Model
     public function notificationLogs()
     {
         return $this->hasMany(NotificationLog::class, 'token_id');
+    }
+
+    public function isExpired()
+    {
+        return $this->expires_at->isPast();
+    }
+
+    public function isUsed()
+    {
+        return $this->used_at !== null;
+    }
+
+    public function markAsUsed($ipAddress, $userAgent)
+    {
+        $this->update([
+            'used_at' => now(),
+            'ip_address' => $ipAddress,
+            'user_agent' => $userAgent,
+            'last_accessed_at' => now(),
+            'access_count' => $this->access_count + 1,
+        ]);
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Member;
 
 use Illuminate\Support\Facades\App;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -15,11 +14,10 @@ use App\Helpers\SearchInvoicePdf;
 use Illuminate\Support\Facades\Storage;
 use File;
 use Response;
-use Auth;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
-
 use pcrov\JsonReader\JsonReader;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -91,7 +89,15 @@ class HomeController extends Controller
 
         $user = User::with('userCodeUserDetails')->find(session('LoggedMember'));
 
-        // dd($user);
+        //$user = Auth::guard('members')->user();
+
+
+        //$user = User::with('userCodeUserDetails')->find($user->id);
+
+
+
+
+        //dd($user);
 
         // $userdetails = $user->userCodeUserDetails()->get();
 
@@ -174,10 +180,27 @@ class HomeController extends Controller
                         ->post($tansactionUrl)->json()['data'];
 
 
+            if (session()->has('tokenPayment.active_id')) {
+                // active_id exists
+
+                $dueId = session()->get('tokenPayment.due_id');
+
+
+                $memberDue = \App\Models\MemberDue::find($dueId);
+
+                $outstandingBalance = $memberDue?->outstanding_balance ?? 0;
+                $balanceFortheMonth = $memberDue?->month_name . ' ' . $memberDue?->year;
+
+            }
+
+
+
             return view('member.invoice', [
                 'userData'          => $user,
                 // 'userProfile'       => $profile,
                 'userTransactions'  => $transactions,
+                'outstandingBalance' => $outstandingBalance ?? 0,
+                'balanceFortheMonth' => $balanceFortheMonth ?? '',
             ]);
 
         } catch (RequestException $e) {
@@ -543,5 +566,31 @@ JSON;
             session()->pull('firstMemberUpdate');
         }
         return redirect()->route('member.dashboard');
+    }
+
+    public function tokenPayment(Request $request)
+    {
+        try {
+
+
+            $user = User::with('userCodeUserDetails')->find(session('LoggedMember'))->first();
+
+            //get the active token and due id model
+
+            $dueId = $request->session()->get('tokenPayment.due_id');
+
+
+            $memberDue = \App\Models\MemberDue::find($dueId);
+
+            $outstandingBalance = $memberDue?->outstanding_balance ?? 0;
+
+
+
+
+
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
     }
 }

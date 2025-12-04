@@ -84,6 +84,10 @@ class PaymentController extends Controller
             );
 
             Notification::send($user, new PayUEmailNotification($emailInfo));
+
+            if (config('auth.logout_after_payment')) {
+                Auth::guard('members')->logout();
+            }
         }
 
         return view('member.paymentstatus', compact('status'));
@@ -123,6 +127,10 @@ class PaymentController extends Controller
                 'body'     => "Thank you for making payment of Rs.{$status['amount']}. Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
                 );
                 Notification::send($user, new PayUEmailNotification($emailInfo));
+
+                if (config('auth.logout_after_payment')) {
+                    Auth::guard('members')->logout();
+                }
             }
             return view('member.paymentstatusotherpgs', compact('status'));
         }
@@ -177,7 +185,9 @@ class PaymentController extends Controller
 
                 Notification::send($user, new PayUEmailNotification($emailInfo));
 
-
+                if (config('auth.logout_after_payment')) {
+                    Auth::guard('members')->logout();
+                }
 
                 $status = ['status' => 'success', 'transactionid' => $input['razorpay_payment_id'], 'amount' => $amount];
 
@@ -392,7 +402,9 @@ class PaymentController extends Controller
 
                 Notification::send($user, new PayUEmailNotification($emailInfo));
 
-
+                if (config('auth.logout_after_payment')) {
+                    Auth::guard('members')->logout();
+                }
 
                 $status = ['status' => 'success', 'transactionid' => $input['razorpay_payment_id'], 'amount' => $amount];
 
@@ -481,6 +493,7 @@ class PaymentController extends Controller
         header('Content-Type: application/json');
         $orderId = uniqid();
         $amount = $input['amount'];
+        $tokenId = $input['token_id'];
 
         try {
             if (!$user) {
@@ -509,7 +522,7 @@ class PaymentController extends Controller
                 $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
 
                 // Store the order ID or other necessary details in your database for future reference
-                DB::table('payu_transactions')->insert([
+                $paymentId = DB::table('payu_transactions')->insertGetId([
                 'paid_for_id' => $user->id,
                 'paid_for_type' => 'App\Models\User',
                 'transaction_id' => $session->orderId,
@@ -527,6 +540,27 @@ class PaymentController extends Controller
                 Session::put('hdfcsmartpayTransactionid', $session->orderId);
 
                 Session::put('hdfcsmartpaycustomerid', $user->id);
+
+                if ($tokenId) {
+                    //mark token as used
+                    $paymentToken = \App\Models\PaymentToken::find($tokenId);
+                    if ($paymentToken) {
+                        $paymentToken->markAsUsed(request()->ip(), request()->userAgent());
+                    }
+
+                    //insert into TokenPayment
+                    $tokenPaymentId = \App\Models\TokenPayment::create([
+                        'payment_id' => $paymentId,
+                        'token_id' => $paymentToken->id,
+                        'member_code' => $paymentToken->member_code,
+                        'member_due_id' => $paymentToken->member_due_id,
+                        'payment_method' => 'HDFC SMART Pay',
+                        'transaction_id' => $session->orderId,
+                        'amount' => $amount,
+                        'payment_status' => 'pending',
+                        'payment_date' => Carbon::now('Asia/Kolkata'),
+                    ]);
+                }
 
 
             } else {
@@ -672,6 +706,36 @@ class PaymentController extends Controller
 
                     ]
                 );
+
+
+                $tokenPayment = \App\Models\TokenPayment::where('transaction_id', $order->orderId)->firstOrFail();
+
+                if ($tokenPayment) {
+
+                    \App\Models\TokenPayment::where('transaction_id', $order->orderId)
+                                        ->update(
+                                            [
+                                                'payment_status'	=> $response['order_status'] === "CHARGED"
+                                                                ? 'successful'
+                                                                : (
+                                                                    $response['order_status'] == 'PENDING' || $response['order_status'] == 'PENDING_VBV'
+                                                                    ? 'pending'
+                                                                    : 'failed'
+                                                                ),
+                                                'payment_date' => Carbon::now('Asia/Kolkata'),
+                                                'gateway_response' => $myOrderData,
+
+                                            ]
+                                        );
+
+                    if ($response['order_status'] === "CHARGED") {
+                        \App\Models\MemberDue::processPayment($tokenPayment->member_due_id, $tokenPayment->amount);
+                    }
+
+
+                }
+
+
                 //find user
                 $user = User::find(session::get('hdfcsmartpaycustomerid'));
 
@@ -684,6 +748,9 @@ class PaymentController extends Controller
 
                 Notification::send($user, new PayUEmailNotification($emailInfo));
 
+                if (config('auth.logout_after_payment')) {
+                    Auth::guard('members')->logout();
+                }
 
                 $status = [
                             'status' =>  $response['order_status'] === "CHARGED" ? 'success' : 'failed',
@@ -725,7 +792,7 @@ class PaymentController extends Controller
         http_response_code(400);
 
         $status = [
-            'status' =>  'failed',
+            'status' =>  $response['order_status'],
             'transactionid' => $response['order_id'] ?? '',
             'amount' => $order->amount ?? 0,
             'message' => $ex->getMessage() ?? ''

@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\UpdateUserFromMemberApi::class,
+        Commands\CleanupPaymentTokens::class,
     ];
 
     /**
@@ -28,6 +29,7 @@ class Kernel extends ConsoleKernel
         //$schedule->command('update:users')->dailyAt('4:00'); // 4 A.M
         // Define the scheduled command to run at 4 am IST (10:30 pm UTC)
         $schedule->command('update:users')->dailyAt('22:30');
+        $schedule->command('payment-tokens:cleanup')->daily();
         //$schedule->command('update:users')->dailyAt('7:00');
 
 

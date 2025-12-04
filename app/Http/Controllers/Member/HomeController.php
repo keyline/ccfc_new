@@ -593,4 +593,41 @@ JSON;
         }
 
     }
+
+    public function tokenInvoice()
+    {
+        try {
+
+            $user = User::with('userCodeUserDetails')->find(session('LoggedMember'))->first();
+
+
+            if (session()->has('tokenPayment.active_id')) {
+                // active_id exists
+
+                $dueId = session()->get('tokenPayment.due_id');
+
+
+                $memberDue = \App\Models\MemberDue::find($dueId);
+
+                $outstandingBalance = $memberDue?->outstanding_balance ?? 0;
+                $balanceFortheMonth = $memberDue?->month_name . ' ' . $memberDue?->year;
+                $paidAmount         = $memberDue?->paid_amount ?? 0;
+
+            }
+
+            return view('member.token_invoice', [
+                            'userData'          => $user,
+                            // 'userProfile'       => $profile,
+                            //'userTransactions'  => $transactions,
+                            'outstandingBalance' => $outstandingBalance ?? 0,
+                            'balanceFortheMonth' => $balanceFortheMonth ?? '',
+                            'paymentAdjustment'  => $paidAmount
+                        ]);
+
+
+
+        } catch (\Exception $ex) {
+            //throw $th;
+        }
+    }
 }

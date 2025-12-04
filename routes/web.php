@@ -766,6 +766,10 @@ Route::group([
 
     Route::get('/magic-login/{token}', [MagicLinkLoginController::class, 'login'])->name('magic.login')->middleware('throttle:60,1');
 
+    Route::get('/token/invoice', [HomeController::class, 'tokenInvoice'])->name('token-invoice');
+
+
+
 
 
 

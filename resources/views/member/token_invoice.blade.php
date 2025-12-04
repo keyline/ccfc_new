@@ -110,13 +110,11 @@
                                 </ul>
                             </div>
                             @endif
-                                @foreach($userTransactions as $user)
+                                <h2>Due for the month of : {{ $balanceFortheMonth }}</h2>
+                                <h3>Total current outstanding : INR. {{ $outstandingBalance }}</h3>
+                                <h3>Payment done till date : INR. {{ $paymentAdjustment }} </h3>
                                 
-                                @if($loop->first)
-                                <h3>Total current outstanding : INR. {{ $user['Balance'] }}</h3>
-                                @endif
-                                @endforeach
-                                <p>(As of last usage 24 hours ago as updated from club servers)</p>
+                                <p>(As of last updated from club admin)</p>
                                 
                                 <div class="invoice_outstading_payment">
 									<form action="" method="POST" id="payment-form">  
@@ -124,6 +122,7 @@
                                         <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
                                         <input type="hidden" name="razorpay_signature" id="razorpay_signature">
                                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="active_token_id" value="{{ session()->get('tokenPayment.active_id') }}">
                                       
                                         @csrf
 										<div class="invoice_input_bank">
@@ -170,13 +169,7 @@
 											</div>
 											
                                             <button type="submit" class="btn btn-primary">Pay Now</button>
-<!--
-											<div class="invoice_btn_bank">
-												<button type="submit" class="pg-btns" data-provider="payu" data-href="{{ route('member.payment') }}">Pay Now (PayU)</button>
-												<button type="submit" class="pg-btns" data-provider="hdfc" data-href="{{ route('member.paywithhdfc') }}">Pay Now (HDFC)</button>
-												<button type="submit" class="pg-btns" data-provider="axis" data-href="{{ route('member.axischeckout') }}">Pay Now (AxisPG)</button>
-											</div>
--->	
+
                                         <pre id="log"></pre>
 										</div>
 									</form>
@@ -249,91 +242,7 @@ function checkAmount(amount) {
         <section class="member_details_section">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-12 pl-0">
-                        <div class="table-responsive">
-
-                            <!-- <pre><code>{{ json_encode($userTransactions, JSON_PRETTY_PRINT) }}</code></pre> -->
-
-
-                            <table class="table table-hover table-sm">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th scope="col">Month</th>
-                                        <th scope="col">Opening Balance</th>
-                                        <th scope="col">Total of receipts & Adjustment</th>
-                                        <th scope="col">Total of Invoice & Adjustment</th>
-                                        <th scope="col">Closing Balance</th>
-                                        <th scope="col">View Summarized bill</th>
-                                        <th scope="col">View Detailed bill</th>
-                                        <!-- <th scope="col">Status</th> -->
-                                    </tr>
-                                </thead>
-                                @foreach($userTransactions as $user)
-                                <tbody>
-                                    <tr>
-                                        <td>{{ $user['Month'] }}</td>
-                                        <td>{{ $user['LastBalance'] }}</td>
-                                        <td>{{ $user['paidamount'] }}</td>
-                                        <td>{{ $user['debitamount'] }}</td>
-                                        <td>{{ $user['Balance'] }}</td>
-                                        <!-- summary -->
-                                        <td>
-                                            @if(SearchInvoicePdf::isBillUploaded(implode("_", explode(" ",
-                                            $user['Month']))) &&
-                                            !empty(SearchInvoicePdf::getSummaryBillLink($userData['user_code'],
-                                            $user['Month'])))
-
-                                            <a href="{{ SearchInvoicePdf::getSummaryBillLink($userData['user_code'],  $user['Month']) }}"
-                                                target="_blank"><img class="img-fluid"
-                                                    src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a>
-                                            @else
-                                            <span>&#8211;</span>
-                                            @endif
-                                        </td>
-                                        <!-- Detail -->
-                                        <td>
-                                            @if(SearchInvoicePdf::isBillUploaded(implode("_", explode(" ",
-                                            $user['Month']))) &&
-                                            !empty(SearchInvoicePdf::getDetailBillLink($userData['user_code'],
-                                            $user['Month'])))
-                                            <a href="{{ SearchInvoicePdf::getDetailBillLink($userData['user_code'],  $user['Month']) }}"
-                                                target="_blank"><img class="img-fluid"
-                                                    src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a>
-                                        </td>
-                                        @else
-                                        <span>&#8211;</span>
-                                        @endif
-                                        <!-- <td>Payment</td> -->
-                                    </tr>
-                                    <!-- <tr>
-                                            <td>Jan 2022</td>
-                                            <td>10773.82</td>
-                                            <td>11827.59</td>
-                                            <td>6106</td>
-                                            <td>11826.96</td>
-                                            <td><a href="#" target="_blank"><img class="img-fluid"
-                                                        src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                            <td><a href="#" target="_blank"><img class="img-fluid"
-                                                        src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                            <td>Payment</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Dec 2021</td>
-                                            <td>7954.72</td>
-                                            <td>11827.59</td>
-                                            <td>6106</td>
-                                            <td>11826.96</td>
-                                            <td><a href="#" target="_blank"><img class="img-fluid"
-                                                        src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                            <td><a href="#" target="_blank"><img class="img-fluid"
-                                                        src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                            <td>Payment</td>
-                                        </tr> -->
-                                </tbody>
-                                @endforeach
-                            </table>
-                        </div>
-                    </div>
+                    
 
                 </div>
 
@@ -448,6 +357,8 @@ function razorpaySubmit(el) {
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
 
+        let tokenPayment = document.querySelector('input[name="active_token_id"]');
+
         if (!amountValue || amountValue <= 0) {
             alert("Please enter a valid amount before choosing HDFC Smart gateway.");
             el.checked = false;
@@ -461,7 +372,7 @@ function razorpaySubmit(el) {
 			"Content-Type": "application/json;charset=UTF-8",
 			"X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
 		},
-		body: JSON.stringify({ amount: amountValue})
+		body: JSON.stringify({ amount: amountValue, token_id: tokenPayment.value})
 	})
 	.then(response => {
         if (!response.ok) {

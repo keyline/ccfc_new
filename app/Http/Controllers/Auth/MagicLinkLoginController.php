@@ -51,6 +51,6 @@ class MagicLinkLoginController extends Controller
         $paymentToken->markAsUsed($request->ip(), $request->userAgent());
 
         // Redirect to the intended page, e.g., the member's dashboard
-        return redirect()->intended('member/invoice');
+        return redirect()->intended('member/token/invoice');
     }
 }

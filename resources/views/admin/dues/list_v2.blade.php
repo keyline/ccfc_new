@@ -157,6 +157,9 @@
                     </button>
                 </form>
             </div>
+            <div class="mb-2">
+                <button type="button" id="resetSelection" class="btn btn-warning btn-sm">Reset Selection</button>
+            </div>
         </div>
     </div>
 
@@ -168,6 +171,9 @@
                     <tr>
                         <th width="10"></th>
                         <th>#</th>
+                        <th>
+                            Selected
+                        </th>
                         <th>Member Code</th>
                         <th>Outstanding Balance</th>
                         <th>Paid Amount</th>
@@ -180,6 +186,9 @@
                         <tr data-entry-id="{{ $due->id }}">
                             <td></td>
                             <td>{{ $due->id ?? '' }}</td>
+                            <td>
+                            <input type="checkbox" class="rowCheck" name="selected_ids[]" value="{{ $due->id }}" data-id="{{ $due->id }}">
+                            </td>
                             <td><strong>{{ $due->member_code ?? '' }}</strong></td>
                             <td>₹{{ number_format($due->outstanding_balance, 2) }}</td>
                             <td>₹{{ number_format($due->paid_amount, 2) }}</td>
@@ -250,6 +259,8 @@
 @parent
 <script>
 $(function () {
+    let selectedIds = [];
+
     let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons);
 
     $.extend(true, $.fn.dataTable.defaults, {
@@ -283,6 +294,43 @@ $(function () {
         // Uncomment to enable auto-submit
         // $('#filterForm').submit();
     });
+
+    
+
+    $('#MemberDuesList').on('draw.dt', function () {
+        reCheckBoxes();
+    });
+
+        // When row checkbox clicked
+    $(document).on('change', '.rowCheck', function () {
+        let id = $(this).data('id');
+
+        if (this.checked) {
+            if (!selectedIds.includes(id)) {
+                selectedIds.push(id);
+            }
+        } else {
+            selectedIds = selectedIds.filter(x => x !== id);
+        }
+    });
+
+    $('#resetSelection').on('click', function () {
+    // Clear global selection
+    selectedIds = [];
+
+    // Uncheck all currently displayed rows
+    $('.rowCheck').prop('checked', false);
+
+    alert("All selections have been reset.");
+    });
 });
+
+function reCheckBoxes() {
+    debugger;
+    $('.rowCheck').each(function () {
+        let id = $(this).data('id');
+        $(this).prop('checked', selectedIds.includes(id));
+    });
+}
 </script>
 @endsection

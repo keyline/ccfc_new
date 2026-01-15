@@ -353,7 +353,7 @@ class PaymentController extends Controller
     // }
     public function razorpaycallback(Request $request)
     {
-        dd($request->all());
+        // dd($request->all());
         $input = $request->all();
 
         $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
@@ -363,7 +363,7 @@ class PaymentController extends Controller
 
         $transactionId = Session::get('razorpayTransactionid');
         // echo $transactionId; die;
-        dd($payment);
+        // dd($payment);
         $amount = number_format($payment->amount / 100, 2, '.', '');
 
         if (count($input)  && !empty($input['razorpay_payment_id'])) {
@@ -392,6 +392,7 @@ class PaymentController extends Controller
                     );
                 //find user
                 $user = User::find($payment->notes->udf1);
+                dd($user);
 
 
 

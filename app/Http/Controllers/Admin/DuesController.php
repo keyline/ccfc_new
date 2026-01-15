@@ -186,7 +186,8 @@ class DuesController extends Controller
 
         //$dues = $query->paginate(20);
         $dues = $query->get();
-        print_r($dues); exit;
+        echo "<pre>";
+        print_r($dues->toArray()); exit;
 
 
         return view('admin.dues.list_v2', compact('dues'));

@@ -396,8 +396,8 @@ class PaymentController extends Controller
                 // dd($user);
 
                 $dueDetails = MemberDue::where('member_code', $user->user_code)
-                                    ->where('status', 'pending')
                                     ->first();
+                dd($dueDetails);
 
                 if($dueDetails->outstanding_balance < $amount)
                     {                        

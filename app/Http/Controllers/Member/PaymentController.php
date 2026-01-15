@@ -353,7 +353,7 @@ class PaymentController extends Controller
     // }
     public function razorpaycallback(Request $request)
     {
-        // dd($request->all());
+        dd($request->all());
         $input = $request->all();
 
         $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));

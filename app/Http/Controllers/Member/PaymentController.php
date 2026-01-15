@@ -392,8 +392,25 @@ class PaymentController extends Controller
                     );
                 //find user
                 $user = User::find($payment->notes->udf1);
-                dd($user);
+                // dd($user);
 
+                $dueDetails = MemberDue::where('member_code', $user->user_code)
+                                    ->where('status', 'pending')
+                                    ->first();
+
+                if($dueDetails->outstanding_balance < $amount)
+                    {                        
+                        DB::table('member_dues')
+                            ->where('member_code', $user->user_code)
+                            ->update(
+                                [
+                                    'status' => 'partial',
+                                    'paid_amount' => $amount,
+                                    'outstanding_balance' => $dueDetails->outstanding_balance - $amount,
+                                    'updated_at' => Carbon::now('Asia/Kolkata'),
+                                ]
+                            );
+                    }
 
 
                 $emailInfo = array(

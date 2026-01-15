@@ -363,7 +363,7 @@ class PaymentController extends Controller
 
         $transactionId = Session::get('razorpayTransactionid');
         // echo $transactionId; die;
-        // dd($payment);
+        dd($payment);
         $amount = number_format($payment->amount / 100, 2, '.', '');
 
         if (count($input)  && !empty($input['razorpay_payment_id'])) {

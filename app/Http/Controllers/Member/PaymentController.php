@@ -395,6 +395,7 @@ class PaymentController extends Controller
                 $user = User::find($payment->notes->udf1);
                 // dd($user);
 
+                //code by deblina to update member dues on payment
                 $dueDetails = MemberDue::where('member_code', $user->user_code)
                                     ->first();
                 // dd($dueDetails);
@@ -407,7 +408,7 @@ class PaymentController extends Controller
                                 [
                                     'status' => 'partial',
                                     'paid_amount' => $amount,
-                                    'outstanding_balance' => $dueDetails->outstanding_balance - $amount,
+                                    'dues_for_this_month' => $dueDetails->outstanding_balance - $amount,
                                     'updated_at' => Carbon::now('Asia/Kolkata'),
                                 ]
                             );

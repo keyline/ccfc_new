@@ -5,10 +5,10 @@
 </head>
 <body>
     <h1>Dear Member,</h1>
-    <p>Please find your payment link for the dues of {{ $token->memberDue->month_name }} {{ $token->memberDue->year }}.</p>
-    <p><a href="{{ url('/member/magic-login/' . $plainTextToken) }}">Pay Now</a></p>
-    <p>If you have any questions, please contact us.</p>
+    <p>Click on the link below to pay your club bill.</p>
+    {{-- <p>Please find your payment link for the dues of {{ $token->memberDue->month_name }} {{ $token->memberDue->year }}.</p> --}}
+    <p>Link :<a href="{{ url('/member/magic-login/' . $plainTextToken) }}"></a></p>
+    <p>Please note, displayed amount does not include late fee charges, if applicable. Payment less than displayed amount will not be accepted by the system.</p>
     <p>Thank you,</p>
-    <p>Your Club</p>
 </body>
 </html>

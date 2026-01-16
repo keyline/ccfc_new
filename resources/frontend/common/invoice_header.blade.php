@@ -66,7 +66,7 @@
                                         </button>
                                         <!-- Logic for logged in or not   -->
                                         @if(session()->has('LoggedMember'))
-                                        @include('common.header_afterlogin')
+                                        @include('common.invoice_afterlogin')
                                         @else
                                         @include('common.header_beforelogin')
                                         @endif

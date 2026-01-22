@@ -111,8 +111,8 @@
                             </div>
                             @endif
                                 <h2>Due for the month of : {{ $balanceFortheMonth }}</h2>
-                                <h3>Total current outstanding : INR. {{ $outstandingBalance }}</h3>
-                                <h3>Payment done till date : INR. {{ $paymentAdjustment }} </h3>
+                                <h3>Total outstanding : INR. {{ $outstandingBalance }}</h3>
+                                <h3>Total due till date : INR. {{ $paymentAdjustment }} </h3>
                                 
                                 <p>(As of last updated from club admin)</p>
                                 

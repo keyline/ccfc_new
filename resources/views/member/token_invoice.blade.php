@@ -421,13 +421,14 @@ function razorpaySubmit(el) {
         }
 
         // Convert payable amount text to number
-        const payableAmount = parseFloat(
-            payableAmountEl.innerText.replace(/[^0-9.]/g, '')
-        );
+        // const payableAmount = parseFloat(
+        //     payableAmountEl.innerText.replace(/[^0-9.]/g, '')
+        // );
 
         payAmountInput.addEventListener('change', function () {
 
-            const enteredAmount = parseFloat(this.value);
+            // const enteredAmount = parseFloat(this.value);
+            const enteredAmount = this.value;
 
             // If input is empty or invalid, do nothing
             if (isNaN(enteredAmount)) {

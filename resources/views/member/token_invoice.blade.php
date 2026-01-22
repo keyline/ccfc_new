@@ -111,14 +111,14 @@
                             </div>
                             @endif
                                 <h2>Due for the month of : {{ $balanceFortheMonth }}</h2>
-                                <h3>Total outstanding : INR. {{ $outstandingBalance }}</h3>
-                                <h3>Total due till date : INR. <span id="comparable_amount"
+                                <h3>Total Payable Amount : INR. <span id="comparable_amount"
                                     style="font-size: 22px;
                                         font-weight: 600;
                                         font-family: 'IBM Plex Serif', serif;
                                         color: #be1f24;
                                         margin-bottom: 0;"
-                                    >{{ $dues_for_this_month }}</span> </h3>
+                                    >{{ $outstandingBalance }}</span></h3>
+                                {{-- <h3>Total due till date : INR. {{ $dues_for_this_month }} </h3> --}}
                                 
                                 <p>(As of last updated from club admin)</p>
                                 
@@ -133,7 +133,7 @@
                                         @csrf
 										<div class="invoice_input_bank">
                                             <div class="invoice_input_feild">
-												<input type="text" name="amount" placeholder="Enter amount being paid">												
+												<input type="text" name="amount" placeholder="Enter amount being paid" id="compare_with_amount">												
 											</div>
 											<div class="invocie_paymentlogo">
 												<ul>
@@ -409,4 +409,40 @@ function razorpaySubmit(el) {
     
 
     </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const payableAmountEl = document.getElementById('comparable_amount');
+        const payAmountInput  = document.getElementById('compare_with_amount');
+
+        if (!payableAmountEl || !payAmountInput) {
+            return;
+        }
+
+        // Convert payable amount text to number
+        const payableAmount = parseFloat(
+            payableAmountEl.innerText.replace(/[^0-9.]/g, '')
+        );
+
+        payAmountInput.addEventListener('change', function () {
+
+            const enteredAmount = parseFloat(this.value);
+
+            // If input is empty or invalid, do nothing
+            if (isNaN(enteredAmount)) {
+                return;
+            }
+
+            if (enteredAmount < payableAmount) {
+                alert('Amount must be equal to or greater than the payable amount.');
+                this.value = '';
+                this.focus();
+            }
+
+        });
+
+    });
+    </script>
+
 <!--block:end:open-paymentpage-->

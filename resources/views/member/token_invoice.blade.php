@@ -112,7 +112,13 @@
                             @endif
                                 <h2>Due for the month of : {{ $balanceFortheMonth }}</h2>
                                 <h3>Total outstanding : INR. {{ $outstandingBalance }}</h3>
-                                <h3>Total due till date : INR.<span id="comparable_amount">{{ $dues_for_this_month }}</span> </h3>
+                                <h3>Total due till date : INR. <span id="comparable_amount"
+                                    style="font-size: 22px;
+                                        font-weight: 600;
+                                        font-family: 'IBM Plex Serif', serif;
+                                        color: #be1f24;
+                                        margin-bottom: 0;"
+                                    >{{ $dues_for_this_month }}</span> </h3>
                                 
                                 <p>(As of last updated from club admin)</p>
                                 

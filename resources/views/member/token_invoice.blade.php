@@ -410,7 +410,7 @@ function razorpaySubmit(el) {
 
     </script>
 
-    <script>
+    {{-- <script>
     document.addEventListener('DOMContentLoaded', function () {
 
         const payableAmountEl = document.getElementById('comparable_amount');
@@ -443,6 +443,6 @@ function razorpaySubmit(el) {
         });
 
     });
-    </script>
+    </script> --}}
 
 <!--block:end:open-paymentpage-->

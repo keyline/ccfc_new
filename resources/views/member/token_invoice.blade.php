@@ -410,53 +410,59 @@ function razorpaySubmit(el) {
 
     </script>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    
+<script>
+document.addEventListener('DOMContentLoaded', function () {
 
-        const payableEl = document.getElementById('comparable_amount');
-        const amountEl  = document.getElementById('pay_amount');
+    const payableEl = document.getElementById('comparable_amount');
+    const payInput  = document.getElementById('compare_with_amount');
 
-        if (!payableEl || !amountEl) return;
+    if (!payableEl || !payInput) return;
 
-        // Convert "1045.67" → "104567"
-        function toPaise(value) {
-            value = value.trim();
+    // Normalize value ONLY for comparison
+    function normalizeForCompare(value) {
+        value = value.trim();
 
-            if (!/^\d+(\.\d{1,2})?$/.test(value)) {
-                return null; // invalid money format
-            }
-
-            let parts = value.split('.');
-            let rupees = parts[0];
-            let paise  = parts[1] ? parts[1].padEnd(2, '0') : '00';
-
-            return rupees + paise;
+        // Allow: 158 | 158.00 | 158.000
+        if (!/^\d+(\.\d+)?$/.test(value)) {
+            return null;
         }
 
-        const payablePaise = toPaise(payableEl.innerText);
+        let parts = value.split('.');
+        let integerPart = parts[0];
+        let decimalPart = parts[1] || '';
 
-        amountEl.addEventListener('change', function () {
+        // Normalize to max 3 decimal places (safe upper bound)
+        decimalPart = decimalPart.padEnd(3, '0').slice(0, 3);
 
-            const enteredPaise = toPaise(this.value);
+        return integerPart + decimalPart;
+    }
 
-            if (enteredPaise === null) {
-                alert('Please enter a valid amount.');
-                this.value = '';
-                this.focus();
-                return;
-            }
+    const payableCompareValue = normalizeForCompare(payableEl.innerText);
 
-            // String → BigInt comparison (safe)
-            if (BigInt(enteredPaise) < BigInt(payablePaise)) {
-                alert('Amount must be equal to or greater than the payable amount.');
-                this.value = '';
-                this.focus();
-            }
+    payInput.addEventListener('change', function () {
 
-        });
+        const enteredCompareValue = normalizeForCompare(this.value);
+
+        if (enteredCompareValue === null) {
+            alert('Please enter a valid amount.');
+            this.value = '';
+            this.focus();
+            return;
+        }
+
+        // BigInt comparison ONLY
+        if (BigInt(enteredCompareValue) < BigInt(payableCompareValue)) {
+            alert('Amount must be equal to or greater than the payable amount.');
+            this.value = '';
+            this.focus();
+        }
 
     });
-    </script>
+
+});
+</script>
+
 
 
 <!--block:end:open-paymentpage-->

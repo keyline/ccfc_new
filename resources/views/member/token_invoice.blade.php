@@ -413,29 +413,41 @@ function razorpaySubmit(el) {
     <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-        const payableAmountEl = document.getElementById('comparable_amount');
-        const payAmountInput  = document.getElementById('compare_with_amount');
+        const payableEl = document.getElementById('comparable_amount');
+        const amountEl  = document.getElementById('pay_amount');
 
-        if (!payableAmountEl || !payAmountInput) {
-            return;
+        if (!payableEl || !amountEl) return;
+
+        // Convert "1045.67" → "104567"
+        function toPaise(value) {
+            value = value.trim();
+
+            if (!/^\d+(\.\d{1,2})?$/.test(value)) {
+                return null; // invalid money format
+            }
+
+            let parts = value.split('.');
+            let rupees = parts[0];
+            let paise  = parts[1] ? parts[1].padEnd(2, '0') : '00';
+
+            return rupees + paise;
         }
 
-        // Convert payable amount text to number
-        // const payableAmount = parseFloat(
-        //     payableAmountEl.innerText.replace(/[^0-9.]/g, '')
-        // );
+        const payablePaise = toPaise(payableEl.innerText);
 
-        payAmountInput.addEventListener('change', function () {
+        amountEl.addEventListener('change', function () {
 
-            // const enteredAmount = parseFloat(this.value);
-            const enteredAmount = this.value;
+            const enteredPaise = toPaise(this.value);
 
-            // If input is empty or invalid, do nothing
-            if (isNaN(enteredAmount)) {
+            if (enteredPaise === null) {
+                alert('Please enter a valid amount.');
+                this.value = '';
+                this.focus();
                 return;
             }
 
-            if (enteredAmount < payableAmount) {
+            // String → BigInt comparison (safe)
+            if (BigInt(enteredPaise) < BigInt(payablePaise)) {
                 alert('Amount must be equal to or greater than the payable amount.');
                 this.value = '';
                 this.focus();
@@ -445,5 +457,6 @@ function razorpaySubmit(el) {
 
     });
     </script>
+
 
 <!--block:end:open-paymentpage-->

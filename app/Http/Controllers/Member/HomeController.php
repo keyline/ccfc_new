@@ -612,6 +612,7 @@ JSON;
                 $outstandingBalance = $memberDue?->outstanding_balance ?? 0;
                 $balanceFortheMonth = $memberDue?->month_name . ' ' . $memberDue?->year;
                 $paidAmount         = $memberDue?->paid_amount ?? 0;
+                $dues_for_this_month         = $memberDue?->dues_for_this_month ?? 0;
 
             }
 
@@ -621,7 +622,8 @@ JSON;
                             //'userTransactions'  => $transactions,
                             'outstandingBalance' => $outstandingBalance ?? 0,
                             'balanceFortheMonth' => $balanceFortheMonth ?? '',
-                            'paymentAdjustment'  => $paidAmount
+                            'paymentAdjustment'  => $paidAmount,
+                            'dues_for_this_month' => $dues_for_this_month
                         ]);
 
 

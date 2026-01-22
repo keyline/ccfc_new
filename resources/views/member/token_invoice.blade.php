@@ -411,7 +411,7 @@ function razorpaySubmit(el) {
     </script>
 
     
-<script>
+{{-- <script>
 document.addEventListener('DOMContentLoaded', function () {
 
     const payableEl = document.getElementById('comparable_amount');
@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 }); 
-</script>
+</script> --}}
 
 
 

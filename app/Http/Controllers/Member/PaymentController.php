@@ -409,6 +409,7 @@ class PaymentController extends Controller
                             [
                                 'status' => 'partial',
                                 'paid_amount' => $amount,
+                                'dues_for_this_month' => $dueDetails->outstanding_balance - $amount,
                                 'updated_at' => Carbon::now('Asia/Kolkata'),
                             ]
                         );

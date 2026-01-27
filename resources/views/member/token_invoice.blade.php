@@ -411,57 +411,57 @@ function razorpaySubmit(el) {
     </script>
 
     
-{{-- <script>
-document.addEventListener('DOMContentLoaded', function () {
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
 
-    const payableEl = document.getElementById('comparable_amount');
-    const payInput  = document.getElementById('compare_with_amount');
+        const payableEl = document.getElementById('comparable_amount');
+        const payInput  = document.getElementById('compare_with_amount');
 
-    if (!payableEl || !payInput) return;
+        if (!payableEl || !payInput) return;
 
-    // Normalize value ONLY for comparison
-    function normalizeForCompare(value) {
-        value = value.trim();
+        // Normalize value ONLY for comparison
+        function normalizeForCompare(value) {
+            value = value.trim();
 
-        // Allow: 158 | 158.00 | 158.000
-        if (!/^\d+(\.\d+)?$/.test(value)) {
-            return null;
+            // Allow: 158 | 158.00 | 158.000
+            if (!/^\d+(\.\d+)?$/.test(value)) {
+                return null;
+            }
+
+            let parts = value.split('.');
+            let integerPart = parts[0];
+            let decimalPart = parts[1] || '';
+
+            // Normalize to max 3 decimal places (safe upper bound)
+            decimalPart = decimalPart.padEnd(3, '0').slice(0, 3);
+
+            return integerPart + decimalPart;
         }
 
-        let parts = value.split('.');
-        let integerPart = parts[0];
-        let decimalPart = parts[1] || '';
+        const payableCompareValue = normalizeForCompare(payableEl.innerText);
 
-        // Normalize to max 3 decimal places (safe upper bound)
-        decimalPart = decimalPart.padEnd(3, '0').slice(0, 3);
+        payInput.addEventListener('change', function () {
 
-        return integerPart + decimalPart;
-    }
+            const enteredCompareValue = normalizeForCompare(this.value);
 
-    const payableCompareValue = normalizeForCompare(payableEl.innerText);
+            if (enteredCompareValue === null) {
+                alert('Please enter a valid amount.');
+                this.value = '';
+                this.focus();
+                return;
+            }
 
-    payInput.addEventListener('change', function () {
+            // BigInt comparison ONLY
+            if (BigInt(enteredCompareValue) < BigInt(payableCompareValue)) {
+                alert('Amount must be equal to or greater than the payable amount.');
+                this.value = '';
+                this.focus();
+            }
 
-        const enteredCompareValue = normalizeForCompare(this.value);
+        });
 
-        if (enteredCompareValue === null) {
-            alert('Please enter a valid amount.');
-            this.value = '';
-            this.focus();
-            return;
-        }
-
-        // BigInt comparison ONLY
-        if (BigInt(enteredCompareValue) < BigInt(payableCompareValue)) {
-            alert('Amount must be equal to or greater than the payable amount.');
-            this.value = '';
-            this.focus();
-        }
-
-    });
-
-}); 
-</script> --}}
+    }); 
+</script>
 
 
 

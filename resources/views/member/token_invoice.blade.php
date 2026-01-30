@@ -96,10 +96,12 @@
                                 @foreach ($userTransactions as $user)
                                     @if ($loop->first)
                                         <h3>Total current outstanding : INR. {{ $user['Balance'] }}</h3>
+                                        <p>(As of last usage 24 hours ago as updated from club servers)</p>
                                     @endif
                                 @endforeach
-                                <h2>Due for the month of : {{ $balanceFortheMonth }}</h2>
-                                <h3>Total Payable Amount : INR. <span id="comparable_amount"
+                                {{-- <h2>Due for the month of : {{ $balanceFortheMonth }}</h2> --}}
+                                <h3>Total Payable Amount for {{ $balanceFortheMonth }} : INR. <span
+                                        id="comparable_amount"
                                         style="font-size: 22px;
                                         font-weight: 600;
                                         font-family: 'IBM Plex Serif', serif;
@@ -108,7 +110,7 @@
                                 </h3>
                                 {{-- <h3>Total due till date : INR. {{ $dues_for_this_month }} </h3> --}}
 
-                                <p>(As of last updated from club admin)</p>
+                                {{-- <p>(As of last updated from club admin)</p> --}}
 
                                 <div class="invoice_outstading_payment">
                                     <form action="" method="POST" id="payment-form">

@@ -93,7 +93,7 @@
                                         </ul>
                                     </div>
                                 @endif
-                                <h3>Total Payable Amount for {{ $balanceFortheMonth }} : INR. <span
+                                <h3>Total payable amount for {{ $balanceFortheMonth }} : INR. <span
                                         id="comparable_amount"
                                         style="font-size: 22px;
                                         font-weight: 600;

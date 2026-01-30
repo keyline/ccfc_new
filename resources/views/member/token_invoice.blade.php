@@ -93,13 +93,6 @@
                                         </ul>
                                     </div>
                                 @endif
-                                @foreach ($userTransactions as $user)
-                                    @if ($loop->first)
-                                        <h3>Total current outstanding : INR. {{ $user['Balance'] }}</h3>
-                                        <p>(As of last usage 24 hours ago as updated from club servers)</p>
-                                    @endif
-                                @endforeach
-                                {{-- <h2>Due for the month of : {{ $balanceFortheMonth }}</h2> --}}
                                 <h3>Total Payable Amount for {{ $balanceFortheMonth }} : INR. <span
                                         id="comparable_amount"
                                         style="font-size: 22px;
@@ -108,6 +101,13 @@
                                         color: #be1f24;
                                         margin-bottom: 0;">{{ $outstandingBalance }}</span>
                                 </h3>
+                                @foreach ($userTransactions as $user)
+                                    @if ($loop->first)
+                                        <h3>Total current outstanding : INR. {{ $user['Balance'] }}</h3>
+                                        <p>(As of last usage 24 hours ago as updated from club servers)</p>
+                                    @endif
+                                @endforeach
+                                {{-- <h2>Due for the month of : {{ $balanceFortheMonth }}</h2> --}}
                                 {{-- <h3>Total due till date : INR. {{ $dues_for_this_month }} </h3> --}}
 
                                 {{-- <p>(As of last updated from club admin)</p> --}}

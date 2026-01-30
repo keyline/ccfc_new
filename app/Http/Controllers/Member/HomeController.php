@@ -214,6 +214,7 @@ class HomeController extends Controller
             ]);
         }
 
+        dd($transactions);
 
         // dd($userProfile);
 

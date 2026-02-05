@@ -455,8 +455,8 @@
                 </li>
                 @endcan
                 @can('monthly_dues_management_access')
-                <li
-                    class="nav-item has-treeview {{ request()->is("admin/permissions*") ? "menu-open" : "" }} {{ request()->is("admin/roles*") ? "menu-open" : "" }} {{ request()->is("admin/dues*") ? "menu-open" : "" }} {{ request()->is("admin/user-details*") ? "menu-open" : "" }}">
+                {{-- <li
+                    class="nav-item has-treeview {{ request()->is("admin/dues/upload") ? "menu-open" : "" }} {{ request()->is("admin/dues/list") ? "menu-open" : "" }}">
                     <a class="nav-link nav-dropdown-toggle" href="#">
                         <i class="fa-fw nav-icon fa fa-credit-card">
 
@@ -471,7 +471,7 @@
                         @can('monthly_dues_upload')
                         <li class="nav-item">
                             <a href="{{ route("admin.dues.upload.form") }}"
-                                class="nav-link {{ request()->is("admin/dues") || request()->is("admin/dues/*") ? "active" : "" }}">
+                                class="nav-link {{ request()->is("admin/dues/upload") ? "active" : "" }}">
                                 <i class="fa-fw nav-icon fa fa-upload">
 
                                 </i>
@@ -484,7 +484,7 @@
                         @can('monthly_dues_list')
                         <li class="nav-item">
                             <a href="{{ route("admin.dues.list") }}"
-                                class="nav-link {{ request()->is("admin/dues") || request()->is("admin/dues/*") ? "active" : "" }}">
+                                class="nav-link {{ request()->is("admin/dues/list") ? "active" : "" }}">
                                 <i class="fa-fw nav-icon fa fa-history">
 
                                 </i>
@@ -495,7 +495,40 @@
                         </li>
                         @endcan
                     </ul>
+                </li> --}}
+
+                <li class="nav-item has-treeview {{ request()->is('admin/dues/*') ? 'menu-open' : '' }}">
+                    <a class="nav-link nav-dropdown-toggle" href="#">
+                        <i class="fa-fw nav-icon fa fa-credit-card"></i>
+                        <p>
+                            Monthly Dues Management
+                            <i class="right fa fa-fw fa-angle-left nav-icon"></i>
+                        </p>
+                    </a>
+
+                    <ul class="nav nav-treeview">
+                        @can('monthly_dues_upload')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.dues.upload.form') }}"
+                            class="nav-link {{ request()->is('admin/dues/upload') ? 'active' : '' }}">
+                                <i class="fa-fw nav-icon fa fa-upload"></i>
+                                <p>Upload Dues Data</p>
+                            </a>
+                        </li>
+                        @endcan
+
+                        @can('monthly_dues_list')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.dues.list') }}"
+                            class="nav-link {{ request()->is('admin/dues/list') ? 'active' : '' }}">
+                                <i class="fa-fw nav-icon fa fa-history"></i>
+                                <p>Dues List</p>
+                            </a>
+                        </li>
+                        @endcan
+                    </ul>
                 </li>
+
                 @endcan
                 @if(file_exists(app_path('Http/Controllers/Auth/ChangePasswordController.php')))
                 @can('profile_password_edit')

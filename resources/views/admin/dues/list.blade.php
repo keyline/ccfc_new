@@ -3,12 +3,12 @@
 @section('content')
 <div style="margin-bottom: 10px;" class="row">
         <div class="col-lg-12">
-            {{-- <form action="{{ route('admin.dues.send.sms.all') }}" method="POST" style="display: inline-block;">
+            <form action="{{ route('admin.dues.send.sms.all') }}" method="POST" style="display: inline-block;">
             @csrf
             <input type="hidden" name="month" value="{{ request('month') }}">
             <input type="hidden" name="year" value="{{ request('year') }}">
             <button type="submit" class="btn btn-primary">Schedule SMS for All</button>
-            </form> --}}
+            </form>
             <form action="{{ route('admin.dues.send.email.all') }}" method="POST" style="display: inline-block;">
                 @csrf
                 <input type="hidden" name="month" value="{{ request('month') }}">
@@ -59,10 +59,10 @@
                             <td>{{ $due->paid_amount }}</td>
                             <td>{{ $due->status }}</td>
                             <td>
-                                {{-- <form action="{{ route('admin.dues.send.sms', $due) }}" method="POST" style="display: inline-block;">
+                                <form action="{{ route('admin.dues.send.sms', $due) }}" method="POST" style="display: inline-block;">
                                     @csrf
                                     <button type="submit" class="btn btn-xs btn-primary">Send SMS</button>
-                                </form> --}}
+                                </form>
                                 <form action="{{ route('admin.dues.send.email', $due) }}" method="POST" style="display: inline-block;">
                                     @csrf
                                     <button type="submit" class="btn btn-xs btn-info">Send Email</button>

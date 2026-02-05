@@ -136,7 +136,7 @@
                 </span>
             </div>
             <div class="d-flex gap-2">
-                <form action="{{ route('admin.dues.send.sms.all') }}" method="POST" class="d-inline">
+                {{-- <form action="{{ route('admin.dues.send.sms.all') }}" method="POST" class="d-inline">
                     @csrf
                     <input type="hidden" name="month" value="{{ request('month') }}">
                     <input type="hidden" name="year" value="{{ request('year') }}">
@@ -145,7 +145,7 @@
                     <button type="submit" class="btn btn-outline-primary" onclick="return confirm('Send SMS to all filtered members?')">
                         <i class="fas fa-sms"></i> Schedule SMS for All
                     </button>
-                </form>
+                </form> --}}
                 <form action="{{ route('admin.dues.send.email.all') }}" method="POST" class="d-inline">
                     @csrf
                     <input type="hidden" name="month" value="{{ request('month') }}">
@@ -199,12 +199,12 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <form action="{{ route('admin.dues.send.sms', $due) }}" method="POST" class="d-inline">
+                                    {{-- <form action="{{ route('admin.dues.send.sms', $due) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-primary" title="Send SMS">
                                             <i class="fas fa-sms"></i> SMS
                                         </button>
-                                    </form>
+                                    </form> --}}
                                     <form action="{{ route('admin.dues.send.email', $due) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-info" title="Send Email">

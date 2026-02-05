@@ -89,7 +89,8 @@
                 <a href="{{ asset('dues_files/Template_Due_List.xlsx') }}"
                    target="_blank"
                    class="btn btn-outline-primary btn-sm">
-                    Download Template
+                   <i class="fa fa-file-excel me-1"></i>
+                    Download
                 </a>
             </div>
 

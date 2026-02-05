@@ -3,6 +3,7 @@
 @section('content')
 <div class="container">
     <h2>Upload Dues File</h2>
+    <h3>Template file link: </h3> <span><a href="{{ asset('storage/dues_files/Template_Due_List.xlsx') }}" target="_blank">Template File</a></span>
     <form action="{{ route('admin.dues.upload.handle') }}" method="POST" enctype="multipart/form-data">
         @csrf
         <div class="form-group">

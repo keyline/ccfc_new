@@ -59,6 +59,20 @@
         align-items: center;
         justify-content: space-between;
     }
+    .template-box i {
+        font-size: 32px;
+        color: #4f46e5;
+    }
+    .form-icon {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+    .form-control-icon {
+        padding-left: 38px;
+    }
     .upload-btn {
         border-radius: 999px;
         padding: 10px 32px;
@@ -89,8 +103,7 @@
                 <a href="{{ asset('dues_files/Template_Due_List.xlsx') }}"
                    target="_blank"
                    class="btn btn-outline-primary btn-sm">
-                   <i class="fa fa-file-excel me-1"></i>
-                    Download
+                    <i class="fa fa-file-excel me-1"></i> Download
                 </a>
             </div>
 
@@ -102,10 +115,10 @@
                 <div class="row g-4">
 
                     <!-- Month -->
-                    <div class="col-md-6">
+                    <div class="col-md-6 position-relative">                        
                         <label class="form-label">Month</label>
                         <select name="month"
-                                class="form-select"
+                                class="form-select form-control-icon"
                                 required>
                             @foreach (range(1, 12) as $month)
                                 <option value="{{ $month }}">
@@ -116,11 +129,11 @@
                     </div>
 
                     <!-- Year -->
-                    <div class="col-md-6">
+                    <div class="col-md-6 position-relative">                        
                         <label class="form-label">Year</label>
                         <input type="number"
                                name="year"
-                               class="form-control"
+                               class="form-control form-control-icon"
                                value="{{ date('Y') }}"
                                required>
                     </div>
@@ -141,6 +154,7 @@
                 <div class="text-end mt-5">
                     <button type="submit"
                             class="btn btn-primary upload-btn">
+                        <i class="fa fa-cloud-upload-alt me-1"></i>
                         Upload Dues File
                     </button>
                 </div>

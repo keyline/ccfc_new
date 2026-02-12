@@ -13,8 +13,8 @@ return [
     */
 
     'defaults' => [
-        'guard'     => 'web',
-        'passwords' => 'users',
+        'guard'     => 'members',
+        'passwords' => 'members',
     ],
 
     /*
@@ -35,9 +35,9 @@ return [
     */
 
     'guards' => [
-        'web' => [
+        'members' => [
             'driver'   => 'session',
-            'provider' => 'users',
+            'provider' => 'members',
         ],
 
         'api' => [
@@ -65,7 +65,7 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        'members' => [
             'driver' => 'eloquent',
             'model'  => App\Models\User::class,
         ],
@@ -98,4 +98,28 @@ return [
             'expire'   => 60,
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Token Retention
+    |--------------------------------------------------------------------------
+    |
+    | Here you can specify the number of days to retain used, expired, and
+    | revoked payment tokens. This value is used by the cleanup command.
+    |
+    */
+
+    'payment_token_retention_days' => env('PAYMENT_TOKEN_RETENTION_DAYS', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Logout After Payment
+    |--------------------------------------------------------------------------
+    |
+    | Here you can specify whether to automatically log the user out after
+    | they have completed their payment.
+    |
+    */
+
+    'logout_after_payment' => env('LOGOUT_AFTER_PAYMENT', false),
 ];

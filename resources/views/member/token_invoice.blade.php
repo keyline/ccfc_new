@@ -9,14 +9,13 @@
     <!-- ?php include 'assets/inc/header.php';?> -->
 
     <!-- header -->
-    @include('common.home_header')
+    @include('common.invoice_header')
     <!-- ********|| RIGHT PART START ||******** -->
 
     <div class="col-lg-9 col-md-7 p-0">
         <div class="right-body">
             <!-- ********|| BANNER PART START ||******** -->
             <section class="banner">
-
                 <div class="banner-box">
 
                     <div id="innerpage-banner" class="owl-carousel owl-theme">
@@ -49,7 +48,6 @@
                                     <!-- <div class="member_profileimg">
                                         <img class="img-fluid" src="{{ asset('img/demopic.png') }}" alt="" />
                                     </div> -->
-
                                     @if ($userData->userCodeUserDetails[0]['member_image'] == '')
                                         <div class="member_profileimg">
                                             <img class="img-fluid ifnotpic" src="{{ asset('img/Profile-Icon-01.svg') }}"
@@ -63,8 +61,6 @@
                                                 alt="" />
                                         </div>
                                     @endif
-
-
                                 </div>
                                 <div class="col-lg-8 col-md-7">
                                     <div class="member_profiletop">
@@ -83,7 +79,6 @@
                                     <h3>Total current outstanding : INR. {{ $outstandingBalance }}</h3>
                                     <p>(As of last usage 24 hours ago as updated from club servers)</p>
                                 </div>     -->
-
                             </div>
                         </div>
 
@@ -98,12 +93,24 @@
                                         </ul>
                                     </div>
                                 @endif
+                                <h3>Total payable amount for {{ $balanceFortheMonth }} : INR. <span
+                                        id="comparable_amount"
+                                        style="font-size: 22px;
+                                        font-weight: 600;
+                                        font-family: 'IBM Plex Serif', serif;
+                                        color: #be1f24;
+                                        margin-bottom: 0;">{{ $outstandingBalance }}</span>
+                                </h3>
                                 @foreach ($userTransactions as $user)
                                     @if ($loop->first)
                                         <h3>Total current outstanding : INR. {{ $user['Balance'] }}</h3>
+                                        <p>(As of last usage 24 hours ago as updated from club servers)</p>
                                     @endif
                                 @endforeach
-                                <p>(As of last usage 24 hours ago as updated from club servers)</p>
+                                {{-- <h2>Due for the month of : {{ $balanceFortheMonth }}</h2> --}}
+                                {{-- <h3>Total due till date : INR. {{ $dues_for_this_month }} </h3> --}}
+
+                                {{-- <p>(As of last updated from club admin)</p> --}}
 
                                 <div class="invoice_outstading_payment">
                                     <form action="" method="POST" id="payment-form">
@@ -111,12 +118,14 @@
                                         <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
                                         <input type="hidden" name="razorpay_signature" id="razorpay_signature">
                                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="active_token_id"
+                                            value="{{ session()->get('tokenPayment.active_id') }}">
 
                                         @csrf
                                         <div class="invoice_input_bank">
                                             <div class="invoice_input_feild">
                                                 <input type="text" name="amount"
-                                                    placeholder="Enter amount being paid">
+                                                    placeholder="Enter amount being paid" id="compare_with_amount">
                                             </div>
                                             <div class="invocie_paymentlogo">
                                                 <ul>
@@ -170,6 +179,7 @@
                                             </div>
 
                                             <button type="submit" class="btn btn-primary">Pay Now</button>
+
                                             <pre id="log"></pre>
                                         </div>
                                     </form>
@@ -215,6 +225,7 @@
                                         false
                                     );
 
+
                                     function getCheckedPG(groupName) {
 
                                         var radios = document.getElementsByName(groupName);
@@ -236,9 +247,10 @@
                             </div>
                         </div>
                     </div>
+                </div>
             </section>
 
-            <section class="member_details_section">
+            {{-- <section class="member_details_section">
                 <div class="container">
                     <div class="row">
                         <div class="col-md-12 pl-0">
@@ -326,10 +338,17 @@
 
                     </div>
                 </div>
-            </section>
+            </section> --}}
             <!-- ********|| HISTORY END ||******** -->
+
+
+
+
             @include('common.footer')
+
             <!-- ?php include 'assets/inc/footer.php';?> -->
+
+
             </body>
 
 </html>
@@ -427,6 +446,8 @@
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
 
+        let tokenPayment = document.querySelector('input[name="active_token_id"]');
+
         if (!amountValue || amountValue <= 0) {
             alert("Please enter a valid amount before choosing HDFC Smart gateway.");
             el.checked = false;
@@ -441,7 +462,8 @@
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                 },
                 body: JSON.stringify({
-                    amount: amountValue
+                    amount: amountValue,
+                    token_id: tokenPayment.value
                 })
             })
             .then(response => {
@@ -459,12 +481,72 @@
                     return window.location.href = url;
                 }
                 alert(`Unexpected status: ${data.status}`);
+
             })
             .catch(err => {
                 el.checked = false;
                 console.error(err);
                 alert("Error connecting to hdfcsmartpay.");
             });
+
+
+
     }
 </script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const payableEl = document.getElementById('comparable_amount');
+        const payInput = document.getElementById('compare_with_amount');
+
+        if (!payableEl || !payInput) return;
+
+        // Normalize value ONLY for comparison
+        function normalizeForCompare(value) {
+            value = value.trim();
+
+            // Allow: 158 | 158.00 | 158.000
+            if (!/^\d+(\.\d+)?$/.test(value)) {
+                return null;
+            }
+
+            let parts = value.split('.');
+            let integerPart = parts[0];
+            let decimalPart = parts[1] || '';
+
+            // Normalize to max 3 decimal places (safe upper bound)
+            decimalPart = decimalPart.padEnd(3, '0').slice(0, 3);
+
+            return integerPart + decimalPart;
+        }
+
+        const payableCompareValue = normalizeForCompare(payableEl.innerText);
+
+        payInput.addEventListener('change', function() {
+
+            const enteredCompareValue = normalizeForCompare(this.value);
+
+            if (enteredCompareValue === null) {
+                alert('Please enter a valid amount.');
+                this.value = '';
+                this.focus();
+                return;
+            }
+
+            // BigInt comparison ONLY
+            if (BigInt(enteredCompareValue) < BigInt(payableCompareValue)) {
+                alert('Amount must be equal to or greater than the payable amount.');
+                this.value = '';
+                this.focus();
+            }
+
+        });
+
+    });
+</script>
+
+
+
 <!--block:end:open-paymentpage-->

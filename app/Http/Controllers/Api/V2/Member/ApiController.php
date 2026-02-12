@@ -1792,14 +1792,14 @@ class ApiController extends Controller
                 if ($checkUser) {
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
                         $currentDate = date('Y-m-d');
-                        $getCookingDaySpecialMenus = CookingDaySpecial::where('status', '=', 1)->where('menu_date', '>=', $currentDate)->get();
+                        $getCookingDaySpecialMenus = CookingDaySpecial::select('image_name')->where('status', '=', 1)->where('menu_date', '>=', $currentDate)->get();
                         /* notification read & count */
-                        $notificationIds = Notification::select('id')->where('type', '=', 'dayspecial')->get();
-                        if ($notificationIds) {
-                            foreach ($notificationIds as $notificationId) {
-                                UserNotification::where('user_id', '=', $uId)->where('notification_id', '=', $notificationId->id)->update(['status' => 1]);
-                            }
-                        }
+                        // $notificationIds = Notification::select('id')->where('type', '=', 'dayspecial')->get();
+                        // if ($notificationIds) {
+                        //     foreach ($notificationIds as $notificationId) {
+                        //         UserNotification::where('user_id', '=', $uId)->where('notification_id', '=', $notificationId->id)->update(['status' => 1]);
+                        //     }
+                        // }
                         /* notification read & count */
                         if ($getCookingDaySpecialMenus) {
                             foreach ($getCookingDaySpecialMenus as $getCookingDaySpecialMenu) {

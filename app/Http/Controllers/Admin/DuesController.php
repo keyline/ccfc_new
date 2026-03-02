@@ -60,7 +60,7 @@ class DuesController extends Controller
             $filePath = $file->storeAs('dues_files', $fileName);
 
             //start transaction
-            DB::beginTransaction();
+            // DB::beginTransaction();
 
             // echo '<pre>';print_r([
             //     'batch_id' => $batchId,
@@ -93,7 +93,7 @@ class DuesController extends Controller
 
             DuesUploadBatch::where('id', $batch->id)->update(['status' => 'completed']);
 
-            DB::commit();
+            // DB::commit();
 
             return redirect()->route('admin.dues.list')->with('success', 'File uploaded successfully. Processing will start shortly.');
 

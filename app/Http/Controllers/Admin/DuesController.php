@@ -151,7 +151,7 @@ class DuesController extends Controller
             // ✅ 5. DEBUG Excel Import
         try {
 
-            Excel::import(new \App\Imports\DuesImport($batch), $fullPath);
+            Excel::import(new \App\Imports\DuesImport($batch), $filePath);
 
             dd('✅ Import completed successfully');
 

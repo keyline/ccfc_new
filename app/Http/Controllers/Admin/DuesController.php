@@ -144,7 +144,11 @@ class DuesController extends Controller
                 'status'      => 'processing',
             ]);
 
-            dd(storage_path('app/' . $filePath));
+            $fullPath = storage_path('app/' . $filePath);
+
+if (!file_exists($fullPath)) {
+    dd('File not found: ' . $fullPath);
+}
 
             // ✅ 5. Import Excel Data
             Excel::import(new \App\Imports\DuesImport($batch), storage_path('app/' . $filePath));

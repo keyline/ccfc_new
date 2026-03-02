@@ -62,14 +62,25 @@ class DuesController extends Controller
             $filePath = $file->storeAs('dues_files', $fileName);
 
             //start transaction
-            DB::beginTransaction();
+            // DB::beginTransaction();
+
+            // echo '<pre>';print_r([
+            //     'batch_id' => $batchId,
+            //     'month_no' => $month,
+            //     'month_name' => Carbon::create()->month($month)->format('F'),
+            //     'year' => $year,
+            //     'upload_date' => date('Y-m-d'),
+            //     'uploaded_by' => auth()->id(),
+            //     'file_name' => $fileName,
+            //     'status' => 'processing',
+            // ]);die;
 
             $batch = DuesUploadBatch::create([
                 'batch_id' => $batchId,
                 'month_no' => $month,
                 'month_name' => Carbon::create()->month($month)->format('F'),
                 'year' => $year,
-                'upload_date' => now(),
+                'upload_date' => date('Y-m-d'),
                 'uploaded_by' => auth()->id(),
                 'file_name' => $fileName,
                 'status' => 'processing',
@@ -84,7 +95,7 @@ class DuesController extends Controller
 
             DuesUploadBatch::where('id', $batch->id)->update(['status' => 'completed']);
 
-            DB::commit();
+            // DB::commit();
 
             return redirect()->route('admin.dues.list')->with('success', 'File uploaded successfully. Processing will start shortly.');
 

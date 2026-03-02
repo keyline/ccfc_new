@@ -41,71 +41,129 @@ class DuesController extends Controller
         return view('admin.dues.list', compact('dues'));
     }
 
+    // public function handleUpload(Request $request)
+    // {
+    //     try {
+
+    //         $request->validate([
+    //                     'month' => 'required|integer|between:1,12',
+    //                     'year' => 'required|integer',
+    //                     'dues_file' => 'required|mimes:xlsx,xls,csv'
+    //                 ]);
+
+    //         $month = $request->input('month');
+    //         $year = $request->input('year');
+    //         $file = $request->file('dues_file');
+
+    //         // print_r($file); exit;
+
+    //         $batchId = 'DUE_' . $year . '_' . str_pad($month, 2, '0', STR_PAD_LEFT) . '_' . uniqid();
+    //         $fileName = $batchId . '.' . $file->getClientOriginalExtension();
+    //         $filePath = $file->storeAs('dues_files', $fileName);
+
+    //         // print_r($fileName); exit;
+    //         //start transaction
+    //         // DB::beginTransaction();
+
+    //         echo '<pre>';print_r([
+    //             'batch_id' => $batchId,
+    //             'month_no' => $month,
+    //             'month_name' => Carbon::create()->month($month)->format('F'),
+    //             'year' => $year,
+    //             'upload_date' => date('Y-m-d'),
+    //             'uploaded_by' => auth()->id(),
+    //             'file_name' => $fileName,
+    //             'status' => 'processing',
+    //         ]);die;
+
+    //         $batch = DuesUploadBatch::create([
+    //             'batch_id' => $batchId,
+    //             'month_no' => $month,
+    //             'month_name' => Carbon::create()->month($month)->format('F'),
+    //             'year' => $year,
+    //             'upload_date' => date('Y-m-d'),
+    //             'uploaded_by' => auth()->id(),
+    //             'file_name' => $fileName,
+    //             'status' => 'processing',
+    //         ]);
+
+    //         //ProcessDuesFile::dispatch($batch, $filePath);
+    //         //if you want to use non facade version
+    //         //then app(\Maatwebsite\Excel\Excel::class)->import(new UsersImport(), $file);
+    //         //resolve it via the service container
+
+    //         Excel::import(new \App\Imports\DuesImport($batch), $filePath);
+
+    //         DuesUploadBatch::where('id', $batch->id)->update(['status' => 'completed']);
+
+    //         // DB::commit();
+
+    //         return redirect()->route('admin.dues.list')->with('success', 'File uploaded successfully. Processing will start shortly.');
+
+    //     } catch (\Exception $e) {
+    //         //throw $th;
+    //         DB::rollBack();
+    //         return back()->with('error', 'There was an error uploading the file: ' . $e->getMessage());
+    //     }
+
+    // }
+
     public function handleUpload(Request $request)
     {
+        DB::beginTransaction();
+
         try {
 
+            // ✅ 1. Validate Request
             $request->validate([
-                        'month' => 'required|integer|between:1,12',
-                        'year' => 'required|integer',
-                        'dues_file' => 'required|mimes:xlsx,xls,csv'
-                    ]);
+                'month'     => 'required|integer|between:1,12',
+                'year'      => 'required|integer',
+                'dues_file' => 'required|mimes:xlsx,xls,csv'
+            ]);
 
-            $month = $request->input('month');
-            $year = $request->input('year');
-            $file = $request->file('dues_file');
+            $month = $request->month;
+            $year  = $request->year;
+            $file  = $request->file('dues_file');
 
-            // print_r($file); exit;
-
+            // ✅ 2. Generate Batch ID
             $batchId = 'DUE_' . $year . '_' . str_pad($month, 2, '0', STR_PAD_LEFT) . '_' . uniqid();
+
+            // ✅ 3. Store File
             $fileName = $batchId . '.' . $file->getClientOriginalExtension();
             $filePath = $file->storeAs('dues_files', $fileName);
 
-            // print_r($fileName); exit;
-            //start transaction
-            // DB::beginTransaction();
-
-            echo '<pre>';print_r([
-                'batch_id' => $batchId,
-                'month_no' => $month,
-                'month_name' => Carbon::create()->month($month)->format('F'),
-                'year' => $year,
-                'upload_date' => date('Y-m-d'),
-                'uploaded_by' => auth()->id(),
-                'file_name' => $fileName,
-                'status' => 'processing',
-            ]);die;
-
+            // ✅ 4. Create Batch Record
             $batch = DuesUploadBatch::create([
-                'batch_id' => $batchId,
-                'month_no' => $month,
-                'month_name' => Carbon::create()->month($month)->format('F'),
-                'year' => $year,
-                'upload_date' => date('Y-m-d'),
+                'batch_id'    => $batchId,
+                'month_no'    => $month,
+                'month_name'  => Carbon::create()->month($month)->format('F'),
+                'year'        => $year,
+                'upload_date' => now(),
                 'uploaded_by' => auth()->id(),
-                'file_name' => $fileName,
-                'status' => 'processing',
+                'file_name'   => $fileName,
+                'status'      => 'processing',
             ]);
 
-            //ProcessDuesFile::dispatch($batch, $filePath);
-            //if you want to use non facade version
-            //then app(\Maatwebsite\Excel\Excel::class)->import(new UsersImport(), $file);
-            //resolve it via the service container
+            // ✅ 5. Import Excel Data
+            Excel::import(new \App\Imports\DuesImport($batch), storage_path('app/' . $filePath));
 
-            Excel::import(new \App\Imports\DuesImport($batch), $filePath);
+            // ✅ 6. Update Status to Completed
+            $batch->update([
+                'status' => 'completed'
+            ]);
 
-            DuesUploadBatch::where('id', $batch->id)->update(['status' => 'completed']);
+            DB::commit();
 
-            // DB::commit();
-
-            return redirect()->route('admin.dues.list')->with('success', 'File uploaded successfully. Processing will start shortly.');
+            return redirect()
+                ->route('admin.dues.list')
+                ->with('success', 'File uploaded and processed successfully.');
 
         } catch (\Exception $e) {
-            //throw $th;
-            DB::rollBack();
-            return back()->with('error', 'There was an error uploading the file: ' . $e->getMessage());
-        }
 
+            DB::rollBack();
+
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     public function listDues(Request $request)

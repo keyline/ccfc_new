@@ -55,6 +55,8 @@ class DuesController extends Controller
             $year = $request->input('year');
             $file = $request->file('dues_file');
 
+            print_r($request->all()); exit;
+
             $batchId = 'DUE_' . $year . '_' . str_pad($month, 2, '0', STR_PAD_LEFT) . '_' . uniqid();
             $fileName = $batchId . '.' . $file->getClientOriginalExtension();
             $filePath = $file->storeAs('dues_files', $fileName);

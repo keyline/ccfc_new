@@ -27,12 +27,24 @@ class DuesImport implements ToModel, WithHeadingRow, WithBatchInserts, WithEvent
     */
     public function model(array $row)
     {
-        ++$this->rowCount;
+         dd($row);
+        // ++$this->rowCount;
+        $this->rowCount++;
+        // return new MemberDue([
+        //     'member_code'         => $row['mcode'],
+        //     'upload_batch_id'     => $this->batch->batch_id,
+        //     'outstanding_balance' => $row['total'],
+        //     'paid_amount'         => $row['paid_amount'] ?? 0.00,
+        //     'status'              => 'pending',
+        //     'month_no'            => $this->batch->month_no,
+        //     'month_name'          => $this->batch->month_name,
+        //     'year'                => $this->batch->year,
+        // ]);
         return new MemberDue([
-            'member_code'         => $row['mcode'],
+            'member_code'         => $row['mcode'] ?? null,
             'upload_batch_id'     => $this->batch->batch_id,
-            'outstanding_balance' => $row['total'],
-            'paid_amount'         => $row['paid_amount'] ?? 0.00,
+            'outstanding_balance' => $row['total'] ?? 0,
+            'paid_amount'         => $row['paid_amount'] ?? 0,
             'status'              => 'pending',
             'month_no'            => $this->batch->month_no,
             'month_name'          => $this->batch->month_name,
@@ -41,6 +53,11 @@ class DuesImport implements ToModel, WithHeadingRow, WithBatchInserts, WithEvent
     }
 
     public function batchSize(): int
+    {
+        return 1000;
+    }
+
+    public function chunkSize(): int
     {
         return 1000;
     }

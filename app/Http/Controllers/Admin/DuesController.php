@@ -147,29 +147,29 @@ class DuesController extends Controller
         
 
             // ✅ 5. Import Excel Data
-            // Excel::import(new \App\Imports\DuesImport($batch), storage_path('app/' . $filePath));
+            Excel::import(new \App\Imports\DuesImport($batch), storage_path('app/' . $filePath));
             // ✅ 5. DEBUG Excel Import
-        try {
+        // try {
 
-            Excel::import(new \App\Imports\DuesImport($batch), $filePath);
+        //     Excel::import(new \App\Imports\DuesImport($batch), $filePath);
 
-            dd('✅ Import completed successfully');
+        //     dd('✅ Import completed successfully');
 
-        } catch (\Throwable $e) {
+        // } catch (\Throwable $e) {
 
-            dd('❌ Excel Import Error: ' . $e->getMessage());
-        }
+        //     dd('❌ Excel Import Error: ' . $e->getMessage());
+        // }
 
             // ✅ 6. Update Status to Completed
-            // $batch->update([
-            //     'status' => 'completed'
-            // ]);
+            $batch->update([
+                'status' => 'completed'
+            ]);
 
-            // DB::commit();
+            DB::commit();
 
-            // return redirect()
-            //     ->route('admin.dues.list')
-            //     ->with('success', 'File uploaded and processed successfully.');
+            return redirect()
+                ->route('admin.dues.list')
+                ->with('success', 'File uploaded and processed successfully.');
 
         } catch (\Exception $e) {
 

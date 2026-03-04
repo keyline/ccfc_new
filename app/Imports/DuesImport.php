@@ -27,7 +27,7 @@ class DuesImport implements ToModel, WithHeadingRow, WithBatchInserts, WithEvent
     */
     public function model(array $row)
     {
-         dd($row);
+        //  dd($row);
         // ++$this->rowCount;
         $this->rowCount++;
         // return new MemberDue([

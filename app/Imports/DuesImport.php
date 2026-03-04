@@ -40,17 +40,17 @@ class DuesImport implements ToModel, WithHeadingRow, WithBatchInserts, WithEvent
         //     'month_name'          => $this->batch->month_name,
         //     'year'                => $this->batch->year,
         // ]);
-        $postData = [
-            'member_code'         => $row['mcode'] ?? null,
-            'upload_batch_id'     => $this->batch->batch_id,
-            'outstanding_balance' => $row['total'] ?? 0,
-            'paid_amount'         => $row['paid_amount'] ?? 0,
-            'status'              => 'pending',
-            'month_no'            => $this->batch->month_no,
-            'month_name'          => $this->batch->month_name,
-            'year'                => $this->batch->year,
-        ];
-        dd($postData);
+        // $postData = [
+        //     'member_code'         => $row['mcode'] ?? null,
+        //     'upload_batch_id'     => $this->batch->batch_id,
+        //     'outstanding_balance' => $row['total'] ?? 0,
+        //     'paid_amount'         => $row['paid_amount'] ?? 0,
+        //     'status'              => 'pending',
+        //     'month_no'            => $this->batch->month_no,
+        //     'month_name'          => $this->batch->month_name,
+        //     'year'                => $this->batch->year,
+        // ];
+        // dd($postData);
         return new MemberDue([
             'member_code'         => $row['mcode'] ?? null,
             'upload_batch_id'     => $this->batch->batch_id,

@@ -27,7 +27,7 @@ class DuesImport implements ToModel, WithHeadingRow, WithBatchInserts, WithEvent
     */
     public function model(array $row)
     {
-        //  dd($row);
+         dd($row);
         // ++$this->rowCount;
         $this->rowCount++;
         // return new MemberDue([
@@ -55,6 +55,7 @@ class DuesImport implements ToModel, WithHeadingRow, WithBatchInserts, WithEvent
             'member_code'         => $row['mcode'] ?? null,
             'upload_batch_id'     => $this->batch->batch_id,
             'outstanding_balance' => $row['total'] ?? 0,
+            'dues_for_this_month' => $row['total'] ?? 0,
             'paid_amount'         => $row['paid_amount'] ?? 0,
             'status'              => 'pending',
             'month_no'            => $this->batch->month_no,

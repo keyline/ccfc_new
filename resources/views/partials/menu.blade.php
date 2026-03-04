@@ -527,6 +527,7 @@
                         </li>
                         @endcan
                     </ul>
+                    
                 </li>
 
                 @endcan

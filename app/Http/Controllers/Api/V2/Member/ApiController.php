@@ -2974,6 +2974,7 @@ class ApiController extends Controller
                                             // 'popup_validity_time'   => $noti->popup_validity_time,
                                             // 'popup_validity'        => $noti->popup_validity_date.' '.$noti->popup_validity_time,
                                             'created_at'            => Helper::time_ago($noti->created_at),
+                                            'validity'              => $validity,
                                         ];
                                     }
                                 }

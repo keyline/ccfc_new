@@ -367,7 +367,7 @@ class DuesController extends Controller
 
             //DB::commit();
 
-            return back()->with('success', 'Email scheduled for member ' . $due->member_code);
+            return back()->with('message', 'Email scheduled for member ' . $due->member_code);
 
         } catch (\Exception $ex) {
             //DB::rollBack();

@@ -61,13 +61,13 @@
         <div class="content-wrapper" style="min-height: 917px;">
             <!-- Main content -->
             <section class="content" style="padding-top: 20px">
-                @if(session('message'))
+                {{-- @if(session('message')) --}}
                 <div class="row mb-2">
                     <div class="col-lg-12">
                         <div class="alert alert-success autohide" role="alert">{{ session('message') }}</div>
                     </div>
                 </div>
-                @endif
+                {{-- @endif --}}
                 @if($errors->count() > 0)
                 <div class="alert alert-danger">
                     <ul class="list-unstyled">

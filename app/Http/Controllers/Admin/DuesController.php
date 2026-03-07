@@ -367,7 +367,7 @@ class DuesController extends Controller
 
             //DB::commit();
 
-            return back()->with('success', 'Email scheduled for member ' . $due->member_code);
+            return back()->with('message', 'Email scheduled for member ' . $due->member_code);
 
         } catch (\Exception $ex) {
             //DB::rollBack();
@@ -524,8 +524,33 @@ class DuesController extends Controller
             foreach ($dues as $due) {
                 try {
                     $tokenData = $this->createPaymentToken($due);
-                    SendEmail::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+                    //SendEmail::dispatch($tokenData['model'], $tokenData['plainTextToken']);
+                    $body = "";
+                    $member = \App\Models\User::where('user_code', $tokenData['model']->member_code)->first();
+
+                    if (!$member) {
+                        Log::error("Member not found for member code: {$tokenData['model']->member_code}");
+                        throw new \Exception("Member not found for member code: {$tokenData['model']->member_code}");
+                        $errorCount++;
+                    }
+
+                    $body .= 'Dear Member, your due payment link is: ' . url('/payment/' . $tokenData['plainTextToken']);
+
+                    Mail::to($member->email)->send(new DuesPaymentMail($tokenData['model'], $tokenData['plainTextToken']));
+
+                    // Log the notification
+                    NotificationLog::create([
+                        'token_id' => $tokenData['model']->id,
+                        'member_code' => $tokenData['model']->member_code,
+                        'notification_type' => 'email',
+                        'recipient' => $member->email,
+                        'subject' => 'Your monthly due payment link',
+                        'message_body' => $body,
+                        'status' => 'sent',
+                    ]);
+
                     $successCount++;
+
                 } catch (\Exception $e) {
                     Log::error("Failed to schedule email for member {$due->member_code}: " . $e->getMessage());
                     $errorCount++;
@@ -537,7 +562,8 @@ class DuesController extends Controller
                 $message .= " {$errorCount} failed.";
             }
 
-            return back()->with('success', $message);
+
+            return back()->with('message', $message);
 
         } catch (\Exception $e) {
             Log::error('Bulk email send failed: ' . $e->getMessage());

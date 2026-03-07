@@ -482,7 +482,6 @@ class DuesController extends Controller
 
     public function sendEmailToAll(Request $request)
     {
-        dd('here');
 
         try {
             // Build the same query as listDues to get filtered results
@@ -538,6 +537,8 @@ class DuesController extends Controller
                 $message .= " {$errorCount} failed.";
             }
 
+            dd('message');
+            
             return back()->with('success', $message);
 
         } catch (\Exception $e) {

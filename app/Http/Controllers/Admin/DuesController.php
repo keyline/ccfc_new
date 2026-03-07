@@ -482,6 +482,7 @@ class DuesController extends Controller
 
     public function sendEmailToAll(Request $request)
     {
+        dd('here');
 
         try {
             // Build the same query as listDues to get filtered results

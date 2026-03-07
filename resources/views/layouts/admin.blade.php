@@ -63,7 +63,7 @@
             <section class="content" style="padding-top: 20px">
                 <div class="row mb-2">
                     <div class="col-lg-12">
-                        <div class="alert alert-success autohide" role="alert">Alert message to show what is happening</div>
+                        <div class="alert alert-success autoHideAlert" role="alert">Alert message to show what is happening</div>
                     </div>
                 </div>
                 @if(session('message'))
@@ -532,6 +532,14 @@
     });
     //# sourceMappingURL=adminlte.min.js.map
     </script>
+
+    <script>
+    setTimeout(function() {
+        $('.autoHideAlert').fadeOut('slow');
+    }, 3000); // 3000ms = 3 seconds
+    </script>
+
+    
     @yield('scripts')
 </body>
 

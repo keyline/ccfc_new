@@ -537,9 +537,9 @@ class DuesController extends Controller
                 $message .= " {$errorCount} failed.";
             }
 
-            dd('message');
-            
-            return back()->with('success', $message);
+            // dd('message');
+
+            return back()->with('message', $message);
 
         } catch (\Exception $e) {
             Log::error('Bulk email send failed: ' . $e->getMessage());

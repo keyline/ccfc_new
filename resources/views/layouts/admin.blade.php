@@ -62,9 +62,9 @@
             <!-- Main content -->
             <section class="content" style="padding-top: 20px">
                 @if(session('message'))
-                <div class="row mb-2">
+                <div class="row mb-2 autoHideAlert">
                     <div class="col-lg-12">
-                        <div class="alert alert-success autoHideAlert" role="alert">{{ session('message') }}</div>
+                        <div class="alert alert-success" role="alert">{{ session('message') }}</div>
                     </div>
                 </div>
                 @endif

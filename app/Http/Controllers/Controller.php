@@ -109,6 +109,8 @@ class Controller extends BaseController
 
         curl_close($ch);
 
+        print_r($response);die;
+
         return $response;
     }
     public function sendCommonPushNotification($token, $title, $body, $type = '', $image = '')

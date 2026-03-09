@@ -3363,13 +3363,13 @@ class ApiController extends Controller
                 if ($checkUser) {
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
                         /* push notification */
-                        $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '=', 'fio3hOakTXmilrUOIDxQxv:APA91bHbmk5QEFi6RAXPN3p_sEcStZkjG3LN0GzR5xWQzEQfw9_hV6vdcihUruXSWwYAezy3TdJGVtl4kMRVVqw1DU7LTNSgMdnIILiMm6h7BAPSMnb9gXA')->get();
+                        $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '=', 'cjwWqtek8E1yviXPwOiBpE:APA91bGwKYoZeEHxbJ4t7wJNjGuHodq0MYanQozBNLrtRheKcsHxT5b3lSXLjG7O2phdnRImPOpLP1Jqlr1tRYFzL4sAZ5xUp_2G9-iSDT_TyN3xoSWye8Y')->get();
                         // Helper::pr($getUserFCMTokens);
                         $tokens             = [];
                         if ($getUserFCMTokens) {
                             foreach ($getUserFCMTokens as $getUserFCMToken) {
                                 $response = $this->sendCommonPushNotification($getUserFCMToken->fcm_token, $title, $body, $type);
-                                Helper::pr($response);
+                                // Helper::pr($response);
                             }
                         }
                         /* push notification */

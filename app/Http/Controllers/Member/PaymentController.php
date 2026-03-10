@@ -514,7 +514,7 @@ class PaymentController extends Controller
         header('Content-Type: application/json');
         $orderId = uniqid();
         $amount = $input['amount'];
-        $tokenId = $input['token_id'];
+        $tokenId = $input['token_id'] ?? null;
 
         try {
             if (!$user) {

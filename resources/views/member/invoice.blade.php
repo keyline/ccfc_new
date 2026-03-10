@@ -434,7 +434,7 @@
             return;
         }
 
-        fetch("{{ route('payment.hdfcsmartpg') }}", {
+        fetch("{{ route('member.hdfcsmartpg') }}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json;charset=UTF-8",

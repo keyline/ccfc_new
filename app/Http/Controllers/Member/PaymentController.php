@@ -654,9 +654,19 @@ class PaymentController extends Controller
             // /* -----------------------------
             // | 4. Initialize Juspay
             // ------------------------------*/
+            // JuspayEnvironment::init()
+            //     ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
+            //     //->withBaseUrl("https://smartgateway.hdfcbank.com")
+            //     ->withMerchantId($config["MERCHANT_ID"])
+            //     ->withJuspayJWT(
+            //         new JuspayJWT(
+            //             $config["KEY_UUID"],
+            //             $publicKey,
+            //             $privateKey
+            //         )
+            //     );
             JuspayEnvironment::init()
                 ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
-                //->withBaseUrl("https://smartgateway.hdfcbank.com")
                 ->withMerchantId($config["MERCHANT_ID"])
                 ->withJuspayJWT(
                     new JuspayJWT(
@@ -682,7 +692,7 @@ class PaymentController extends Controller
                 'amount'                  => $amount,
                 'currency'                => 'INR',
                 'order_id'                => $orderId,
-                'merchant_id'             => $config["MERCHANT_ID"],
+                // 'merchant_id'             => $config["MERCHANT_ID"],
                 'customer_id'             => "testing-customer-one",
                 'udf1'                    => $user->user_code,
                 'payment_page_client_id'  => $config["PAYMENT_PAGE_CLIENT_ID"],

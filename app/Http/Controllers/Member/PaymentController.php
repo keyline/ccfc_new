@@ -770,7 +770,7 @@ class PaymentController extends Controller
             $user   = User::where('id', $userId)->first();
 
             // return response()->json($response);
-             return response()->json(['user' => $user]);
+             return response()->json(['user' => $user, 'status' => 'NEW']);
 
         }catch (\Exception $e) {
 

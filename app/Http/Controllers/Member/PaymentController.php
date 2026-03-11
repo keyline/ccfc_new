@@ -703,6 +703,8 @@ class PaymentController extends Controller
                 return response()->json([
                     'message' => 'Session status: '.$session->status
                 ], 500);
+            }else{
+                return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => "just_demo"]);
             }
 
 

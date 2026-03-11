@@ -188,7 +188,7 @@ class Controller extends BaseController
 
             // Send FCM message
             $response1 = $this->sendFCMMessage($accessToken, $projectId, $message);
-            $response2 = $this->sendFCMMessage($accessToken, $projectId, $iosPayload);
+            $response2 = $this->sendFCMMessage($accessToken, $projectId, $message);
             Helper::pr($response2);
             // return true;
             // return "Response: " . $response1;

@@ -610,168 +610,168 @@ class PaymentController extends Controller
             /* -----------------------------
             | 1. Get Logged User
             ------------------------------*/
-            // $userId = session('LoggedMember');
-            // $user   = User::where('id', $userId)->first();
+            $userId = session('LoggedMember');
+            $user   = User::where('id', $userId)->first();
 
-            // if (!$user) {
-            //     return response()->json([
-            //         'message' => 'User not logged in'
-            //     ], 401);
-            // }
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not logged in'
+                ], 401);
+            }
 
 
             /* -----------------------------
             | 2. Read Juspay Config
             ------------------------------*/
-            // $configPath = storage_path('app/juspay/config.json');
+            $configPath = storage_path('app/juspay/config.json');
 
-            // if (!file_exists($configPath)) {
-            //     return response()->json([
-            //         'message' => 'Juspay configuration not found'
-            //     ], 500);
-            // }
+            if (!file_exists($configPath)) {
+                return response()->json([
+                    'message' => 'Juspay configuration not found'
+                ], 500);
+            }
 
-            // $config = json_decode(file_get_contents($configPath), true);
-            // new ServerEnv($config);
+            $config = json_decode(file_get_contents($configPath), true);
+            new ServerEnv($config);
 
 
             // /* -----------------------------
             // | 3. Read Keys
             // ------------------------------*/
-            // $privateKey = $config["PRIVATE_KEY"] 
-            //     ?? file_get_contents(storage_path($config["PRIVATE_KEY_PATH"]));
+            $privateKey = $config["PRIVATE_KEY"] 
+                ?? file_get_contents(storage_path($config["PRIVATE_KEY_PATH"]));
 
-            // $publicKey = $config["PUBLIC_KEY"] 
-            //     ?? file_get_contents(storage_path($config["PUBLIC_KEY_PATH"]));
+            $publicKey = $config["PUBLIC_KEY"] 
+                ?? file_get_contents(storage_path($config["PUBLIC_KEY_PATH"]));
 
-            // if (!$privateKey || !$publicKey) {
-            //     return response()->json([
-            //         'message' => 'Key files missing'
-            //     ], 500);
-            // }
+            if (!$privateKey || !$publicKey) {
+                return response()->json([
+                    'message' => 'Key files missing'
+                ], 500);
+            }
 
 
             // /* -----------------------------
             // | 4. Initialize Juspay
             // ------------------------------*/
-            // JuspayEnvironment::init()
-            //     ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
-            //     //->withBaseUrl("https://smartgateway.hdfcbank.com")
-            //     ->withMerchantId($config["MERCHANT_ID"])
-            //     ->withJuspayJWT(
-            //         new JuspayJWT(
-            //             $config["KEY_UUID"],
-            //             $publicKey,
-            //             $privateKey
-            //         )
-            //     );
+            JuspayEnvironment::init()
+                ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
+                //->withBaseUrl("https://smartgateway.hdfcbank.com")
+                ->withMerchantId($config["MERCHANT_ID"])
+                ->withJuspayJWT(
+                    new JuspayJWT(
+                        $config["KEY_UUID"],
+                        $publicKey,
+                        $privateKey
+                    )
+                );
 
 
             // /* -----------------------------
             // | 5. Read Request Data
             // ------------------------------*/
-            // $amount  = $request->amount;
-            // $tokenId = $request->token_id ?? null;
-            // $orderId = uniqid();
+            $amount  = $request->amount;
+            $tokenId = $request->token_id ?? null;
+            $orderId = uniqid();
 
 
             // /* -----------------------------
             // | 6. Prepare Juspay Parameters
             // ------------------------------*/
-            // $params = [
-            //     'amount'                  => $amount,
-            //     'currency'                => 'INR',
-            //     'order_id'                => $orderId,
-            //     'merchant_id'             => $config["MERCHANT_ID"],
-            //     'customer_id'             => "testing-customer-one",
-            //     'udf1'                    => $user->user_code,
-            //     'payment_page_client_id'  => $config["PAYMENT_PAGE_CLIENT_ID"],
-            //     'action'                  => 'paymentPage',
-            //     'return_url'              => route('member.hdfcsmartpaycallback')
-            // ];
+            $params = [
+                'amount'                  => $amount,
+                'currency'                => 'INR',
+                'order_id'                => $orderId,
+                'merchant_id'             => $config["MERCHANT_ID"],
+                'customer_id'             => "testing-customer-one",
+                'udf1'                    => $user->user_code,
+                'payment_page_client_id'  => $config["PAYMENT_PAGE_CLIENT_ID"],
+                'action'                  => 'paymentPage',
+                'return_url'              => route('member.hdfcsmartpaycallback')
+            ];
 
-            // $requestOption = new RequestOptions();
-            // $requestOption->withCustomerId("testing-customer-one");
+            $requestOption = new RequestOptions();
+            $requestOption->withCustomerId("testing-customer-one");
 
 
             // /* -----------------------------
             // | 7. Create Juspay Session
             // ------------------------------*/
-            // $session = OrderSession::create($params, $requestOption);
+            $session = OrderSession::create($params, $requestOption);
 
-            // if ($session->status !== "NEW") {
-            //     return response()->json([
-            //         'message' => 'Session status: '.$session->status
-            //     ], 500);
-            // }
+            if ($session->status !== "NEW") {
+                return response()->json([
+                    'message' => 'Session status: '.$session->status
+                ], 500);
+            }
 
 
             // /* -----------------------------
             // | 8. Store Transaction
             // ------------------------------*/
-            // $paymentId = DB::table('payu_transactions')->insertGetId([
-            //     'paid_for_id'   => $user->id,
-            //     'paid_for_type' => 'App\Models\User',
-            //     'transaction_id'=> $session->orderId,
-            //     'gateway'       => 'HDFC SMART Pay',
-            //     'body'          => serialize($session->sdkPayload),
-            //     'destination'   => route('member.hdfcsmartpaycallback'),
-            //     'hash'          => '',
-            //     'response'      => '',
-            //     'status'        => 'pending',
-            //     'created_at'    => Carbon::now('Asia/Kolkata'),
-            //     'updated_at'    => Carbon::now('Asia/Kolkata')
-            // ]);
+            $paymentId = DB::table('payu_transactions')->insertGetId([
+                'paid_for_id'   => $user->id,
+                'paid_for_type' => 'App\Models\User',
+                'transaction_id'=> $session->orderId,
+                'gateway'       => 'HDFC SMART Pay',
+                'body'          => serialize($session->sdkPayload),
+                'destination'   => route('member.hdfcsmartpaycallback'),
+                'hash'          => '',
+                'response'      => '',
+                'status'        => 'pending',
+                'created_at'    => Carbon::now('Asia/Kolkata'),
+                'updated_at'    => Carbon::now('Asia/Kolkata')
+            ]);
 
 
             // /* -----------------------------
             // | 9. Store Session
             // ------------------------------*/
-            // Session::put('hdfcsmartpayTransactionid', $session->orderId);
-            // Session::put('hdfcsmartpaycustomerid', $user->id);
+            Session::put('hdfcsmartpayTransactionid', $session->orderId);
+            Session::put('hdfcsmartpaycustomerid', $user->id);
 
 
             // /* -----------------------------
             // | 10. Token Payment Handling
             // ------------------------------*/
-            // if ($tokenId) {
+            if ($tokenId) {
 
-            //     $paymentToken = \App\Models\PaymentToken::find($tokenId);
+                $paymentToken = \App\Models\PaymentToken::find($tokenId);
 
-            //     if ($paymentToken) {
-            //         $paymentToken->markAsUsed(request()->ip(), request()->userAgent());
-            //     }
+                if ($paymentToken) {
+                    $paymentToken->markAsUsed(request()->ip(), request()->userAgent());
+                }
 
-            //     \App\Models\TokenPayment::create([
-            //         'payment_id'     => $paymentId,
-            //         'token_id'       => $paymentToken->id,
-            //         'member_code'    => $paymentToken->member_code,
-            //         'member_due_id'  => $paymentToken->member_due_id,
-            //         'payment_method' => 'HDFC SMART Pay',
-            //         'transaction_id' => $session->orderId,
-            //         'amount'         => $amount,
-            //         'payment_status' => 'pending',
-            //         'payment_date'   => Carbon::now('Asia/Kolkata')
-            //     ]);
-            // }
+                \App\Models\TokenPayment::create([
+                    'payment_id'     => $paymentId,
+                    'token_id'       => $paymentToken->id,
+                    'member_code'    => $paymentToken->member_code,
+                    'member_due_id'  => $paymentToken->member_due_id,
+                    'payment_method' => 'HDFC SMART Pay',
+                    'transaction_id' => $session->orderId,
+                    'amount'         => $amount,
+                    'payment_status' => 'pending',
+                    'payment_date'   => Carbon::now('Asia/Kolkata')
+                ]);
+            }
 
 
             // /* -----------------------------
             // | 11. Return Response
             // ------------------------------*/
-            // $response = [
-            //     "status"       => $session->status,
-            //     "orderId"      => $session->orderId,
-            //     "paymentLinks" => $session->paymentLinks
-            // ];
+            $response = [
+                "status"       => $session->status,
+                "orderId"      => $session->orderId,
+                "paymentLinks" => $session->paymentLinks
+            ];
 
             // \Log::info("Juspay Response", $response);
-            $userId = session('LoggedMember');
-            $user   = User::where('id', $userId)->first();
-            $paymentLink  = "https://smartgatewayuat.hdfcbank.com/smartgateway/pgui/jsp/paymentrequest.jsp?orderId=12345";
+            // $userId = session('LoggedMember');
+            // $user   = User::where('id', $userId)->first();
+            // $paymentLink  = "https://smartgatewayuat.hdfcbank.com/smartgateway/pgui/jsp/paymentrequest.jsp?orderId=12345";
 
-            // return response()->json($response);
-             return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => ['web' => $paymentLink]]);
+            return response()->json($response);
+            //  return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => ['web' => $paymentLink]]);
 
         }catch (\Exception $e) {
 

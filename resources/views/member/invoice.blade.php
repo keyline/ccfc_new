@@ -445,6 +445,8 @@
                 })
             })
             .then(response => {
+                    const data = await response.json();
+                   console.log("SERVER RESPONSE:", data);
                 if (!response.ok) {
                     return response.json().then(data => {
                         throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
@@ -461,19 +463,10 @@
                 }
                 alert(`Unexpected status: ${data.status}`);
             })
-            // .catch(err => {
-            //     el.checked = false;
-            //     console.error(err);
-            //     alert("Error connecting to hdfcsmartpay.");
-            // });
-
             .catch(err => {
-
-                console.error("FETCH ERROR:", err);
-
-                alert(err.message);
-
                 el.checked = false;
+                console.error(err);
+                alert("Error connecting to hdfcsmartpay.");
             });
     }
 </script>

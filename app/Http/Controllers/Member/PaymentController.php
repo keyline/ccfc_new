@@ -666,7 +666,8 @@ class PaymentController extends Controller
             //         )
             //     );
             JuspayEnvironment::init()
-                ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
+                // ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
+                ->withBaseUrl("https://smartgateway.hdfcbank.com")
                 ->withMerchantId($config["MERCHANT_ID"])
                 ->withJuspayJWT(
                     new JuspayJWT(

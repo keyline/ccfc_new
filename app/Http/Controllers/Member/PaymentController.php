@@ -697,15 +697,32 @@ class PaymentController extends Controller
             // /* -----------------------------
             // | 7. Create Juspay Session
             // ------------------------------*/
-            $session = OrderSession::create($params, $requestOption);
+            try {
 
-            if ($session->status !== "NEW") {
-                return response()->json([
-                    'message' => 'Session status: '.$session->status
-                ], 500);
-            }
+                    $session = OrderSession::create($params, $requestOption);
+
+                    return response()->json([
+                        "success" => true,
+                        "session_object" => $session
+                    ]);
+
+                    } catch (\Exception $e) {
+
+                        return response()->json([
+                            "success" => false,
+                            "error_message" => $e->getMessage(),
+                            "line" => $e->getLine(),
+                            "file" => $e->getFile()
+                        ]);
+                    }
+            // $session = OrderSession::create($params, $requestOption);
+
+            // if ($session->status !== "NEW") {
+            //     return response()->json([
+            //         'message' => 'Session status: '.$session->status
+            //     ], 500);
+            // }
         //    return response()->json(['status' => $session->status, "orderId" => $session->orderId, 'paymentLinks' =>  $session->paymentLinks]);
-           return response()->json(['session' => $session]);
 
             // /* -----------------------------
             // | 8. Store Transaction

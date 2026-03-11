@@ -648,8 +648,6 @@ class PaymentController extends Controller
                 return response()->json([
                     'message' => 'Key files missing'
                 ], 500);
-            }else{
-                return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => 'private_key']);
             }
 
 

@@ -444,9 +444,7 @@
                     amount: amountValue
                 })
             })
-            .then(async response => {
-                    const data = await response.json();
-                    console.log("SERVER RESPONSE:", data);
+            .then(response => {
                 if (!response.ok) {
                     return response.json().then(data => {
                         throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);

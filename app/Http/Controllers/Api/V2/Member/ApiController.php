@@ -3366,7 +3366,6 @@ class ApiController extends Controller
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
                         /* push notification */
                         $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '=', $fcm_token)->get();
-                        // Helper::pr($getUserFCMTokens);
                         $tokens             = [];
                         if ($getUserFCMTokens) {
                             foreach ($getUserFCMTokens as $getUserFCMToken) {

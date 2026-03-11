@@ -768,9 +768,10 @@ class PaymentController extends Controller
             // \Log::info("Juspay Response", $response);
             $userId = session('LoggedMember');
             $user   = User::where('id', $userId)->first();
+            $paymentLink  = "https://smartgatewayuat.hdfcbank.com/smartgateway/pgui/jsp/paymentrequest.jsp?orderId=12345";
 
             // return response()->json($response);
-             return response()->json(['user' => $user, 'status' => 'NEW']);
+             return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLink' => $paymentLink]);
 
         }catch (\Exception $e) {
 

@@ -175,7 +175,7 @@ class Controller extends BaseController
                     ]
                 ]
             ];
-            Helper::pr($message);
+            
             $response = $this->sendFCMMessage($accessToken, $projectId, $message);
             Helper::pr($response);
             return $response;

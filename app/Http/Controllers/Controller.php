@@ -116,7 +116,7 @@ class Controller extends BaseController
     }
     public function sendCommonPushNotification($token, $title, $body, $type = '', $image = '')
     {
-        try {
+        // try {
 
             $jsonCredentials = getenv('FIREBASE_CREDENTIALS');
 
@@ -180,10 +180,10 @@ class Controller extends BaseController
             Helper::pr($response);
             return $response;
 
-        } catch (Exception $e) {
+        // } catch (Exception $e) {
 
-            return false;
-        }
+        //     return false;
+        // }
     }
     // send sms
     public function sendSMS($mobileNo, $messageBody)

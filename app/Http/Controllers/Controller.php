@@ -188,7 +188,8 @@ class Controller extends BaseController
             // Send FCM message
             $response1 = $this->sendFCMMessage($accessToken, $projectId, $message);
             $response2 = $this->sendFCMMessage($accessToken, $projectId, $iosPayload);
-            return true;
+            Helper::pr($response2);
+            // return true;
             // return "Response: " . $response1;
             // return redirect()->to('admin/create/settinglist')->with('status', "Response: " . $response);
         } catch (Exception $e) {

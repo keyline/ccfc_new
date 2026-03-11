@@ -693,7 +693,7 @@ class PaymentController extends Controller
             $requestOption = new RequestOptions();
             $requestOption->withCustomerId("testing-customer-one");
 
-             return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => "before_session"]);
+             
             // /* -----------------------------
             // | 7. Create Juspay Session
             // ------------------------------*/
@@ -703,8 +703,6 @@ class PaymentController extends Controller
                 return response()->json([
                     'message' => 'Session status: '.$session->status
                 ], 500);
-            }else{
-                return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => "session"]);
             }
 
 

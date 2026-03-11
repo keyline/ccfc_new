@@ -102,6 +102,7 @@ class Controller extends BaseController
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($message));
 
         $response = curl_exec($ch);
+        Helper::pr($response);
 
         if ($response === false) {
             throw new Exception(curl_error($ch));

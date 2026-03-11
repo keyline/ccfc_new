@@ -118,7 +118,7 @@ class Controller extends BaseController
     {
         // try {
 
-            $jsonCredentials = getenv('FIREBASE_CREDENTIALS');
+            $jsonCredentials = config('services.firebase.credentials');
 
             if (!$jsonCredentials) {
                 throw new Exception("Firebase credentials not found.");

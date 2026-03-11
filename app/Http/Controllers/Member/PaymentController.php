@@ -769,14 +769,13 @@ class PaymentController extends Controller
 
             return response()->json($response);
 
-        } catch (\Exception $e) {
-
-            \Log::error("Juspay Error", [
-                'message' => $e->getMessage()
-            ]);
+        }catch (\Exception $e) {
 
             return response()->json([
-                'message' => $e->getMessage()
+                'error' => true,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
             ], 500);
         }
     }

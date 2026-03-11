@@ -3371,7 +3371,7 @@ class ApiController extends Controller
                         if ($getUserFCMTokens) {
                             foreach ($getUserFCMTokens as $getUserFCMToken) {
                                 $response = $this->sendCommonPushNotification($getUserFCMToken->fcm_token, $title, $body, $type, $image_link);
-                                // Helper::pr($response);
+                                Helper::pr($response);
                             }
                         }
                         /* push notification */

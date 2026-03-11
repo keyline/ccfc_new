@@ -433,7 +433,7 @@
             //payNowButton.disabled =false;
             return;
         }
-        
+
         fetch("{{ route('member.hdfcsmartpg') }}", {
                 method: "POST",
                 headers: {
@@ -461,10 +461,23 @@
                 }
                 alert(`Unexpected status: ${data.status}`);
             })
-            .catch(err => {
-                el.checked = false;
-                console.error(err);
-                alert("Error connecting to hdfcsmartpay.");
+            .catch(async err => {
+            // .catch(err => {
+            //     el.checked = false;
+            //     console.error(err);
+            //     alert("Error connecting to hdfcsmartpay.");
+            // });
+
+            let errorMsg = "Unknown error";
+
+            try {
+                const res = await err.response?.json();
+                errorMsg = res?.message || errorMsg;
+            } catch(e){}
+
+            console.error(err);
+            alert(errorMsg);
+
             });
     }
 </script>

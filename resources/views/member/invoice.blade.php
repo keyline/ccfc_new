@@ -461,23 +461,19 @@
                 }
                 alert(`Unexpected status: ${data.status}`);
             })
-            .catch(async err => {
             // .catch(err => {
             //     el.checked = false;
             //     console.error(err);
             //     alert("Error connecting to hdfcsmartpay.");
             // });
 
-            let errorMsg = "Unknown error";
+            .catch(err => {
 
-            try {
-                const res = await err.response?.json();
-                errorMsg = res?.message || errorMsg;
-            } catch(e){}
+                console.error("FETCH ERROR:", err);
 
-            console.error(err);
-            alert(errorMsg);
+                alert(err.message);
 
+                el.checked = false;
             });
     }
 </script>

@@ -233,9 +233,10 @@ class EventsController extends Controller
         $event->update();
 
         /* push notification */
+            $title              = $request->input('event_name');
+            $body               = (($request->input('event_details1') != '')?$request->input('event_details1'):$request->input('event_name'));
+            
             if($event_image != ''){
-                $title              = $request->input('event_name');
-                $body               = '';
                 // $body               = $request->input('event_details1');
                 $ext                = pathinfo($event_image, PATHINFO_EXTENSION);
                 if($ext!= 'pdf' && $ext!= 'PDF'){

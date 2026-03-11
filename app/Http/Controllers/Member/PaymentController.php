@@ -771,7 +771,7 @@ class PaymentController extends Controller
             $paymentLink  = "https://smartgatewayuat.hdfcbank.com/smartgateway/pgui/jsp/paymentrequest.jsp?orderId=12345";
 
             // return response()->json($response);
-             return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLink' => ['web' => $paymentLink]]);
+             return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => ['web' => $paymentLink]]);
 
         }catch (\Exception $e) {
 

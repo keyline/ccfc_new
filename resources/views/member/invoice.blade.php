@@ -450,6 +450,7 @@
                         throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
                     });
                 }
+                console.log(data);
                 return response.json();
 
             })

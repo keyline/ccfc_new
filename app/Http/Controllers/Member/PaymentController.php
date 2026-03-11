@@ -704,7 +704,7 @@ class PaymentController extends Controller
                     'message' => 'Session status: '.$session->status
                 ], 500);
             }
-           return response()->json(['status' => $session->status, "orderId" => "session->orderId", 'paymentLinks' =>  $session->paymentLinks]);
+           return response()->json(['status' => $session->status, "orderId" => $session->orderId, 'paymentLinks' =>  "session->paymentLinks"]);
 
             // /* -----------------------------
             // | 8. Store Transaction

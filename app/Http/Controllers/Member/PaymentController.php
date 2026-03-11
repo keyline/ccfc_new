@@ -629,6 +629,8 @@ class PaymentController extends Controller
                 return response()->json([
                     'message' => 'Juspay configuration not found'
                 ], 500);
+            }else{
+                return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => 'storage_path']);
             }
 
             $config = json_decode(file_get_contents($configPath), true);
@@ -648,6 +650,8 @@ class PaymentController extends Controller
                 return response()->json([
                     'message' => 'Key files missing'
                 ], 500);
+            }else{
+                return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => 'private_key']);
             }
 
 
@@ -704,7 +708,7 @@ class PaymentController extends Controller
                     'message' => 'Session status: '.$session->status
                 ], 500);
             }else{
-                return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => "just_demo"]);
+                return response()->json(['user' => $user, 'status' => 'NEW', 'paymentLinks' => "session"]);
             }
 
 

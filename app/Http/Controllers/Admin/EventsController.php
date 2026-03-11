@@ -248,7 +248,8 @@ class EventsController extends Controller
             }
 
             $type               = 'event';
-            $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '=', '')->get();
+            // $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '!=', '')->groupBy('fcm_token')->get();
+            $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '=', 'cBC1nQmrD0uao0lSdZC7dg:APA91bHfY9ATKIiQfjh1X1UIOR__uueNlKlB3P7S7a8qihWxwpbmSXBTh4fgnLz8aYQbgS0pMODeCSuM6h8jt0UZZf0pGASjqvEvax6zAmIlLnFtKnkRaAc')->get();
             $tokens             = [];
             if($getUserFCMTokens){
                 foreach($getUserFCMTokens as $getUserFCMToken){

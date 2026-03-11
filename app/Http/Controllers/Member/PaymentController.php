@@ -693,10 +693,10 @@ class PaymentController extends Controller
                 'amount'                  => $amount,
                 'currency'                => 'INR',
                 'order_id'                => $orderId,
-                // 'merchant_id'             => $config["MERCHANT_ID"],
+                'merchant_id'             => 'SG3351',
                 'customer_id'             => "testing-customer-one",
                 'udf1'                    => $user->user_code,
-                'payment_page_client_id'  => $config["PAYMENT_PAGE_CLIENT_ID"],
+                'payment_page_client_id'  => 'hdfcmaster',
                 'action'                  => 'paymentPage',
                 'return_url'              => route('member.hdfcsmartpaycallback')
             ];

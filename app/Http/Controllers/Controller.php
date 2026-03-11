@@ -104,7 +104,7 @@ class Controller extends BaseController
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($message));
 
         $response = curl_exec($ch);
-        echo $message;
+        
         Helper::pr($response);
         if (curl_errno($ch)) {
             throw new Exception(curl_error($ch));
@@ -177,7 +177,7 @@ class Controller extends BaseController
             ];
             
             $response = $this->sendFCMMessage($accessToken, $projectId, $message);
-            Helper::pr($response);
+            // Helper::pr($response);
             return $response;
 
         // } catch (Exception $e) {

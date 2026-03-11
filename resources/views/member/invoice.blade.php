@@ -433,7 +433,7 @@
             //payNowButton.disabled =false;
             return;
         }
-             console.log(amountValue);
+        
         fetch("{{ route('member.hdfcsmartpg') }}", {
                 method: "POST",
                 headers: {

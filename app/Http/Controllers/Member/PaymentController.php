@@ -609,18 +609,19 @@ class PaymentController extends Controller
                 $response = array("message" => "session status: " . $session->status);
             }
         } catch (JuspayException $e) {
-            http_response_code($e->getHttpResponseCode());
-            $response = array("message" => $e->getErrorMessage());
-            error_log($e->getErrorMessage());
-                // return response()->json([
-                //             'error' => true,
-                //             'message' => $e->getMessage(),
-                //             'error_message' => $e->getErrorMessage(),
-                //             'code' => $e->getCode(),
-                //             'line' => $e->getLine(),
-                //             'file' => $e->getFile(),
-                //             'trace' => $e->getTraceAsString()
-                //         ]);
+            // http_response_code($e->getHttpResponseCode());
+            // $response = array("message" => $e->getErrorMessage());
+            // error_log($e->getErrorMessage());
+                dd($session);
+                return response()->json([
+                            'error' => true,
+                            'message' => $e->getMessage(),
+                            'error_message' => $e->getErrorMessage(),
+                            'code' => $e->getCode(),
+                            'line' => $e->getLine(),
+                            'file' => $e->getFile(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
         } catch (Exception $e) {
             http_response_code(429);
             $response = array("message" => $e->getMessage());

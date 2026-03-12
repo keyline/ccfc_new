@@ -606,11 +606,11 @@ class PaymentController extends Controller
 
             } else {
                 http_response_code(500);
-                $response = array("message" => "session status: " . $session->status, "type" => "session status not NEW");
+                $response = array("message" => "session status: " . $session->status);
             }
         } catch (JuspayException $e) {
             http_response_code($e->getHttpResponseCode());
-            $response = array("message" => $e->getErrorMessage(), "type" => "juspayException");
+            $response = array("message" => $e->getErrorMessage());
             error_log($e->getErrorMessage());
                 // return response()->json([
                 //             'error' => true,
@@ -623,7 +623,7 @@ class PaymentController extends Controller
                 //         ]);
         } catch (Exception $e) {
             http_response_code(429);
-            $response = array("message" => $e->getMessage(), "type" => "Exception");
+            $response = array("message" => $e->getMessage());
             error_log($e->getMessage());
         }
         \Log::info('Juspay Response:', $response);

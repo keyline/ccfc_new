@@ -449,9 +449,8 @@
                     return response.json().then(data => {
                         throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
                     });
-                }else{
-                    console.log(response);
                 }
+                console.log(response.json());
                 return response.json();
 
             })

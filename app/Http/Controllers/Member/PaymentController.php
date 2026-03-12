@@ -612,7 +612,7 @@ class PaymentController extends Controller
             // http_response_code($e->getHttpResponseCode());
             // $response = array("message" => $e->getErrorMessage());
             // error_log($e->getErrorMessage());
-                dd($session);
+                var_dump($session);
                 return response()->json([
                             'error' => true,
                             'message' => $e->getMessage(),

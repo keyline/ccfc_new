@@ -465,9 +465,10 @@ class PaymentController extends Controller
     public function initiateJuspayPayment(Request $request)
     {
 
-        $loggedInMemberId = session('LoggedMember')['id'];
-        $user = User::find(session('LoggedMember'))->first();
+        // $loggedInMemberId = session('LoggedMember')['id'];
+        // $user = User::find(session('LoggedMember'))->first();
         //    $user = User::find($loggedInMemberId);
+        $user = User::findOrFail(session('LoggedMember'));
 
         // Fallback to JSON file
         $configPath = storage_path('app/juspay/config.json');
@@ -540,7 +541,7 @@ class PaymentController extends Controller
 
                 $params = [];
 
-                $params['amount'] = (int)($amount * 100);
+                $params['amount'] = $amount;
                 $params['currency'] = "INR";
                 $params['order_id'] = $orderId;
                 $params['customer_id'] = 'member_'.$user->id;

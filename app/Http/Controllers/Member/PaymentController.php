@@ -515,8 +515,7 @@ class PaymentController extends Controller
         $input = json_decode($inputJSON, true);
         header('Content-Type: application/json');
         $orderId = uniqid();
-        // $amount = $input['amount'];
-        $amount = (int)($input['amount'] * 100);
+        $amount = $input['amount'];
         $tokenId = $input['token_id'] ?? null;
 
         try {
@@ -592,9 +591,18 @@ class PaymentController extends Controller
                 $response = array("message" => "session status: " . $session->status, "type" => "session status not NEW");
             }
         } catch (JuspayException $e) {
-            http_response_code($e->getHttpResponseCode());
-            $response = array("message" => $e->getErrorMessage(), "type" => "juspayException");
-            error_log($e->getErrorMessage());
+            // http_response_code($e->getHttpResponseCode());
+            // $response = array("message" => $e->getErrorMessage(), "type" => "juspayException");
+            // error_log($e->getErrorMessage());
+                return response()->json([
+                            'error' => true,
+                            'message' => $e->getMessage(),
+                            'error_message' => $e->getErrorMessage(),
+                            'code' => $e->getCode(),
+                            'line' => $e->getLine(),
+                            'file' => $e->getFile(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
         } catch (Exception $e) {
             http_response_code(429);
             $response = array("message" => $e->getMessage(), "type" => "Exception");

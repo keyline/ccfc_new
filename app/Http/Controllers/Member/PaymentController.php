@@ -467,8 +467,7 @@ class PaymentController extends Controller
 
         $loggedInMemberId = session('LoggedMember')['id'];
         // $user = User::find(session('LoggedMember'))->first();
-        //    $user = User::find($loggedInMemberId);
-        $user = User::findOrFail($loggedInMemberId);
+           $user = User::find($loggedInMemberId);
 
         // Fallback to JSON file
         $configPath = storage_path('app/juspay/config.json');
@@ -610,19 +609,18 @@ class PaymentController extends Controller
                 $response = array("message" => "session status: " . $session->status, "type" => "session status not NEW");
             }
         } catch (JuspayException $e) {
-            // http_response_code($e->getHttpResponseCode());
-            // $response = array("message" => $e->getErrorMessage(), "type" => "juspayException");
-            // error_log($e->getErrorMessage());
-                return response()->json([
-                            'error' => true,
-                            'message' => $e->getMessage(),
-                            'error_message' => $e->getErrorMessage(),
-                            'code' => $e->getCode(),
-                            'line' => $e->getLine(),
-                            'file' => $e->getFile(),
-                            'trace' => $e->getTraceAsString(),
-                            'params' => $params
-                        ]);
+            http_response_code($e->getHttpResponseCode());
+            $response = array("message" => $e->getErrorMessage(), "type" => "juspayException");
+            error_log($e->getErrorMessage());
+                // return response()->json([
+                //             'error' => true,
+                //             'message' => $e->getMessage(),
+                //             'error_message' => $e->getErrorMessage(),
+                //             'code' => $e->getCode(),
+                //             'line' => $e->getLine(),
+                //             'file' => $e->getFile(),
+                //             'trace' => $e->getTraceAsString()
+                //         ]);
         } catch (Exception $e) {
             http_response_code(429);
             $response = array("message" => $e->getMessage(), "type" => "Exception");

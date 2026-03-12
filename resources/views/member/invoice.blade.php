@@ -455,7 +455,6 @@
             })
             .then(data => {
                 console.log(data);
-                return;
                 if (data.status === 'NEW') {
                     const url = data.paymentLinks.web;
                     return window.location.href = url;

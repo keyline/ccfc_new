@@ -466,8 +466,8 @@ class PaymentController extends Controller
     {
 
         $loggedInMemberId = session('LoggedMember')['id'];
-        // $user = User::find(session('LoggedMember'))->first();
-           $user = User::find($loggedInMemberId);
+        $user = User::find(session('LoggedMember'))->first();
+        //    $user = User::find($loggedInMemberId);
 
         // Fallback to JSON file
         $configPath = storage_path('app/juspay/config.json');

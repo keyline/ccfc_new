@@ -592,7 +592,7 @@ class PaymentController extends Controller
             }
         } catch (JuspayException $e) {
             http_response_code($e->getHttpResponseCode());
-            $response = array("message" => $e->getErrorMessage(), "userId" => $userNewId);
+            $response = array("message" => $e->getErrorMessage());
             error_log($e->getErrorMessage());
         } catch (Exception $e) {
             http_response_code(429);

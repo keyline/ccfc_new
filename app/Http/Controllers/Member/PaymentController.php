@@ -588,15 +588,15 @@ class PaymentController extends Controller
 
             } else {
                 http_response_code(500);
-                $response = array("message" => "session status: " . $session->status);
+                $response = array("message" => "session status: " . $session->status, "type" => "session status not NEW");
             }
         } catch (JuspayException $e) {
             http_response_code($e->getHttpResponseCode());
-            $response = array("message" => $e->getErrorMessage());
+            $response = array("message" => $e->getErrorMessage(), "type" => "juspayException");
             error_log($e->getErrorMessage());
         } catch (Exception $e) {
             http_response_code(429);
-            $response = array("message" => $e->getMessage());
+            $response = array("message" => $e->getMessage(), "type" => "Exception");
             error_log($e->getMessage());
         }
         \Log::info('Juspay Response:', $response);

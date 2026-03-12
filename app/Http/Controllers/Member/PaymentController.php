@@ -587,11 +587,11 @@ class PaymentController extends Controller
 
             } else {
                 http_response_code(500);
-                $response = array("message" => "session status: " . $session->status, "userId" => session('LoggedMember'));
+                $response = array("message" => "session status: " . $session->status);
             }
         } catch (JuspayException $e) {
             http_response_code($e->getHttpResponseCode());
-            $response = array("message" => $e->getErrorMessage());
+            $response = array("message" => $e->getErrorMessage(), "userId" => session('LoggedMember'));
             error_log($e->getErrorMessage());
         } catch (Exception $e) {
             http_response_code(429);

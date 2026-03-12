@@ -526,11 +526,11 @@ class PaymentController extends Controller
             $params['amount'] = $amount;
             $params['currency'] = "INR";
             $params['order_id'] = $orderId;
-            //$params['customer_id'] = $user->id;
+            $params['customer_id'] = $user->id;
             $params["merchant_id"] = $config["MERCHANT_ID"]; # Add merchant id
             $params['customer_id'] = "testing-customer-one";
             $params['udf1'] = $user->user_code;
-            //$params['udf2'] = $user->id;
+            $params['udf2'] = $user->id;
             $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
             $params['action'] = "paymentPage";
             $params['return_url'] = route('member.hdfcsmartpaycallback');

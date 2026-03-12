@@ -620,7 +620,8 @@ class PaymentController extends Controller
                             'code' => $e->getCode(),
                             'line' => $e->getLine(),
                             'file' => $e->getFile(),
-                            'trace' => $e->getTraceAsString()
+                            'trace' => $e->getTraceAsString(),
+                            'params' => $params
                         ]);
         } catch (Exception $e) {
             http_response_code(429);

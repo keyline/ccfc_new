@@ -466,7 +466,7 @@ class PaymentController extends Controller
     {
 
         $user = User::find(session('LoggedMember'))->first();
-        //    $user = User::find(session('LoggedMember'));
+        //    $user = User::find(session('LoggedMember')->id);
 
         // Fallback to JSON file
         $configPath = storage_path('app/juspay/config.json');
@@ -591,7 +591,7 @@ class PaymentController extends Controller
             }
         } catch (JuspayException $e) {
             http_response_code($e->getHttpResponseCode());
-            $response = array("message" => $e->getErrorMessage(), "userId" => session('LoggedMember'));
+            $response = array("message" => $e->getErrorMessage(), "userId" => session('LoggedMember')->id);
             error_log($e->getErrorMessage());
         } catch (Exception $e) {
             http_response_code(429);

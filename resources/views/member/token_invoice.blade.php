@@ -250,7 +250,7 @@
                 </div>
             </section>
 
-            {{-- <section class="member_details_section">
+            <section class="member_details_section">
                 <div class="container">
                     <div class="row">
                         <div class="col-md-12 pl-0">
@@ -338,7 +338,7 @@
 
                     </div>
                 </div>
-            </section> --}}
+            </section>
             <!-- ********|| HISTORY END ||******** -->
 
 

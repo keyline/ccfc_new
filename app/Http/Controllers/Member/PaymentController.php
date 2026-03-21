@@ -545,10 +545,19 @@ class PaymentController extends Controller
             // $session = OrderSession::create($params, $requestOption);
             try {
                 $session = OrderSession::create($params, $requestOption);
-                return response()->json(["ordersession" => $session]);
+                return response()->json([
+                                        "success" => true,
+                                        "data" => $session->{'*'}   // 🔥 IMPORTANT
+                                    ]);
 
             } catch (\Throwable $e) {
-                return response()->json(["error" => $e]);
+                        return response()->json([
+                            "error" => true,
+                            "message" => $e->getMessage(),
+                            "file" => $e->getFile(),
+                            "line" => $e->getLine(),
+                            "trace" => $e->getTraceAsString()
+                        ], 500);
             }
             
         $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session);

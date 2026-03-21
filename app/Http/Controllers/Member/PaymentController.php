@@ -465,7 +465,8 @@ class PaymentController extends Controller
     public function initiateJuspayPayment(Request $request)
     {
 
-        $user = User::find(session('LoggedMember'))->first();
+        // $user = User::find(session('LoggedMember'))->first();
+        $user = User::find(session('LoggedMember'));
 
         // Fallback to JSON file
         $configPath = storage_path('app/juspay/config.json');
@@ -514,7 +515,8 @@ class PaymentController extends Controller
         header('Content-Type: application/json');
         $orderId = uniqid();
         $amount = $input['amount'];
-        $tokenId = $input['token_id'];
+        // $tokenId = $input['token_id'];
+        $tokenId = $input['token_id'] ?? null;
 
         try {
             if (!$user) {

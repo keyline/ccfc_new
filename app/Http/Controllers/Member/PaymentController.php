@@ -503,7 +503,8 @@ class PaymentController extends Controller
 
         // block:start:initialize-juspay-config
         JuspayEnvironment::init()
-        ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
+        ->withBaseUrl("https://smartgateway.hdfc.bank.in")
+        // ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
         //->withBaseUrl("https://smartgateway.hdfcbank.com/")
         ->withMerchantId($config["MERCHANT_ID"])
         ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id

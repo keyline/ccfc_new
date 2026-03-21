@@ -468,9 +468,7 @@ class PaymentController extends Controller
         // $user = User::find(session('LoggedMember'))->first();
         $session_user = session('LoggedMember');
         $user = User::where('id', $session_user)->first();
-        
-         $response = array("user" => $user, "session" => $session_user);
-         return response()->json($response);
+    
         // Fallback to JSON file
         $configPath = storage_path('app/juspay/config.json');
 
@@ -526,6 +524,8 @@ class PaymentController extends Controller
                 throw new Exception("User not logged in", 1);
 
             }
+        $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId);
+         return response()->json($response);
             $params = array();
             $params['amount'] = $amount;
             $params['currency'] = "INR";

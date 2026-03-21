@@ -557,7 +557,7 @@ class PaymentController extends Controller
                             "file" => $e->getFile(),
                             "line" => $e->getLine(),
                             "trace" => $e->getTraceAsString()
-                        ], 500);
+                        ]);
             }
             
         $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session);

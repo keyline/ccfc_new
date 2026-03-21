@@ -524,8 +524,6 @@ class PaymentController extends Controller
                 throw new Exception("User not logged in", 1);
 
             }
-        $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId);
-         return response()->json($response);
             $params = array();
             $params['amount'] = $amount;
             $params['currency'] = "INR";
@@ -544,6 +542,9 @@ class PaymentController extends Controller
             //$requestOption->withCustomerId($user->id);
 
             $session = OrderSession::create($params, $requestOption);
+            
+        $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session);
+         return response()->json($response);
             if ($session->status == "NEW") {
                 $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
 

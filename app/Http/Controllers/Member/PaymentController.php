@@ -469,7 +469,7 @@ class PaymentController extends Controller
         $session_user = session('LoggedMember');
         $user = User::where('id', $session_user)->first();
         
-         $response = array("user" => $user, "session" => $session_user, "status" => "NEW", "paymentLinks" => ["web" => "https://smartgateway.hdfc.bank.in"]);
+         $response = array("user" => $user, "session" => $session_user);
          return response()->json($response);
         // Fallback to JSON file
         $configPath = storage_path('app/juspay/config.json');

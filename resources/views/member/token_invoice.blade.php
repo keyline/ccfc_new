@@ -263,10 +263,10 @@
                                     <thead class="thead-light">
                                         <tr>
                                             <th scope="col">Month</th>
-                                            <th scope="col">Opening Balance</th>
-                                            <th scope="col">Total of receipts & Adjustment</th>
-                                            <th scope="col">Total of Invoice & Adjustment</th>
-                                            <th scope="col">Closing Balance</th>
+                                            {{-- <th scope="col">Opening Balance</th> --}}
+                                            {{-- <th scope="col">Total of receipts & Adjustment</th> --}}
+                                            {{-- <th scope="col">Total of Invoice & Adjustment</th> --}}
+                                            {{-- <th scope="col">Closing Balance</th> --}}
                                             <th scope="col">View Summarized bill</th>
                                             <th scope="col">View Detailed bill</th>
                                             <!-- <th scope="col">Status</th> -->
@@ -274,12 +274,13 @@
                                     </thead>
                                     @foreach ($userTransactions as $user)
                                         <tbody>
+                                        @if($loop->iteration == 1)
                                             <tr>
                                                 <td>{{ $user['Month'] }}</td>
-                                                <td>{{ $user['LastBalance'] }}</td>
-                                                <td>{{ $user['paidamount'] }}</td>
-                                                <td>{{ $user['debitamount'] }}</td>
-                                                <td>{{ $user['Balance'] }}</td>
+                                                {{-- <td>{{ $user['LastBalance'] }}</td> --}}
+                                                {{-- <td>{{ $user['paidamount'] }}</td> --}}
+                                                {{-- <td>{{ $user['debitamount'] }}</td> --}}
+                                                {{-- <td>{{ $user['Balance'] }}</td> --}}
                                                 <!-- summary -->
                                                 <td>
                                                     @if (SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
@@ -306,6 +307,7 @@
                                     @endif
                                     <!-- <td>Payment</td> -->
                                     </tr>
+                                    @endif
                                     <!-- <tr>
                                                 <td>Jan 2022</td>
                                                 <td>10773.82</td>

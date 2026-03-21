@@ -457,7 +457,9 @@
                 if (data.status === 'NEW') {
                     const url = data.paymentLinks.web;
                     return window.location.href = url;
+                    console.log("yes");
                 }
+                console.log(data);
                 alert(`Unexpected status: ${data.status}`);
             })
             .catch(err => {

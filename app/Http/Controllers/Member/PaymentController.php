@@ -543,7 +543,7 @@ class PaymentController extends Controller
             //$requestOption->withCustomerId($user->id);
 
             // $session = OrderSession::create($params, $requestOption);
-            $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session, "params" => $params, "requestOption" => $requestOption);
+            $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "params" => $params, "requestOption" => $requestOption);
             return response()->json($response);
             try {
                 $session = OrderSession::create($params, $requestOption);

@@ -536,18 +536,18 @@ class DuesController extends Controller
 
                     $body .= 'Dear Member, your due payment link is: ' . url('/payment/' . $tokenData['plainTextToken']);
 
-                    // Mail::to($member->email)->send(new DuesPaymentMail($tokenData['model'], $tokenData['plainTextToken']));
+                    Mail::to($member->email)->send(new DuesPaymentMail($tokenData['model'], $tokenData['plainTextToken']));
 
                     // Log the notification
-                    // NotificationLog::create([
-                    //     'token_id' => $tokenData['model']->id,
-                    //     'member_code' => $tokenData['model']->member_code,
-                    //     'notification_type' => 'email',
-                    //     'recipient' => $member->email,
-                    //     'subject' => 'Your monthly due payment link',
-                    //     'message_body' => $body,
-                    //     'status' => 'sent',
-                    // ]);
+                    NotificationLog::create([
+                        'token_id' => $tokenData['model']->id,
+                        'member_code' => $tokenData['model']->member_code,
+                        'notification_type' => 'email',
+                        'recipient' => $member->email,
+                        'subject' => 'Your monthly due payment link',
+                        'message_body' => $body,
+                        'status' => 'sent',
+                    ]);
 
                     $successCount++;
 

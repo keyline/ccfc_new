@@ -13,7 +13,7 @@
               <label for="myDropdown" class="mb-2">Select an year:</label>
               <select class="custom-select" name="folder_year">
                 @foreach($folders as $folder)
-              
+                <option selected disabled>Select Year</option>
               <option value="{{ $folder->cdo_id }}">{{ $folder->cdo_name}}</option>
               
               @endforeach

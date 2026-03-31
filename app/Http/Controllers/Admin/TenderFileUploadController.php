@@ -52,7 +52,8 @@ class TenderFileUploadController extends Controller
     {
         abort_if(Gate::denies('tenderupload_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $folders = DocumentOrganizer::all();
+        // $folders = DocumentOrganizer::all();
+        $folders = DocumentOrganizer::orderBy('rank', 'desc')->get();
 
         return view('admin.tendersupload.create', compact('folders'));
     }

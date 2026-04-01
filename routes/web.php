@@ -976,13 +976,13 @@ Route::get('tenders', function () {
             $uploadedTenders = $uploadedTenders->merge(
                 $organizer->documents()
                     ->where('ctd_archive_status', '1')
-                    ->orderBy('ctd_created_at', 'desc')
+                    ->orderBy('ctd_updated_at', 'desc')
                     ->get()
             );
         }
     }
 
-    $uploadedTenders = $uploadedTenders->sortByDesc('ctd_created_at');
+    $uploadedTenders = $uploadedTenders->sortByDesc('ctd_updated_at');
 
 
 

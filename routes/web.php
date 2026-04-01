@@ -966,13 +966,23 @@ Route::get('tenders', function () {
     // $uploadedTenders = DocumentOrganizer::find(1)->documents()->where('ctd_archive_status', '1')
     //                     ->orderBy('ctd_created_at', 'desc')
     //                     ->get();
-    $uploadedTenders = array();
-    for($i=1; $i<=7; $i++)
-    {        
-        $uploadedTenders += DocumentOrganizer::find($i)->documents()->where('ctd_archive_status', '1')
-                            ->orderBy('ctd_created_at', 'desc')
-                            ->get();
+    
+    $uploadedTenders = collect();
+
+    for ($i = 1; $i <= 7; $i++) {
+        $organizer = DocumentOrganizer::find($i);
+
+        if ($organizer) {
+            $uploadedTenders = $uploadedTenders->merge(
+                $organizer->documents()
+                    ->where('ctd_archive_status', '1')
+                    ->orderBy('ctd_created_at', 'desc')
+                    ->get()
+            );
+        }
     }
+
+    $uploadedTenders = $uploadedTenders->sortByDesc('ctd_created_at');
 
 
 

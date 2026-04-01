@@ -967,7 +967,7 @@ Route::get('tenders', function () {
     //                     ->orderBy('ctd_created_at', 'desc')
     //                     ->get();
 
-    $uploadedTenders = DocumentOrganizer::all()->documents()->where('ctd_archive_status', '1')
+    $uploadedTenders = DocumentOrganizer::find(6)->documents()->where('ctd_archive_status', '1')
                         ->orderBy('ctd_created_at', 'desc')
                         ->get();
 

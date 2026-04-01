@@ -966,10 +966,13 @@ Route::get('tenders', function () {
     // $uploadedTenders = DocumentOrganizer::find(1)->documents()->where('ctd_archive_status', '1')
     //                     ->orderBy('ctd_created_at', 'desc')
     //                     ->get();
-
-    $uploadedTenders = DocumentOrganizer::find(6)->documents()->where('ctd_archive_status', '1')
-                        ->orderBy('ctd_created_at', 'desc')
-                        ->get();
+    
+    for($i=1; $i<=7; $i++)
+    {        
+        $uploadedTenders += DocumentOrganizer::find($i)->documents()->where('ctd_archive_status', '1')
+                            ->orderBy('ctd_created_at', 'desc')
+                            ->get();
+    }
 
 
 

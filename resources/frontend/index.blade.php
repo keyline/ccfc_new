@@ -85,7 +85,7 @@
 
                         <div class="col-lg-6">
                             <div class="advise-img">
-                                <img class="img-fluid" src="{{ asset('img/Istora-Tea-Bag-2.jpeg') }}" alt="" />
+                                <img class="img-fluid" src="{{ asset('img/istora-banner.jpg') }}" alt="" />
                             </div>
                         </div>
                        <!--  <div class="col-lg-6">

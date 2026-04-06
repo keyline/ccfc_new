@@ -483,8 +483,9 @@ class PaymentController extends Controller
         new ServerEnv($config);
 
         // block:start:read-keys-from-file
-        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path('app/juspay/' . $config["PRIVATE_KEY_PATH"]));
-        $publicKey =  array_key_exists("PUBLIC_KEY_PATH", $config) ? $config["PUBLIC_KEY_PATH"] : file_get_contents(storage_path('app/juspay/' . $config["PUBLIC_KEY_PATH"]));
+        // $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path('app/juspay/' . $config["PRIVATE_KEY_PATH"]));
+        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY_PATH"]);
+        $publicKey =  array_key_exists("PUBLIC_KEY_PATH", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]);
         // block:end:read-keys-from-file
 
         if ($privateKey == false || $publicKey == false) {

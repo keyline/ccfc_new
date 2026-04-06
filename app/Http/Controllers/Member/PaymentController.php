@@ -571,7 +571,7 @@ class PaymentController extends Controller
                         "return_url" => route('member.hdfcsmartpaycallback')
                     ];
 
-            //$requestOption->withCustomerId($user->id);
+            $requestOption->withCustomerId($user->id);
 
             // $session = OrderSession::create($params, $requestOption);
             // $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "params" => $params, "requestOption" => $requestOption);

@@ -203,8 +203,8 @@ class DuesController extends Controller
                 $defaultYear = $latestBatch->year;
                 $isDefaultView = true;
 
-                $query->where('month_no', $defaultMonth)
-                      ->where('year', $defaultYear);
+                // $query->where('month_no', $defaultMonth)
+                //       ->where('year', $defaultYear);
             }
             // else: no data uploaded yet, show empty list
         } else {

@@ -556,7 +556,7 @@ class PaymentController extends Controller
                 // $params['action'] = "paymentPage";
                 // $params['return_url'] = route('member.hdfcsmartpaycallback');
 
-                // $requestOption = new RequestOptions();
+                $requestOption = new RequestOptions();
                 // $requestOption->withCustomerId('member_'.$user->id);
 
                 $params = [

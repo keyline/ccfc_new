@@ -563,22 +563,22 @@ class PaymentController extends Controller
             // $session = OrderSession::create($params, $requestOption);
             // $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "params" => $params, "requestOption" => $requestOption);
             // return response()->json($response);
-            try {
+            // try {
                 $session = OrderSession::create($params, $requestOption);
-                return response()->json([
-                                        "success" => true,
-                                        "data" => $session->{'*'}   // 🔥 IMPORTANT
-                                    ]);
+                // return response()->json([
+                //                         "success" => true,
+                //                         "data" => $session->{'*'}   // 🔥 IMPORTANT
+                //                     ]);
 
-            } catch (\Throwable $e) {
-                        return response()->json([
-                            "error" => true,
-                            "message" => $e->getMessage(),
-                            "file" => $e->getFile(),
-                            "line" => $e->getLine(),
-                            "trace" => $e->getTraceAsString()
-                        ]);
-            }
+            // } catch (\Throwable $e) {
+            //             return response()->json([
+            //                 "error" => true,
+            //                 "message" => $e->getMessage(),
+            //                 "file" => $e->getFile(),
+            //                 "line" => $e->getLine(),
+            //                 "trace" => $e->getTraceAsString()
+            //             ]);
+            // }
             
         // $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session);
         //  return response()->json($response);

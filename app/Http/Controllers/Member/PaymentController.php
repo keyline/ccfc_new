@@ -553,7 +553,7 @@ class PaymentController extends Controller
                 $params['udf1'] = $user->user_code;
                 $params['udf2'] = $user->id;
                 // $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
-                $params['payment_page_client_id'] = 64726;
+                $params['payment_page_client_id'] = '64726';
                 $params['action'] = "paymentPage";
                 $params['return_url'] = route('member.hdfcsmartpaycallback');
 

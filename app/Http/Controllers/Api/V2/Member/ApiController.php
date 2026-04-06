@@ -3317,7 +3317,12 @@ class ApiController extends Controller
                     $apiMessage                             = 'We Don\'t Recognize You !!!';
                 }
             } else {
-                http_response_code($getTokenValue['data'][2]);
+                // http_response_code($getTokenValue['data'][2]);
+                if (isset($getTokenValue['data'][2]) && is_numeric($getTokenValue['data'][2])) {
+                        http_response_code((int) $getTokenValue['data'][2]);
+                    } else {
+                        http_response_code(400); // fallback
+                    }
                 $apiStatus                      = FALSE;
                 $apiMessage                     = $this->getResponseCode(http_response_code());
                 $apiExtraField                  = 'response_code';

@@ -542,7 +542,7 @@ class PaymentController extends Controller
 
                 $params = [];
 
-                $params['amount'] = $amount;
+                $params['amount'] = (int) $amount;
                 $params['currency'] = "INR";
                 $params['order_id'] = $orderId;
                 $params['customer_id'] = 'member_'.$user->id;

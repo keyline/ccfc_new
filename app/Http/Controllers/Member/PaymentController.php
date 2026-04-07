@@ -549,6 +549,8 @@ class PaymentController extends Controller
                 $params['merchant_id'] = $config["MERCHANT_ID"];
                 $params['customer_email'] = $user->email ?? 'test@test.com';
                 $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
+                $params['first_name'] = 'Somnath';
+                $params['last_name'] = 'Shil';
                 $params['udf1'] = $user->user_code;
                 $params['udf2'] = $user->id;
                 $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
@@ -560,6 +562,8 @@ class PaymentController extends Controller
                 $requestOption->withCustomerId('member_'.$user->id);
                 //$requestOption->withCustomerId($user->id);
 
+                echo '<pre>';print_r($params);
+                echo '<pre>';print_r($requestOption);
                 $session = OrderSession::create($params, $requestOption);
                 echo '<pre>';print_r($session);die;
             

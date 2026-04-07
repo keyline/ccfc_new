@@ -510,7 +510,7 @@ class PaymentController extends Controller
         ->withMerchantId($config["MERCHANT_ID"])
         ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
         // block:end:initialize-juspay-config
-        return response()->json(["message" => "Juspay initialized successfully", "jusResponse" => $juspayResponse]);
+        return response()->json(["message" => "Juspay initiation  successfully done", "jusResponse" => $juspayResponse]);
         } catch (\Exception $e){
             http_response_code(500);
             $response = array("message" => $e->getMessage);

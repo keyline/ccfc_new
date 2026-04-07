@@ -504,13 +504,13 @@ class PaymentController extends Controller
 
         // block:start:initialize-juspay-config
         try{
-        JuspayEnvironment::init()
+        $juspayResponse = JuspayEnvironment::init()
         ->withBaseUrl("https://smartgateway.hdfc.bank.in")
         //->withBaseUrl("https://smartgateway.hdfcbank.com/")
         ->withMerchantId($config["MERCHANT_ID"])
         ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
         // block:end:initialize-juspay-config
-        return response()->json(["message" => "Juspay initialized successfully"]);
+        return response()->json(["message" => "Juspay initialized successfully", "jusResponse" => $juspayResponse]);
         } catch (\Exception $e){
             http_response_code(500);
             $response = array("message" => $e->getMessage);

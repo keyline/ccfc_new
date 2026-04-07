@@ -503,13 +503,18 @@ class PaymentController extends Controller
 
 
         // block:start:initialize-juspay-config
+        try{
         JuspayEnvironment::init()
         ->withBaseUrl("https://smartgateway.hdfc.bank.in")
-        // ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
         //->withBaseUrl("https://smartgateway.hdfcbank.com/")
         ->withMerchantId($config["MERCHANT_ID"])
         ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
         // block:end:initialize-juspay-config
+        return response()->json(["message" => "Juspay initialized successfully"]);
+        } catch (\Exception $e){
+            http_response_code(500);
+            $response = array("message" => $e->getMessage);
+        }
 
         $config = ServerEnv::$config;
 
@@ -542,13 +547,13 @@ class PaymentController extends Controller
 
                 $params = [];
 
-                $params['amount'] = (int) $amount;
+                $params['amount'] = $amount;
                 $params['currency'] = "INR";
                 $params['order_id'] = $orderId;
-                $params['customer_id'] = $user->id;
+                $params['customer_id'] = 'member_'.$user->id;
                 $params['merchant_id'] = $config["MERCHANT_ID"];
-                // $params['customer_email'] = $user->email ?? 'test@test.com';
-                // $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
+                $params['customer_email'] = $user->email ?? 'test@test.com';
+                $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
                 $params['udf1'] = $user->user_code;
                 $params['udf2'] = $user->id;
                 $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];

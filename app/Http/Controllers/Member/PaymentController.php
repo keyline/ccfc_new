@@ -503,7 +503,7 @@ class PaymentController extends Controller
 
 
         // block:start:initialize-juspay-config
-        $juspayResponse = JuspayEnvironment::init()
+        JuspayEnvironment::init()
         ->withBaseUrl("https://smartgateway.hdfc.bank.in")
         //->withBaseUrl("https://smartgateway.hdfcbank.com/")
         ->withMerchantId($config["MERCHANT_ID"])
@@ -557,31 +557,10 @@ class PaymentController extends Controller
 
                 $requestOption = new RequestOptions();
                 $requestOption->withCustomerId('member_'.$user->id);
+                //$requestOption->withCustomerId($user->id);
 
-            //$requestOption->withCustomerId($user->id);
-
-            // $session = OrderSession::create($params, $requestOption);
-            // $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "params" => $params, "requestOption" => $requestOption);
-            // return response()->json($response);
-            // try {
                 $session = OrderSession::create($params, $requestOption);
-                // return response()->json([
-                //                         "success" => true,
-                //                         "data" => $session->{'*'}   // 🔥 IMPORTANT
-                //                     ]);
-
-            // } catch (\Throwable $e) {
-            //             return response()->json([
-            //                 "error" => true,
-            //                 "message" => $e->getMessage(),
-            //                 "file" => $e->getFile(),
-            //                 "line" => $e->getLine(),
-            //                 "trace" => $e->getTraceAsString()
-            //             ]);
-            // }
             
-        // $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session);
-        //  return response()->json($response);
             if ($session->status == "NEW") {
                 $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
 

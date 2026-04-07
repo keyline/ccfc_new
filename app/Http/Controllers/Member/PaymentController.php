@@ -555,12 +555,13 @@ class PaymentController extends Controller
                 $params['action'] = "paymentPage";
                 $params['return_url'] = route('member.hdfcsmartpaycallback');
 
-                echo '<pre>';print_r($params);die;
+                
                 $requestOption = new RequestOptions();
                 $requestOption->withCustomerId('member_'.$user->id);
                 //$requestOption->withCustomerId($user->id);
 
                 $session = OrderSession::create($params, $requestOption);
+                echo '<pre>';print_r($session);die;
             
             if ($session->status == "NEW") {
                 $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );

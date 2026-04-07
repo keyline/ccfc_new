@@ -540,38 +540,23 @@ class PaymentController extends Controller
             // $requestOption = new RequestOptions();
             // $requestOption->withCustomerId("testing-customer-one");
 
-                // $params = [];
+                $params = [];
 
-                // $params['amount'] = $amount;
-                // $params['currency'] = "INR";
-                // $params['order_id'] = $orderId;
-                // $params['customer_id'] = 'member_'.$user->id;
-                // $params['merchant_id'] = $config["MERCHANT_ID"];
-                // $params['customer_email'] = $user->email ?? 'test@test.com';
-                // $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
-                // $params['udf1'] = $user->user_code;
-                // $params['udf2'] = $user->id;
-                // $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
-                // $params['action'] = "paymentPage";
-                // $params['return_url'] = route('member.hdfcsmartpaycallback');
+                $params['amount'] = $amount;
+                $params['currency'] = "INR";
+                $params['order_id'] = $orderId;
+                $params['customer_id'] = 'member_'.$user->id;
+                $params['merchant_id'] = $config["MERCHANT_ID"];
+                $params['customer_email'] = $user->email ?? 'test@test.com';
+                $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
+                $params['udf1'] = $user->user_code;
+                $params['udf2'] = $user->id;
+                $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
+                $params['action'] = "paymentPage";
+                $params['return_url'] = route('member.hdfcsmartpaycallback');
 
-                // $requestOption = new RequestOptions();
-                // $requestOption->withCustomerId('member_'.$user->id);
-
-            $params = array();
-            $params['amount'] = $amount;
-            $params['currency'] = "INR";
-            $params['order_id'] = $orderId;
-            $params['customer_id'] = $user->id;
-            $params["merchant_id"] = $config["MERCHANT_ID"]; # Add merchant id
-            // $params['customer_id'] = "testing-customer-one";
-            $params['udf1'] = $user->user_code;
-            $params['udf2'] = $user->id;
-            $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
-            $params['action'] = "paymentPage";
-            $params['return_url'] = route('member.hdfcsmartpaycallback');
-            $requestOption = new RequestOptions();
-            $requestOption->withCustomerId($user->id);
+                $requestOption = new RequestOptions();
+                $requestOption->withCustomerId('member_'.$user->id);
 
             //$requestOption->withCustomerId($user->id);
 

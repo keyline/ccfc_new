@@ -507,7 +507,7 @@ class PaymentController extends Controller
         $juspayResponse = JuspayEnvironment::init()
         ->withBaseUrl("https://smartgateway.hdfc.bank.in")
         //->withBaseUrl("https://smartgateway.hdfcbank.com/")
-        ->withMerchantId($config["MERCHANT_ID"])
+        ->withMerchantId(1478)
         ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
         // block:end:initialize-juspay-config
         return response()->json(["message" => "Juspay initiation  successfully done", "jusResponse" => $juspayResponse]);

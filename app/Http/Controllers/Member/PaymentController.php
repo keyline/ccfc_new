@@ -545,7 +545,7 @@ class PaymentController extends Controller
                 $params['amount'] = $amount;
                 $params['currency'] = "INR";
                 $params['order_id'] = $orderId;
-                $params['customer_id'] = 'member_'.$user->id;
+                $params['customer_id'] = $user->id;
                 $params['merchant_id'] = $config["MERCHANT_ID"];
                 $params['customer_email'] = $user->email ?? 'test@test.com';
                 $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
@@ -563,7 +563,7 @@ class PaymentController extends Controller
                 //$requestOption->withCustomerId($user->id);
 
                 echo '<pre>';print_r($params);
-                echo '<pre>';print_r($requestOption);
+                echo '<pre>';print_r($requestOption);die;
                 $session = OrderSession::create($params, $requestOption);
                 echo '<pre>';print_r($session);die;
             

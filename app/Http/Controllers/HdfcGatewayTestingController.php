@@ -10,6 +10,6 @@ class HdfcGatewayTestingController extends Controller
 {
     public function index()
     {
-        return view('hdfc-testing.hdfc_demo');
+        return view('hdfc-testing.hdfc-demo');
     }
 }

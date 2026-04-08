@@ -8,6 +8,5 @@
 </head>
 <body>
     hello
-    <?php var_dump($session); ?>
 </body>
 </html>

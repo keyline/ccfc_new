@@ -561,13 +561,13 @@ class PaymentController extends Controller
 
             // $session = OrderSession::create($params, $requestOption);
             $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "params" => $params, "requestOption" => $requestOption);
-            return response()->json($response);
+            // return response()->json($response);
             try {
                 $session = OrderSession::create($params, $requestOption);
-                return response()->json([
-                                        "success" => true,
-                                        "data" => $session->{'*'}   // 🔥 IMPORTANT
-                                    ]);
+                // return response()->json([
+                //                         "success" => true,
+                //                         "data" => $session->{'*'}   // 🔥 IMPORTANT
+                //                     ]);
 
             } catch (\Throwable $e) {
                         return response()->json([
@@ -581,6 +581,8 @@ class PaymentController extends Controller
             
         // $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session);
         //  return response()->json($response);
+            return response()->json($session);
+            
             if ($session->status == "NEW") {
                 $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
 

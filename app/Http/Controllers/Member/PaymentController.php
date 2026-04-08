@@ -493,10 +493,6 @@ class PaymentController extends Controller
         $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents($keyPath . $config["PRIVATE_KEY_PATH"]);
         $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents($keyPath . $config["PUBLIC_KEY_PATH"]);
 
-        // echo 'private : ' . $privateKey;
-        // echo '<br>';
-        // echo 'public : ' . $publicKey;
-
         if ($privateKey == false || $publicKey == false) {
             http_response_code(500);
             $response = $privateKey == false ? array("message" => "private key file not found") : array("message" => "public key file not found");

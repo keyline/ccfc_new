@@ -562,8 +562,8 @@ class PaymentController extends Controller
                 $requestOption->withCustomerId('member_'.$user->id);
                 //$requestOption->withCustomerId($user->id);
 
-                // echo '<pre>';print_r($params);
-                // echo '<pre>';print_r($requestOption);die;
+                echo '<pre>';print_r($params);
+                echo '<pre>';print_r($requestOption);die;
                 $session = OrderSession::create($params, $requestOption);
                 // echo '<pre>';print_r($session);die;
             

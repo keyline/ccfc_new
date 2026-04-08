@@ -44,7 +44,7 @@ class HdfcGatewayTestingController extends Controller
                     )
                 );
                     $orderId = "ORDER_" . time();
-                    $amount = '100.0';
+                    $amount = 100;
 
                     $user = auth()->user() ?? (object)[
                         'id' => 1,
@@ -58,8 +58,8 @@ class HdfcGatewayTestingController extends Controller
                     $params['amount'] = $amount;
                     $params['currency'] = "INR";
                     $params['order_id'] = $orderId;
-                    $params['customer_id'] = $user->id;
-                    $params['merchant_id'] = $config["MERCHANT_ID"];
+                    // $params['customer_id'] = (string)$user->id;
+                    // $params['merchant_id'] = $config["MERCHANT_ID"];
                     // $params['merchant_id'] = 'SG3351';
                     $params['customer_email'] = $user->email ?? 'test@test.com';
                     $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
@@ -69,8 +69,8 @@ class HdfcGatewayTestingController extends Controller
                     $params['udf2'] = $user->id;
                     $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
                     // $params['payment_page_client_id'] = 'hdfcmaster';
-                    $params['action'] = "paymentPage";
-                    $params['return_url'] = route('member.hdfcsmartpaycallback');
+                    // $params['action'] = "paymentPage";
+                    // $params['return_url'] = route('member.hdfcsmartpaycallback');
 
                     
                     $requestOption = new RequestOptions();

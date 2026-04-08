@@ -75,7 +75,17 @@ class HdfcGatewayTestingController extends Controller
                     
                     $requestOption = new RequestOptions();
                     $requestOption->withCustomerId($user->id);
-                    $session = OrderSession::create($params, $requestOption);
+                    try {
+                       $session = OrderSession::create($params, $requestOption);
+                    } catch (JuspayException $e){
+                        $error = [
+                            'message' => $e->getMessage(),
+                            'error_message' => $e->getErrorMessage(),
+                            'code' => $e->getCode(),
+                            'params' => $params,
+                        ];
+                        dd($error); die;
+                    }
 
                     dd($session); die;
                     return view('hdfc_demo', compact('session'));

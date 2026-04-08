@@ -44,7 +44,7 @@ class HdfcGatewayTestingController extends Controller
                     )
                 );
                     $orderId = "ORDER_" . time();
-                    $amount = 100;
+                    $amount = '100.0';
 
                     $user = auth()->user() ?? (object)[
                         'id' => 1,

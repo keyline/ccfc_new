@@ -77,15 +77,21 @@ class HdfcGatewayTestingController extends Controller
                     $requestOption->withCustomerId($user->id);
                     try {
                        $session = OrderSession::create($params, $requestOption);
-                    } catch (JuspayException $e){
-                        $error = [
-                            'message' => $e->getMessage(),
-                            'error_message' => $e->getErrorMessage(),
-                            'code' => $e->getCode(),
-                            'params' => $params,
-                        ];
-                        dd($error); die;
+                       } catch ( JuspayException $e ) {
+                        echo "error code" . $e->getHttpResponseCode() . PHP_EOL;
+                        echo "error message: " . $e->getErrorMessage() . PHP_EOL;
+                        echo "error code" . $e->getErrorCode() . PHP_EOL;
                     }
+    
+                    // } catch (JuspayException $e){
+                    //     $error = [
+                    //         'message' => $e->getMessage(),
+                    //         'error_message' => $e->getErrorMessage(),
+                    //         'code' => $e->getCode(),
+                    //         'params' => $params,
+                    //     ];
+                    //     dd($error); die;
+                    // }
 
                     dd($session); die;
                     return view('hdfc_demo', compact('session'));

@@ -484,13 +484,17 @@ class PaymentController extends Controller
 
         // block:start:read-keys-from-file
         // $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path('app/juspay/' . $config["PRIVATE_KEY_PATH"]));
-        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY_PATH"]);
-        $publicKey =  array_key_exists("PUBLIC_KEY_PATH", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]);
-        // block:end:read-keys-from-file
+        // $privateKey = array_key_exists("PRIVATE_KEY", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY_PATH"]);
+        // $publicKey =  array_key_exists("PUBLIC_KEY_PATH", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]);
+        // // block:end:read-keys-from-file
 
-        echo 'private : ' . $privateKey;
-        echo '<br>';
-        echo 'public : ' . $publicKey;
+        
+        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents($config["PRIVATE_KEY_PATH"]);
+        $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents($config["PUBLIC_KEY_PATH"]);
+
+        // echo 'private : ' . $privateKey;
+        // echo '<br>';
+        // echo 'public : ' . $publicKey;
 
         if ($privateKey == false || $publicKey == false) {
             http_response_code(500);
@@ -568,8 +572,8 @@ class PaymentController extends Controller
                 $requestOption->withCustomerId($user->id);
                 //$requestOption->withCustomerId($user->id);
 
-                echo '<pre>';print_r($params);
-                echo '<pre>';print_r($requestOption);die;
+                // echo '<pre>';print_r($params);
+                // echo '<pre>';print_r($requestOption);die;
                 $session = OrderSession::create($params, $requestOption);
                 // echo '<pre>';print_r($session);die;
             

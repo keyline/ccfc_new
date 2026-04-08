@@ -559,7 +559,7 @@ class PaymentController extends Controller
 
                 
                 $requestOption = new RequestOptions();
-                $requestOption->withCustomerId('member_'.$user->id);
+                $requestOption->withCustomerId($user->id);
                 //$requestOption->withCustomerId($user->id);
 
                 echo '<pre>';print_r($params);

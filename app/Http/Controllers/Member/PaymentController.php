@@ -488,6 +488,10 @@ class PaymentController extends Controller
         $publicKey =  array_key_exists("PUBLIC_KEY_PATH", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]);
         // block:end:read-keys-from-file
 
+        echo 'private : ' . $privateKey;
+        echo '<br>';
+        echo 'public : ' . $publicKey;
+
         if ($privateKey == false || $publicKey == false) {
             http_response_code(500);
             $response = $privateKey == false ? array("message" => "private key file not found") : array("message" => "public key file not found");
@@ -504,8 +508,8 @@ class PaymentController extends Controller
 
         // block:start:initialize-juspay-config
         JuspayEnvironment::init()
-        ->withBaseUrl("https://smartgateway.hdfc.bank.in")
-        //->withBaseUrl("https://smartgateway.hdfcbank.com/")
+        // ->withBaseUrl("https://smartgateway.hdfc.bank.in")
+        ->withBaseUrl("https://smartgateway.hdfcuat.bank.in")
         ->withMerchantId($config["MERCHANT_ID"])
         ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
         // block:end:initialize-juspay-config
@@ -546,14 +550,16 @@ class PaymentController extends Controller
                 $params['currency'] = "INR";
                 $params['order_id'] = $orderId;
                 $params['customer_id'] = $user->id;
-                $params['merchant_id'] = $config["MERCHANT_ID"];
+                // $params['merchant_id'] = $config["MERCHANT_ID"];
+                $params['merchant_id'] = 'SG3351';
                 $params['customer_email'] = $user->email ?? 'test@test.com';
                 $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
                 $params['first_name'] = 'Somnath';
                 $params['last_name'] = 'Shil';
                 $params['udf1'] = $user->user_code;
                 $params['udf2'] = $user->id;
-                $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
+                // $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
+                $params['payment_page_client_id'] = 'hdfcmaster';
                 $params['action'] = "paymentPage";
                 $params['return_url'] = route('member.hdfcsmartpaycallback');
 

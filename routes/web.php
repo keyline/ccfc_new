@@ -1009,3 +1009,6 @@ Route::get('archives', function () {
 Route::get('/download/tender/{file}', [TenderDownloadController::class, 'download'])->name('download.tender');
 
 Route::get('/payment/{token}', 'PaymentController@showPaymentPage')->name('payment.page');
+
+// Making demo route for testing purpose hdfc payment gateway, to be removed later
+Route::get('/payment/hdfc/demo', 'HdfcGatewayTestingController@index')->name('hdfc.demo');

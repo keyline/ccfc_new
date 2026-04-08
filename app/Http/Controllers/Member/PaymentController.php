@@ -471,6 +471,7 @@ class PaymentController extends Controller
     
         // Fallback to JSON file
         $configPath = storage_path('app/juspay/config.json');
+        $keyPath = storage_path('app/juspay/');
 
         if (!file_exists($configPath)) {
             throw new Exception("Juspay configuration not found");
@@ -489,8 +490,8 @@ class PaymentController extends Controller
         // // block:end:read-keys-from-file
 
         
-        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents($config["PRIVATE_KEY_PATH"]);
-        $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents($config["PUBLIC_KEY_PATH"]);
+        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents($keyPath . $config["PRIVATE_KEY_PATH"]);
+        $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents($keyPath . $config["PUBLIC_KEY_PATH"]);
 
         // echo 'private : ' . $privateKey;
         // echo '<br>';

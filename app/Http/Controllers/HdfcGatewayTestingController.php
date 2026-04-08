@@ -9,6 +9,10 @@ use Juspay\JuspayEnvironment;
 use Juspay\Request\OrderCreateRequest;
 use Juspay\Model\Order;
 use Juspay\Util\JuspayJWT;
+use Juspay\RequestOptions;
+use Juspay\Model\OrderSession;
+use Juspay\Exception\JuspayException;
+use Exception;
 
 class HdfcGatewayTestingController extends Controller
 {
@@ -55,5 +59,5 @@ class HdfcGatewayTestingController extends Controller
             
                 return view('hdfc_demo', compact('session'));
 
-        }
     }
+}

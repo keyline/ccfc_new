@@ -93,7 +93,7 @@ class HdfcGatewayTestingController extends Controller
                     //     dd($error); die;
                     // }
 
-                    dd($session); die;
+                    // dd($session); die;
                     return view('hdfc_demo', compact('session'));
 
         }

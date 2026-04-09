@@ -1,8 +1,8 @@
 <?php
 
 return [
-    // 'base_url' => env('JUSPAY_BASE_URL', 'https://smartgateway.hdfcuat.bank.in'), //uat
-    'base_url' => env('JUSPAY_BASE_URL', 'https://smartgateway.hdfc.bank.in'), //live
+    'base_url' => env('JUSPAY_BASE_URL'), //uat
+    // 'base_url' => env('JUSPAY_BASE_URL', 'https://smartgateway.hdfc.bank.in'), //live
     'merchant_id' => env('JUSPAY_MERCHANT_ID'),
     'key_uuid' => env('JUSPAY_KEY_UUID'),
     'public_key_file' => env('JUSPAY_PUBLIC_KEY_FILE'),

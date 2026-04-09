@@ -719,9 +719,6 @@ class PaymentController extends Controller
 
     public function initiateJuspayPayment(Request $request, JuspayService $juspay)
     {
-        // echo "<pre>";    
-        // print_r($request->all());
-        // die;
         $amount = $request->amount;
 
         try {

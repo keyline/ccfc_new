@@ -647,94 +647,94 @@ class PaymentController extends Controller
     //     return response()->json($response);
     // }
 
-    // public function initiateJuspayPayment(Request $request, JuspayService $juspay)
-    // {
-
-    //     // $user = User::find(session('LoggedMember'))->first();
-    //     $session_user = session('LoggedMember');
-    //     $user = User::where('id', $session_user)->first();
-
-    //             $amount = '120.30';
-    //             // $session = OrderSession::create($params, $requestOption);
-    //                 try {
-    //                     $orderId = uniqid('order_');
-    //                     $session = $juspay->createPaymentSession($orderId, route('payment.success'), $amount);
-    //                 } catch (\Throwable $e) {
-    //                     return back()->with('payment_error', [
-    //                         'message' => method_exists($e, 'getErrorMessage') ? $e->getErrorMessage() : $e->getMessage(),
-    //                         'code' => method_exists($e, 'getErrorCode') ? $e->getErrorCode() : null,
-    //                     ]);
-    //                 }
-            
-    //         if ($session->status == "NEW") {
-    //             $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
-
-    //             // Store the order ID or other necessary details in your database for future reference
-    //             $paymentId = DB::table('payu_transactions')->insertGetId([
-    //             'paid_for_id' => $user->id,
-    //             'paid_for_type' => 'App\Models\User',
-    //             'transaction_id' => $session->orderId,
-    //             'gateway'		=> 'HDFC SMART Pay',
-    //             'body'			=> serialize($session->sdkPayload),
-    //             'destination'	=> route('member.hdfcsmartpaycallback'),
-    //             'hash'			=> '',
-    //             'response'		=> '',
-    //             'status'		=> 'pending',
-    //             'created_at'	=> Carbon::now('Asia/Kolkata'),
-    //             'updated_at'	=> Carbon::now('Asia/Kolkata'),
-
-    //             ]);
-
-    //             Session::put('hdfcsmartpayTransactionid', $session->orderId);
-
-    //             Session::put('hdfcsmartpaycustomerid', $user->id);
-
-    //             if ($tokenId) {
-    //                 //mark token as used
-    //                 $paymentToken = \App\Models\PaymentToken::find($tokenId);
-    //                 if ($paymentToken) {
-    //                     $paymentToken->markAsUsed(request()->ip(), request()->userAgent());
-    //                 }
-
-    //                 //insert into TokenPayment
-    //                 $tokenPaymentId = \App\Models\TokenPayment::create([
-    //                     'payment_id' => $paymentId,
-    //                     'token_id' => $paymentToken->id,
-    //                     'member_code' => $paymentToken->member_code,
-    //                     'member_due_id' => $paymentToken->member_due_id,
-    //                     'payment_method' => 'HDFC SMART Pay',
-    //                     'transaction_id' => $session->orderId,
-    //                     'amount' => $amount,
-    //                     'payment_status' => 'pending',
-    //                     'payment_date' => Carbon::now('Asia/Kolkata'),
-    //                 ]);
-    //             }
-
-
-    //         } else {
-    //             http_response_code(500);
-    //             $response = array("message" => "session status: " . $session->status);
-    //         }
-    // }
-
-    public function initiateJuspayPayment(JuspayService $juspay)
+    public function initiateJuspayPayment(Request $request, JuspayService $juspay)
     {
-        try {
-            $orderId = uniqid('order_');
-            $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpaycallback'));
 
-            return response()->json([
-                'status' => true,
-                'data' => $result
-            ]);
+        // $user = User::find(session('LoggedMember'))->first();
+        $session_user = session('LoggedMember');
+        $user = User::where('id', $session_user)->first();
 
-        } catch (\Throwable $e) {
-            return response()->json([
-                'status' => false,
-                'error' => $e->getMessage()
-            ]);
-        }
+                $amount = $input['amount']?? '170.25';
+                // $session = OrderSession::create($params, $requestOption);
+                    try {
+                        $orderId = uniqid('order_');
+                        $session = $juspay->createPaymentSession($orderId, route('payment.success'), $amount);
+                    } catch (\Throwable $e) {
+                        return back()->with('payment_error', [
+                            'message' => method_exists($e, 'getErrorMessage') ? $e->getErrorMessage() : $e->getMessage(),
+                            'code' => method_exists($e, 'getErrorCode') ? $e->getErrorCode() : null,
+                        ]);
+                    }
+            
+            if ($session->data->order_status == "NEW") {
+                $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
+
+                // Store the order ID or other necessary details in your database for future reference
+                $paymentId = DB::table('payu_transactions')->insertGetId([
+                'paid_for_id' => $user->id,
+                'paid_for_type' => 'App\Models\User',
+                'transaction_id' => $session->orderId,
+                'gateway'		=> 'HDFC SMART Pay',
+                'body'			=> serialize($session->sdkPayload),
+                'destination'	=> route('member.hdfcsmartpaycallback'),
+                'hash'			=> '',
+                'response'		=> '',
+                'status'		=> 'pending',
+                'created_at'	=> Carbon::now('Asia/Kolkata'),
+                'updated_at'	=> Carbon::now('Asia/Kolkata'),
+
+                ]);
+
+                Session::put('hdfcsmartpayTransactionid', $session->orderId);
+
+                Session::put('hdfcsmartpaycustomerid', $user->id);
+
+                if ($tokenId) {
+                    //mark token as used
+                    $paymentToken = \App\Models\PaymentToken::find($tokenId);
+                    if ($paymentToken) {
+                        $paymentToken->markAsUsed(request()->ip(), request()->userAgent());
+                    }
+
+                    //insert into TokenPayment
+                    $tokenPaymentId = \App\Models\TokenPayment::create([
+                        'payment_id' => $paymentId,
+                        'token_id' => $paymentToken->id,
+                        'member_code' => $paymentToken->member_code,
+                        'member_due_id' => $paymentToken->member_due_id,
+                        'payment_method' => 'HDFC SMART Pay',
+                        'transaction_id' => $session->orderId,
+                        'amount' => $amount,
+                        'payment_status' => 'pending',
+                        'payment_date' => Carbon::now('Asia/Kolkata'),
+                    ]);
+                }
+
+
+            } else {
+                http_response_code(500);
+                $response = array("message" => "session status: " . $session->status);
+            }
     }
+
+    // public function initiateJuspayPayment(JuspayService $juspay)
+    // {
+    //     try {
+    //         $orderId = uniqid('order_');
+    //         $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpaycallback'));
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'data' => $result
+    //         ]);
+
+    //     } catch (\Throwable $e) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'error' => $e->getMessage()
+    //         ]);
+    //     }
+    // }
 
     // public function initiateJuspayPayment(Request $request)
     // {

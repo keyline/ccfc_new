@@ -721,7 +721,7 @@ class PaymentController extends Controller
     {
         try {
             $orderId = uniqid('order_');
-            $result = $juspay->createPaymentSession($orderId, route('payment.success'));
+            $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpg'));
 
             return response()->json([
                 'status' => true,

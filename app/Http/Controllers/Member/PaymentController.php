@@ -28,6 +28,7 @@ use Juspay\Exception\JuspayException;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use App\Models\MemberDue;
+use App\Services\Juspay\JuspayService;
 
 use function Symfony\Component\VarDumper\Dumper\esc;
 
@@ -462,117 +463,208 @@ class PaymentController extends Controller
         //return response()->json(['success' => true]);
     }
 
-    public function initiateJuspayPayment(Request $request)
+    // public function initiateJuspayPayment(Request $request)
+    // {
+
+    //     // $user = User::find(session('LoggedMember'))->first();
+    //     $session_user = session('LoggedMember');
+    //     $user = User::where('id', $session_user)->first();
+    
+    //     // Fallback to JSON file
+    //     $configPath = storage_path('app/juspay/config.json');
+    //     $keyPath = storage_path('app/juspay/');
+
+    //     if (!file_exists($configPath)) {
+    //         throw new Exception("Juspay configuration not found");
+    //     }
+
+
+    //     $config = file_get_contents($configPath);
+    //     $config = json_decode($config, true);
+
+    //     new ServerEnv($config);
+
+    //     // block:start:read-keys-from-file
+    //     // $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path('app/juspay/' . $config["PRIVATE_KEY_PATH"]));
+    //     // $privateKey = array_key_exists("PRIVATE_KEY", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY_PATH"]);
+    //     // $publicKey =  array_key_exists("PUBLIC_KEY_PATH", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]);
+    //     // // block:end:read-keys-from-file
+
+        
+    //     $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents($keyPath . $config["PRIVATE_KEY_PATH"]);
+    //     $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents($keyPath . $config["PUBLIC_KEY_PATH"]);
+
+    //     if ($privateKey == false || $publicKey == false) {
+    //         http_response_code(500);
+    //         $response = $privateKey == false ? array("message" => "private key file not found") : array("message" => "public key file not found");
+    //         echo json_encode($response);
+    //         if ($privateKey == false) {
+    //             error_log("private key file not found");
+    //             throw new Exception("private key file not found");
+    //         } else {
+    //             error_log("public key file not found");
+    //             throw new Exception("public key file not found");
+    //         }
+    //     }
+
+
+    //     // block:start:initialize-juspay-config
+    //     JuspayEnvironment::init()
+    //     // ->withBaseUrl("https://smartgateway.hdfc.bank.in")
+    //     ->withBaseUrl("https://smartgateway.hdfcuat.bank.in")
+    //     ->withMerchantId($config["MERCHANT_ID"])
+    //     ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
+    //     // block:end:initialize-juspay-config
+
+        
+    //     $config = ServerEnv::$config;
+
+    //     $inputJSON = file_get_contents('php://input');
+    //     $input = json_decode($inputJSON, true);
+    //     header('Content-Type: application/json');
+    //     $orderId = uniqid();
+    //     $amount = $input['amount'];
+    //     $tokenId = $input['token_id'] ?? null;
+
+    //     try {
+    //         if (!$user) {
+    //             throw new Exception("User not logged in", 1);
+
+    //         }
+    //         // $params = array();
+    //         // $params['amount'] = $amount;
+    //         // $params['currency'] = "INR";
+    //         // $params['order_id'] = $orderId;
+    //         // $params['customer_id'] = $user->id;
+    //         // $params["merchant_id"] = $config["MERCHANT_ID"]; # Add merchant id
+    //         // $params['customer_id'] = "testing-customer-one";
+    //         // $params['udf1'] = $user->user_code;
+    //         // $params['udf2'] = $user->id;
+    //         // $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
+    //         // $params['action'] = "paymentPage";
+    //         // $params['return_url'] = route('member.hdfcsmartpaycallback');
+    //         // $requestOption = new RequestOptions();
+    //         // $requestOption->withCustomerId("testing-customer-one");
+
+    //             $params = [];
+
+    //             $params['amount'] = $amount;
+    //             $params['currency'] = "INR";
+    //             $params['order_id'] = $orderId;
+    //             $params['customer_id'] = $user->id;
+    //             // $params['merchant_id'] = $config["MERCHANT_ID"];
+    //             $params['merchant_id'] = 'SG3351';
+    //             $params['customer_email'] = $user->email ?? 'test@test.com';
+    //             $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
+    //             $params['first_name'] = 'Somnath';
+    //             $params['last_name'] = 'Shil';
+    //             $params['udf1'] = $user->user_code;
+    //             $params['udf2'] = $user->id;
+    //             // $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
+    //             $params['payment_page_client_id'] = 'hdfcmaster';
+    //             $params['action'] = "paymentPage";
+    //             $params['return_url'] = route('member.hdfcsmartpaycallback');
+
+                
+    //             $requestOption = new RequestOptions();
+    //             $requestOption->withCustomerId($user->id);
+    //             //$requestOption->withCustomerId($user->id);
+
+    //             // echo '<pre>';print_r($params);
+    //             // echo '<pre>';print_r($requestOption);die;
+    //             $session = OrderSession::create($params, $requestOption);
+    //             // echo '<pre>';print_r($session);die;
+            
+    //         if ($session->status == "NEW") {
+    //             $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
+
+    //             // Store the order ID or other necessary details in your database for future reference
+    //             $paymentId = DB::table('payu_transactions')->insertGetId([
+    //             'paid_for_id' => $user->id,
+    //             'paid_for_type' => 'App\Models\User',
+    //             'transaction_id' => $session->orderId,
+    //             'gateway'		=> 'HDFC SMART Pay',
+    //             'body'			=> serialize($session->sdkPayload),
+    //             'destination'	=> route('member.hdfcsmartpaycallback'),
+    //             'hash'			=> '',
+    //             'response'		=> '',
+    //             'status'		=> 'pending',
+    //             'created_at'	=> Carbon::now('Asia/Kolkata'),
+    //             'updated_at'	=> Carbon::now('Asia/Kolkata'),
+
+    //             ]);
+
+    //             Session::put('hdfcsmartpayTransactionid', $session->orderId);
+
+    //             Session::put('hdfcsmartpaycustomerid', $user->id);
+
+    //             if ($tokenId) {
+    //                 //mark token as used
+    //                 $paymentToken = \App\Models\PaymentToken::find($tokenId);
+    //                 if ($paymentToken) {
+    //                     $paymentToken->markAsUsed(request()->ip(), request()->userAgent());
+    //                 }
+
+    //                 //insert into TokenPayment
+    //                 $tokenPaymentId = \App\Models\TokenPayment::create([
+    //                     'payment_id' => $paymentId,
+    //                     'token_id' => $paymentToken->id,
+    //                     'member_code' => $paymentToken->member_code,
+    //                     'member_due_id' => $paymentToken->member_due_id,
+    //                     'payment_method' => 'HDFC SMART Pay',
+    //                     'transaction_id' => $session->orderId,
+    //                     'amount' => $amount,
+    //                     'payment_status' => 'pending',
+    //                     'payment_date' => Carbon::now('Asia/Kolkata'),
+    //                 ]);
+    //             }
+
+
+    //         } else {
+    //             http_response_code(500);
+    //             $response = array("message" => "session status: " . $session->status);
+    //         }
+    //     } catch (JuspayException $e) {
+    //         // http_response_code($e->getHttpResponseCode());
+    //         // $response = array("message" => $e->getErrorMessage());
+    //         // error_log($e->getErrorMessage());
+    //             return response()->json([
+    //                         'error' => true,
+    //                         'message' => $e->getMessage(),
+    //                         'error_message' => $e->getErrorMessage(),
+    //                         'code' => $e->getCode(),
+    //                         'line' => $e->getLine(),
+    //                         'file' => $e->getFile(),
+    //                         'trace' => $e->getTraceAsString()
+    //                     ]);
+    //     } catch (Exception $e) {
+    //         http_response_code(429);
+    //         $response = array("message" => $e->getMessage());
+    //         error_log($e->getMessage());
+    //     }
+    //     \Log::info('Juspay Response:', $response);
+    //     // echo json_encode($response);
+    //     return response()->json($response);
+    // }
+
+    public function initiateJuspayPayment(Request $request, JuspayService $juspay)
     {
 
         // $user = User::find(session('LoggedMember'))->first();
         $session_user = session('LoggedMember');
         $user = User::where('id', $session_user)->first();
-    
-        // Fallback to JSON file
-        $configPath = storage_path('app/juspay/config.json');
-        $keyPath = storage_path('app/juspay/');
 
-        if (!file_exists($configPath)) {
-            throw new Exception("Juspay configuration not found");
-        }
-
-
-        $config = file_get_contents($configPath);
-        $config = json_decode($config, true);
-
-        new ServerEnv($config);
-
-        // block:start:read-keys-from-file
-        // $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path('app/juspay/' . $config["PRIVATE_KEY_PATH"]));
-        // $privateKey = array_key_exists("PRIVATE_KEY", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PRIVATE_KEY_PATH"]);
-        // $publicKey =  array_key_exists("PUBLIC_KEY_PATH", $config) ? file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]) : file_get_contents('/home/507708.cloudwaysapps.com/mcbnwefrun/public_html/storage/app/juspay/' . $config["PUBLIC_KEY_PATH"]);
-        // // block:end:read-keys-from-file
-
-        
-        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents($keyPath . $config["PRIVATE_KEY_PATH"]);
-        $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents($keyPath . $config["PUBLIC_KEY_PATH"]);
-
-        if ($privateKey == false || $publicKey == false) {
-            http_response_code(500);
-            $response = $privateKey == false ? array("message" => "private key file not found") : array("message" => "public key file not found");
-            echo json_encode($response);
-            if ($privateKey == false) {
-                error_log("private key file not found");
-                throw new Exception("private key file not found");
-            } else {
-                error_log("public key file not found");
-                throw new Exception("public key file not found");
-            }
-        }
-
-
-        // block:start:initialize-juspay-config
-        JuspayEnvironment::init()
-        // ->withBaseUrl("https://smartgateway.hdfc.bank.in")
-        ->withBaseUrl("https://smartgateway.hdfcuat.bank.in")
-        ->withMerchantId($config["MERCHANT_ID"])
-        ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
-        // block:end:initialize-juspay-config
-
-        
-        $config = ServerEnv::$config;
-
-        $inputJSON = file_get_contents('php://input');
-        $input = json_decode($inputJSON, true);
-        header('Content-Type: application/json');
-        $orderId = uniqid();
-        $amount = $input['amount'];
-        $tokenId = $input['token_id'] ?? null;
-
-        try {
-            if (!$user) {
-                throw new Exception("User not logged in", 1);
-
-            }
-            // $params = array();
-            // $params['amount'] = $amount;
-            // $params['currency'] = "INR";
-            // $params['order_id'] = $orderId;
-            // $params['customer_id'] = $user->id;
-            // $params["merchant_id"] = $config["MERCHANT_ID"]; # Add merchant id
-            // $params['customer_id'] = "testing-customer-one";
-            // $params['udf1'] = $user->user_code;
-            // $params['udf2'] = $user->id;
-            // $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
-            // $params['action'] = "paymentPage";
-            // $params['return_url'] = route('member.hdfcsmartpaycallback');
-            // $requestOption = new RequestOptions();
-            // $requestOption->withCustomerId("testing-customer-one");
-
-                $params = [];
-
-                $params['amount'] = $amount;
-                $params['currency'] = "INR";
-                $params['order_id'] = $orderId;
-                $params['customer_id'] = $user->id;
-                // $params['merchant_id'] = $config["MERCHANT_ID"];
-                $params['merchant_id'] = 'SG3351';
-                $params['customer_email'] = $user->email ?? 'test@test.com';
-                $params['customer_phone'] = $user->phone_number_1 ?? '9999999999';
-                $params['first_name'] = 'Somnath';
-                $params['last_name'] = 'Shil';
-                $params['udf1'] = $user->user_code;
-                $params['udf2'] = $user->id;
-                // $params['payment_page_client_id'] = $config["PAYMENT_PAGE_CLIENT_ID"];
-                $params['payment_page_client_id'] = 'hdfcmaster';
-                $params['action'] = "paymentPage";
-                $params['return_url'] = route('member.hdfcsmartpaycallback');
-
-                
-                $requestOption = new RequestOptions();
-                $requestOption->withCustomerId($user->id);
-                //$requestOption->withCustomerId($user->id);
-
-                // echo '<pre>';print_r($params);
-                // echo '<pre>';print_r($requestOption);die;
-                $session = OrderSession::create($params, $requestOption);
-                // echo '<pre>';print_r($session);die;
+                $amount = '120.30';
+                // $session = OrderSession::create($params, $requestOption);
+                    try {
+                        $orderId = uniqid('order_');
+                        $session = $juspay->createPaymentSession($orderId, route('payment.success'), $amount);
+                    } catch (\Throwable $e) {
+                        return back()->with('payment_error', [
+                            'message' => method_exists($e, 'getErrorMessage') ? $e->getErrorMessage() : $e->getMessage(),
+                            'code' => method_exists($e, 'getErrorCode') ? $e->getErrorCode() : null,
+                        ]);
+                    }
             
             if ($session->status == "NEW") {
                 $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
@@ -623,28 +715,25 @@ class PaymentController extends Controller
                 http_response_code(500);
                 $response = array("message" => "session status: " . $session->status);
             }
-        } catch (JuspayException $e) {
-            // http_response_code($e->getHttpResponseCode());
-            // $response = array("message" => $e->getErrorMessage());
-            // error_log($e->getErrorMessage());
-                return response()->json([
-                            'error' => true,
-                            'message' => $e->getMessage(),
-                            'error_message' => $e->getErrorMessage(),
-                            'code' => $e->getCode(),
-                            'line' => $e->getLine(),
-                            'file' => $e->getFile(),
-                            'trace' => $e->getTraceAsString()
-                        ]);
-        } catch (Exception $e) {
-            http_response_code(429);
-            $response = array("message" => $e->getMessage());
-            error_log($e->getMessage());
-        }
-        \Log::info('Juspay Response:', $response);
-        // echo json_encode($response);
-        return response()->json($response);
     }
+
+    // public function initiate(JuspayService $juspay)
+    // {
+    //     try {
+    //         $orderId = uniqid('order_');
+    //         $result = $juspay->createPaymentSession($orderId, route('payment.success'));
+
+    //         return view('payment-result', [
+    //             'orderId' => $orderId,
+    //             'result' => $result,
+    //         ]);
+    //     } catch (\Throwable $e) {
+    //         return back()->with('payment_error', [
+    //             'message' => method_exists($e, 'getErrorMessage') ? $e->getErrorMessage() : $e->getMessage(),
+    //             'code' => method_exists($e, 'getErrorCode') ? $e->getErrorCode() : null,
+    //         ]);
+    //     }
+    // }
 
     // public function initiateJuspayPayment(Request $request)
     // {

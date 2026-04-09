@@ -717,11 +717,12 @@ class PaymentController extends Controller
     //         }
     // }
 
-    public function initiateJuspayPayment(JuspayService $juspay)
+    public function initiateJuspayPayment(Request $request, JuspayService $juspay)
     {
+        $amount = $request['input']['amount'];
         try {
             $orderId = uniqid('order_');
-            $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpaycallback'));
+            $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpaycallback'), $amount);
 
             return response()->json([
                 'status' => true,

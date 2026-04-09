@@ -455,7 +455,7 @@
 
             })
             .then(data => {
-                if (data.data.order_status === 'NEW') {
+                if (data.data.order_status === 'NEWg') {
                     const url = data.paymentLinks.web;
                     return window.location.href = url;
                     console.log("yes");

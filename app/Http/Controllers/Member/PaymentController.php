@@ -947,54 +947,242 @@ class PaymentController extends Controller
     //     }
     // }
 
-    public function handleJuspayResponse()
+    // public function handleJuspayResponse()
+    // {
+
+
+    //     // Fallback to JSON file
+    //     $configPath = storage_path('app/juspay/config.json');
+
+    //     if (!file_exists($configPath)) {
+    //         throw new Exception("Juspay configuration not found");
+    //     }
+
+
+    //     $config = file_get_contents($configPath);
+    //     $config = json_decode($config, true);
+
+
+
+    //     new ServerEnv($config);
+
+
+    //     // block:start:read-keys-from-file
+    //     $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path($config["PRIVATE_KEY_PATH"]));
+    //     $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents(storage_path($config["PUBLIC_KEY_PATH"]));
+    //     // block:end:read-keys-from-file
+
+    //     if ($privateKey == false || $publicKey == false) {
+    //         http_response_code(500);
+    //         $response = $privateKey == false ? array("message" => "private key file not found") : array("message" => "public key file not found");
+    //         echo json_encode($response);
+    //         if ($privateKey == false) {
+    //             error_log("private key file not found");
+    //             throw new Exception("private key file not found");
+    //         } else {
+    //             error_log("public key file not found");
+    //             throw new Exception("public key file not found");
+    //         }
+    //     }
+
+
+    //     // block:start:initialize-juspay-config
+    //     JuspayEnvironment::init()
+    //     ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
+    //     //->withBaseUrl("https://smartgateway.hdfcbank.com/")
+    //     ->withMerchantId($config["MERCHANT_ID"])
+    //     ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
+    //     // block:end:initialize-juspay-config
+
+    //     $config = ServerEnv::$config;
+
+
+    //     if (isset($_POST["order_id"])) {
+    //         try {
+
+    //             $params = array();
+
+    //             $orderId = $_POST["order_id"];
+
+    //             $params ['order_id'] = $orderId;
+
+    //             $order = Order::status($params, new RequestOptions(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)));
+    //             if ($order == null || $order->orderId  != $orderId) {
+    //                 throw new Exception("Order not found", 1);
+    //             }
+
+    //             //$order = $this->JpgetOrder($orderId, $config);
+    //             $response = $this->JporderStatusMessage($order);
+
+    //             //Build array and store in database
+    //             $myOrderData = [
+    //                 'orderId'       => $order->orderId,
+    //                 'merchantId'    => $order->merchantId,
+    //                 'txnId'         => $order->txnId ?? null,
+    //                 'amount'        => $order->amount ,
+    //                 'txn_amount'    => $order->amount ,
+    //                 'customerId'    => $order->customerId ?? '',
+    //                 'customerEmail' => $order->customerEmail ?? '',
+    //                 'returnUrl'     => $order->returnUrl,
+    //                 'udf1'          => $order->udf1 ?? '',
+    //                 'udf2'          => $order->udf2 ?? '',
+    //                 'statusId'      => $order->statusId,
+    //                 'status'        => $order->status,
+    //                 'bankErrorCode' => $order->bankErrorCode ?? '',
+    //                 'bankErrorMessage' => $order->bankErrorMessage ?? '',
+    //                 'paymentMethodType' => $order->paymentMethodType ?? '',
+    //                 'paymentMethod'     => $order->paymentMethod
+    //             ];
+
+    //             //Update DB Layer
+    //             $payment = DB::table('payu_transactions')
+    //                                 ->where('transaction_id', $order->orderId)->first();
+
+    //             $requestLoad = @unserialize($payment->body ?? '');
+
+    //             if (!$payment) {
+    //                 throw new Exception("Payment record not found", 1);
+    //             }
+
+
+
+    //             if (is_array($requestLoad)) {
+    //                 $amountFromPayload = $requestLoad['payload']['amount'] ?? null;
+
+    //                 // Compare with your expected DB amount
+    //                 if ((float)$order->amount !== (float)$amountFromPayload) {
+    //                     Log::error("Amount mismatch for {$orderId}: expected {$order->amount}, got {$amountFromPayload}");
+    //                     throw new Exception("Amount mismatch", 1);
+    //                     //return response('Amount Mismatch', 400);
+    //                 }
+    //             }
+
+
+    //             DB::table('payu_transactions')
+    //             ->where('transaction_id', $order->orderId)
+    //             ->update(
+    //                 [
+    //                     'response' => $myOrderData,
+    //                     'status'	=> $response['order_status'] === "CHARGED"
+    //                                     ? 'successful'
+    //                                     : (
+    //                                         $response['order_status'] == 'PENDING' || $response['order_status'] == 'PENDING_VBV'
+    //                                         ? 'pending'
+    //                                         : 'failed'
+    //                                     ),
+    //                     'updated_at' => Carbon::now('Asia/Kolkata'),
+
+    //                 ]
+    //             );
+
+
+    //             $tokenPayment = \App\Models\TokenPayment::where('transaction_id', $order->orderId)->firstOrFail();
+
+    //             if ($tokenPayment) {
+
+    //                 \App\Models\TokenPayment::where('transaction_id', $order->orderId)
+    //                                     ->update(
+    //                                         [
+    //                                             'payment_status'	=> $response['order_status'] === "CHARGED"
+    //                                                             ? 'successful'
+    //                                                             : (
+    //                                                                 $response['order_status'] == 'PENDING' || $response['order_status'] == 'PENDING_VBV'
+    //                                                                 ? 'pending'
+    //                                                                 : 'failed'
+    //                                                             ),
+    //                                             'payment_date' => Carbon::now('Asia/Kolkata'),
+    //                                             'gateway_response' => $myOrderData,
+
+    //                                         ]
+    //                                     );
+
+    //                 if ($response['order_status'] === "CHARGED") {
+    //                     \App\Models\MemberDue::processPayment($tokenPayment->member_due_id, $tokenPayment->amount);
+    //                 }
+
+
+    //             }
+
+
+    //             //find user
+    //             $user = User::find(session::get('hdfcsmartpaycustomerid'));
+
+
+
+    //             $emailInfo = array(
+    //                 'greeting' => "Dear, {$user->name}",
+    //                 'body'     => "Thank you for making payment of Rs.{ $order->amount }. Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
+    //             );
+
+    //             Notification::send($user, new PayUEmailNotification($emailInfo));
+
+    //             if (config('auth.logout_after_payment')) {
+    //                 Auth::guard('members')->logout();
+    //             }
+
+    //             $status = [
+    //                         'status' =>  $response['order_status'] === "CHARGED" ? 'success' : 'failed',
+    //                         'transactionid' => $response['order_id'],
+    //                         'amount' => $order->amount ?? 0,
+    //                         'message' => $response['message']
+    //                     ];
+
+
+    //             Session::forget(['hdfcsmartpayTransactionid', 'hdfcsmartpaycustomerid']);
+
+
+    //             return view('member.paymentstatusotherpgs', compact('status'));
+
+
+
+
+
+    //         } catch (JuspayException $ex) {
+    //             http_response_code(500);
+    //             //$response = array("message" => $e->getErrorMessage());
+    //             error_log($ex->getMessage());
+    //         } catch (Exception $ex) {
+    //             http_response_code(429);
+    //             //$response_1 = array("message" => $ex->getMessage());
+    //             error_log($ex->getMessage());
+    //         }
+    //     } else {
+    //         http_response_code(400);
+    //         $response = array('message' => 'order id not found');
+    //     }
+
+
+    //     //header('Content-Type: application/json');
+    //     //echo json_encode($response);
+    //     //convert data to generalize form
+
+
+    //     http_response_code(400);
+
+    //     $status = [
+    //         'status' =>  $response['order_status'],
+    //         'transactionid' => $response['order_id'] ?? '',
+    //         'amount' => $order->amount ?? 0,
+    //         'message' => $ex->getMessage() ?? ''
+    //     ];
+
+    //     Session::forget(['hdfcsmartpayTransactionid', 'hdfcsmartpaycustomerid']);
+
+
+    //     return view('member.paymentstatusotherpgs', compact('status'));
+
+
+
+
+
+    // }
+
+    public function handleJuspayResponse(JuspayService $juspay)
     {
-
-
-        // Fallback to JSON file
-        $configPath = storage_path('app/juspay/config.json');
-
-        if (!file_exists($configPath)) {
-            throw new Exception("Juspay configuration not found");
-        }
-
-
-        $config = file_get_contents($configPath);
-        $config = json_decode($config, true);
-
-
-
-        new ServerEnv($config);
-
-
-        // block:start:read-keys-from-file
-        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path($config["PRIVATE_KEY_PATH"]));
-        $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents(storage_path($config["PUBLIC_KEY_PATH"]));
-        // block:end:read-keys-from-file
-
-        if ($privateKey == false || $publicKey == false) {
-            http_response_code(500);
-            $response = $privateKey == false ? array("message" => "private key file not found") : array("message" => "public key file not found");
-            echo json_encode($response);
-            if ($privateKey == false) {
-                error_log("private key file not found");
-                throw new Exception("private key file not found");
-            } else {
-                error_log("public key file not found");
-                throw new Exception("public key file not found");
-            }
-        }
-
-
-        // block:start:initialize-juspay-config
-        JuspayEnvironment::init()
-        ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
-        //->withBaseUrl("https://smartgateway.hdfcbank.com/")
-        ->withMerchantId($config["MERCHANT_ID"])
-        ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
-        // block:end:initialize-juspay-config
-
-        $config = ServerEnv::$config;
+        // changed: callback now uses the same Juspay config/key resolution as initiateJuspayPayment().
+        $config = $juspay->config();
+        $jwt = $juspay->jwt();
+        $juspay->initialize();
 
 
         if (isset($_POST["order_id"])) {
@@ -1006,7 +1194,8 @@ class PaymentController extends Controller
 
                 $params ['order_id'] = $orderId;
 
-                $order = Order::status($params, new RequestOptions(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)));
+                // changed: reuse the shared JWT instead of reading config.json paths directly in the callback.
+                $order = Order::status($params, new RequestOptions($jwt));
                 if ($order == null || $order->orderId  != $orderId) {
                     throw new Exception("Order not found", 1);
                 }

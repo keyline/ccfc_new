@@ -18,11 +18,19 @@ class JuspayService
         JuspayEnvironment::init()
             ->withBaseUrl($config['base_url'])
             ->withMerchantId($config['merchant_id'])
-            ->withJuspayJWT(new JuspayJWT(
-                $config['key_uuid'],
-                $this->readKeyFile($config['public_key_file']),
-                $this->readKeyFile($config['private_key_file']),
-            ));
+            ->withJuspayJWT($this->jwt());
+    }
+
+    // changed: shared JWT builder so callback and session creation use the same key-loading path.
+    public function jwt(): JuspayJWT
+    {
+        $config = $this->config();
+
+        return new JuspayJWT(
+            $config['key_uuid'],
+            $this->readKeyFile($config['public_key_file']),
+            $this->readKeyFile($config['private_key_file']),
+        );
     }
 
     public function createPaymentSession(string $orderId, string $returnUrl, string $amount = '120.30'): array

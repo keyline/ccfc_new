@@ -49,6 +49,7 @@ class JuspayService
         return [
             'session' => $session,
             'status' => $status,
+            'order_status' => $status->status ?? null,
             'payment_link' => Arr::get($session->paymentLinks, 'web'),
             'sdk_payload' => $session->sdkPayload ?? null,
             'meta' => [

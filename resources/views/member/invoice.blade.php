@@ -421,6 +421,28 @@
         if (!el.checked) {
             return;
         }
+
+        // changed: lightweight loader so the user sees progress before gateway redirection.
+        let loader = document.getElementById('hdfc-smart-loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'hdfc-smart-loader';
+            loader.innerHTML =
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;font-family:Arial,sans-serif;">' +
+                '<div style="width:42px;height:42px;border:4px solid rgba(255,255,255,0.35);border-top-color:#ffffff;border-radius:50%;animation:hdfcSmartSpin 0.8s linear infinite;"></div>' +
+                '<div style="font-size:16px;font-weight:600;">Please wait, redirecting to payment gateway...</div>' +
+                '</div>';
+            loader.style.cssText =
+                'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;';
+            document.body.appendChild(loader);
+
+            const loaderStyle = document.createElement('style');
+            loaderStyle.innerHTML = '@keyframes hdfcSmartSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+            document.head.appendChild(loaderStyle);
+        }
+
+        loader.style.display = 'flex';
+
         const payNowButton = document.querySelector('.btn-primary');
         payNowButton.style.display = 'none';
         // Get amount from the input
@@ -430,6 +452,7 @@
         if (!amountValue || amountValue <= 0) {
             alert("Please enter a valid amount before choosing HDFC Smart gateway.");
             el.checked = false;
+            loader.style.display = 'none';
             //payNowButton.disabled =false;
             return;
         }
@@ -461,10 +484,12 @@
                     console.log("yes");
                 }
                 console.log(data);
+                loader.style.display = 'none';
                 alert(`Unexpected status: ${data.status}`);
             })
             .catch(err => {
                 el.checked = false;
+                loader.style.display = 'none';
                 console.error(err);
                 alert("Error connecting to hdfcsmartpay.");
             });

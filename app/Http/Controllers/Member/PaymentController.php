@@ -581,8 +581,8 @@ class PaymentController extends Controller
             
         // $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session);
         //  return response()->json($response);
-            return response()->json($session);
-            
+            // return response()->json($session);
+
             if ($session->status == "NEW") {
                 $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
 

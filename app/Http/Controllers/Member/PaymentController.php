@@ -320,7 +320,7 @@ class PaymentController extends Controller
         return response()->json(['order_id' => $order['id']]);
         // return response()->json(['order_id' => 56789]);
     }
-    //     public function razorpay(Request $request)
+    // public function razorpay(Request $request)
     // {
     //     try {
     //         $amount = $request->amount;

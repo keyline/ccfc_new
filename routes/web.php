@@ -685,8 +685,6 @@ Route::group([
     Route::get('/token/payment', [HomeController::class, 'tokenPayment'])->name('token.payment');
 
 
-    // Making demo route for testing purpose hdfc payment gateway, to be removed later
-    Route::get('/payment/hdfc/demo', 'HdfcGatewayTestingController@index')->name('hdfc.demo');
 
 
 

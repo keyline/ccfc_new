@@ -61,7 +61,7 @@
                                     <span class="success-msg">Thank you for your payment. The paid amount will reflect in your account within next 24 working hours.</span>
                                     @else
                                     <div class="card">
-                                    <button class="btn btn-primary btn-flat btn-block" onclick="location.href='{{ route('member.invoice')}}'">Another Payment</button>
+                                    <button class="btn btn-primary btn-flat btn-block" onclick="location.href='{{ route('member.invoice')}}'">Try Again</button>
                                     </div>
                                     @endif
                             </div>

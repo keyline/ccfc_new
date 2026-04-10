@@ -1283,7 +1283,7 @@ class PaymentController extends Controller
                 //code by deblina to update member dues on payment
                 $dueDetails = MemberDue::where('member_code', $user->user_code)
                                     ->first();
-                // dd($dueDetails);
+                dd($dueDetails);
 
                 // if($dueDetails->outstanding_balance > $amount)
                 if(1)

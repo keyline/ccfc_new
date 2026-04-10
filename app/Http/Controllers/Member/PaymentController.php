@@ -1330,7 +1330,7 @@ class PaymentController extends Controller
                 Session::forget(['hdfcsmartpayTransactionid', 'hdfcsmartpaycustomerid']);
 
 
-                return view('member.paymentstatusotherpgs', compact('status'));
+                return view('member.paymentstatusotherpgs', ['status' => $status]);
 
 
 

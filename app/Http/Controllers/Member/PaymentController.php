@@ -1292,10 +1292,15 @@ class PaymentController extends Controller
                                     ->first();
                 // dd($dueDetails);
 
+                $currentMonth = Carbon::now()->month; 
+                $currentYear  = Carbon::now()->year;
+
                 if($dueDetails->outstanding_balance > $amount)
                 {                        
                     DB::table('member_dues')
                         ->where('member_code', $user->user_code)
+                        ->where('month_no', $currentMonth)   
+                        ->where('year', $currentYear)
                         ->update(
                             [
                                 'status' => 'paid',

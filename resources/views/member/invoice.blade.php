@@ -5,6 +5,44 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <style>
+        /* File: resources/views/member/invoice.blade.php | Improve spacing and alignment for payment gateway radio options only */
+        .invoicepayment_section .invocie_paymentlogo ul {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px 22px;
+            margin: 14px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .invoicepayment_section .invocie_paymentlogo li {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .invoicepayment_section .invocie_paymentlogo .form-check-input {
+            margin: 0;
+            position: static;
+            flex-shrink: 0;
+        }
+
+        .invoicepayment_section .invocie_paymentlogo .form-check-label {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .invoicepayment_section .invocie_paymentlogo img {
+            max-height: 28px;
+            width: auto;
+            display: block;
+        }
+    </style>
 
     <!-- ?php include 'assets/inc/header.php';?> -->
 

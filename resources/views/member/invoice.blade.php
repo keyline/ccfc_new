@@ -149,6 +149,9 @@
                                         <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
                                         <input type="hidden" name="razorpay_signature" id="razorpay_signature">
                                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="active_token_id"
+                                            value="{{ session()->get('tokenPayment.active_id') }}">
+                                        <input type="hidden" name="member_code" value="{{ $userData->user_code }}">
 
                                         @csrf
                                         <div class="invoice_input_bank">
@@ -486,6 +489,8 @@
         // Get amount from the input
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
+        let tokenPayment = document.querySelector('input[name="active_token_id"]');
+        let memberCode = document.querySelector('input[name="member_code"]');
 
         if (!amountValue || amountValue <= 0) {
             alert("Please enter a valid amount before choosing HDFC Smart gateway.");
@@ -502,7 +507,9 @@
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                 },
                 body: JSON.stringify({
-                    amount: amountValue
+                    amount: amountValue,
+                    token_id: tokenPayment?.value || null,
+                    member_code: memberCode?.value || null
                 })
             })
             .then(response => {

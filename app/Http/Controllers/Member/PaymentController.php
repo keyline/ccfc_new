@@ -664,8 +664,14 @@ class PaymentController extends Controller
             }
 
             $tokenId = $request->token_id ?? null;
+            $memberCode = $request->member_code ?? $user->user_code;
             $orderId = uniqid('order_');
             $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpaycallback'), $amount);
+            $payloadToStore = $result['sdk_payload'] ?? [];
+            $payloadToStore['settlement_context'] = [
+                'token_id' => $tokenId,
+                'member_code' => $memberCode,
+            ];
 
             // changed: keep storing the transaction row used later by the callback status-update flow.
             $paymentId = DB::table('payu_transactions')->insertGetId([
@@ -673,7 +679,7 @@ class PaymentController extends Controller
                 'paid_for_type' => 'App\Models\User',
                 'transaction_id' => $orderId,
                 'gateway' => 'HDFC SMART Pay',
-                'body' => serialize($result['sdk_payload'] ?? []),
+                'body' => serialize($payloadToStore),
                 'destination' => route('member.hdfcsmartpaycallback'),
                 'hash' => '',
                 'response' => '',
@@ -1247,7 +1253,7 @@ class PaymentController extends Controller
                 );
 
 
-                $tokenPayment = \App\Models\TokenPayment::where('transaction_id', $order->orderId)->firstOrFail();
+                $tokenPayment = \App\Models\TokenPayment::where('transaction_id', $order->orderId)->first();
 
                 if ($tokenPayment) {
 

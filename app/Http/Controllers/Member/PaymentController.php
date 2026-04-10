@@ -1312,7 +1312,12 @@ class PaymentController extends Controller
                     Auth::guard('members')->logout();
                 }
 
-                $showstatus = $response['order_status'] === "CHARGED" ? 'success' : 'failed';
+                $showstatus = '';
+                if($response['order_status'] == "CHARGED"){
+                     $showstatus = 'success';
+                }else{
+                    $showstatus = 'failed';
+                 }
 
                 $status = [
                             'status' =>  $showstatus,

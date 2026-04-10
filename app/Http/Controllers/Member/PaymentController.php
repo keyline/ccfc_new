@@ -1285,15 +1285,15 @@ class PaymentController extends Controller
                 $user = User::find(session::get('hdfcsmartpaycustomerid'));
                 $amount = $order->amount ?? 0;
 
-                //find user
-
+                $currentMonth = Carbon::now()->month; 
+                $currentYear  = Carbon::now()->year;
                 //code by deblina to update member dues on payment
                 $dueDetails = MemberDue::where('member_code', $user->user_code)
+                                        ->where('month_no', $currentMonth)
+                                        ->where('year', $currentYear)
                                     ->first();
                 // dd($dueDetails);
 
-                $currentMonth = Carbon::now()->month; 
-                $currentYear  = Carbon::now()->year;
 
                 if($dueDetails->outstanding_balance > $amount)
                 {                        

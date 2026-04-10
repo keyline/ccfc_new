@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\OtherFoodItemController;
 use App\Http\Controllers\Auth\MagicLinkLoginController;
 use App\Http\Controllers\Member\MemberDuesController;
 use App\Http\Controllers\Member\PaymentController;
+use App\Http\Controllers\Member\HdfcGatewayTestingController;
 
 // use App\Http\Controllers\Api\V2\Member\ApiController;
 

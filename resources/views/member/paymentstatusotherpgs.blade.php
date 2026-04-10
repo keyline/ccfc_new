@@ -41,6 +41,7 @@
 
 
             <!-- ********|| HISTORY START ||******** -->
+            <?php print_r($status);?>
             <section class="inner_belowbanner invoice_section">
                 <div class="container">
                     <div class="row">

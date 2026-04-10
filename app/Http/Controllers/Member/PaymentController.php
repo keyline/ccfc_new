@@ -1283,6 +1283,7 @@ class PaymentController extends Controller
 
                 //find user
                 $user = User::find(session::get('hdfcsmartpaycustomerid'));
+                $amount = $order->amount ?? 0;
 
                 //find user
 

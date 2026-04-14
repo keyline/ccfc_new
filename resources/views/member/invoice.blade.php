@@ -195,7 +195,7 @@
                                                         </label>
                                                     </li>
                                                     <!-- ?php } ?> -->
-                                                    <?php if ($userData->user_code == 'B47CEO') { ?>
+                                                    {{-- </?php if ($userData->user_code == 'B47CEO') { ?> --}}
                                                     <li>
                                                         <input class="form-check-input" type="radio"
                                                             name="paymentGatewayOptions" id="exampleRadios5"
@@ -206,7 +206,7 @@
                                                                 alt="" />
                                                         </label>
                                                     </li>
-                                                    <?php } ?>
+                                                    {{-- </?php } ?> --}}
                                                 </ul>
                                             </div>
 

@@ -13,7 +13,7 @@ class CreatorJwt
             'id'                => $userId,
             'email'             => $email,
             'phone'             => $phone,
-            'exp'               => time() + (30 * 24 * 60 * 60) // 30 days
+            'exp'               => time() + (35 * 24 * 60 * 60) // 30 days or 1 month
         );
         $jwt = JWT::encode($data, $this->key);
         return $jwt;

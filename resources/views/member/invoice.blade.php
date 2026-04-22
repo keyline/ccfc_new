@@ -161,6 +161,18 @@
                                             </div>
                                             <div class="invocie_paymentlogo">
                                                 <ul>
+                                                {{-- </?php if ($userData->user_code == 'B47CEO') { ?> --}}
+                                                    <li>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="paymentGatewayOptions" id="exampleRadios5"
+                                                            onclick="hdfcSmartSubmit(this);">
+                                                        <label class="form-check-label" for="exampleRadios5">
+                                                            <img class="img-fluid"
+                                                                src="{{ asset('img/HdfcLogo.svg') }}"
+                                                                alt="" />
+                                                        </label>
+                                                    </li>
+                                                    {{-- </?php } ?> --}}
                                                     <li>
                                                         <input class="form-check-input" type="radio"
                                                             name="paymentGatewayOptions" id="exampleRadios1"
@@ -169,17 +181,6 @@
                                                         <label class="form-check-label" for="exampleRadios1">
                                                             <img class="img-fluid"
                                                                 src="{{ asset('img/invoice_payu_logo.png') }}"
-                                                                alt="" />
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <input class="form-check-input" type="radio"
-                                                            name="paymentGatewayOptions" id="exampleRadios3"
-                                                            value="{{ route('member.axischeckout') }}"
-                                                            onclick="setPaymentAction('axis')">
-                                                        <label class="form-check-label" for="exampleRadios3">
-                                                            <img class="img-fluid"
-                                                                src="{{ asset('img/invoice_axis_logo.jpg') }}"
                                                                 alt="" />
                                                         </label>
                                                     </li>
@@ -195,18 +196,17 @@
                                                         </label>
                                                     </li>
                                                     <!-- ?php } ?> -->
-                                                    {{-- </?php if ($userData->user_code == 'B47CEO') { ?> --}}
                                                     <li>
                                                         <input class="form-check-input" type="radio"
-                                                            name="paymentGatewayOptions" id="exampleRadios5"
-                                                            onclick="hdfcSmartSubmit(this);">
-                                                        <label class="form-check-label" for="exampleRadios5">
+                                                            name="paymentGatewayOptions" id="exampleRadios3"
+                                                            value="{{ route('member.axischeckout') }}"
+                                                            onclick="setPaymentAction('axis')">
+                                                        <label class="form-check-label" for="exampleRadios3">
                                                             <img class="img-fluid"
-                                                                src="{{ asset('img/HdfcLogo.svg') }}"
+                                                                src="{{ asset('img/invoice_axis_logo.jpg') }}"
                                                                 alt="" />
                                                         </label>
                                                     </li>
-                                                    {{-- </?php } ?> --}}
                                                 </ul>
                                             </div>
 

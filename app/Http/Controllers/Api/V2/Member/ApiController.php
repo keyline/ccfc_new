@@ -3342,7 +3342,7 @@ class ApiController extends Controller
         $apiExtraData       = '';
         $this->isJSON(file_get_contents('php://input'));
         $requestData        = $this->extract_json(file_get_contents('php://input'));
-        $requiredFields     = ['title', 'body', 'type', 'image_link'];
+        $requiredFields     = ['title', 'body', 'type', 'image_link', 'fcm_token'];
         $headerData         = $request->header();
         if (!$this->validateArray($requiredFields, $requestData)) {
             $apiStatus          = FALSE;
@@ -3356,6 +3356,8 @@ class ApiController extends Controller
             $body                       = $requestData['body'];
             $type                       = $requestData['type'];
             $image_link                 = $requestData['image_link'];
+            $fcm_token                  = $requestData['fcm_token'];
+
             if ($getTokenValue['status']) {
                 $uId                        = $getTokenValue['data'][1];
                 $expiry                     = date('d/m/Y H:i:s', $getTokenValue['data'][4]);
@@ -3363,7 +3365,7 @@ class ApiController extends Controller
                 if ($checkUser) {
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
                         /* push notification */
-                        $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '!=', '')->get();
+                        $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '=', $fcm_token)->get();
                         $tokens             = [];
                         if ($getUserFCMTokens) {
                             foreach ($getUserFCMTokens as $getUserFCMToken) {

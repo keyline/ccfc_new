@@ -9,7 +9,7 @@ use App\Models\UserNotification;
 use App\Models\User;
 
 use Illuminate\Http\Request;
-
+use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Support\Facades\File;
@@ -203,8 +203,11 @@ class EventsController extends Controller
             $file1->move('uploads/enentimg/',$filename);
 
             $event->event_image = $filename;
-        }
 
+            $event_image = $filename;
+        } else {
+            $event_image = $event->event_image;
+        }
 
 
         if($request->hasfile('event_image_2')){
@@ -228,6 +231,34 @@ class EventsController extends Controller
         }
 
         $event->update();
+
+        /* push notification */
+            $title              = $request->input('event_name');
+            $body               = (($request->input('event_details1') != '')?$request->input('event_details1'):$request->input('event_name'));
+
+            if($event_image != ''){
+                // $body               = $request->input('event_details1');
+                $ext                = pathinfo($event_image, PATHINFO_EXTENSION);
+                if($ext!= 'pdf' && $ext!= 'PDF'){
+                    $image              = env('UPLOADS_URL').'enentimg/'.$event_image;
+                } else {
+                    $image = '';
+                }
+            } else {
+                $image = '';
+            }
+
+            $type               = 'event';
+            $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '!=', '')->groupBy('fcm_token')->get();
+            // Helper::pr($getUserFCMTokens);
+            // $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '=', 'cBC1nQmrD0uao0lSdZC7dg:APA91bHfY9ATKIiQfjh1X1UIOR__uueNlKlB3P7S7a8qihWxwpbmSXBTh4fgnLz8aYQbgS0pMODeCSuM6h8jt0UZZf0pGASjqvEvax6zAmIlLnFtKnkRaAc')->get();
+            $tokens             = [];
+            if($getUserFCMTokens){
+                foreach($getUserFCMTokens as $getUserFCMToken){
+                    $response           = $this->sendCommonPushNotification($getUserFCMToken->fcm_token, $title, $body, $type, $image);
+                }
+            }
+        /* push notification */
 
         return redirect()->back()->with('status','Update successfully');
     }

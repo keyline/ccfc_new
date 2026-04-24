@@ -450,14 +450,18 @@
                         throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
                     });
                 }
+                
                 return response.json();
 
             })
             .then(data => {
+                console.log(data);
                 if (data.status === 'NEW') {
                     const url = data.paymentLinks.web;
                     return window.location.href = url;
+                    console.log("yes");
                 }
+                console.log(data);
                 alert(`Unexpected status: ${data.status}`);
             })
             .catch(err => {

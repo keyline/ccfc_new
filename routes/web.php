@@ -962,9 +962,30 @@ Route::get('/testemail', function () {
     Mail::to('system@keylines.net')->send(new MyTestEmail($data));
 });
 Route::get('tenders', function () {
-    $uploadedTenders = DocumentOrganizer::find(1)->documents()->where('ctd_archive_status', '1')
-                        ->orderBy('ctd_created_at', 'desc')
-                        ->get();
+
+    // $uploadedTenders = DocumentOrganizer::find(1)->documents()->where('ctd_archive_status', '1')
+    //                     ->orderBy('ctd_created_at', 'desc')
+    //                     ->get();
+    
+    $uploadedTenders = collect();
+
+    for ($i = 1; $i <= 7; $i++) {
+        $organizer = DocumentOrganizer::find($i);
+
+        if ($organizer) {
+            $uploadedTenders = $uploadedTenders->merge(
+                $organizer->documents()
+                    ->where('ctd_archive_status', '1')
+                    ->orderBy('ctd_updated_at', 'desc')
+                    ->get()
+            );
+        }
+    }
+
+    $uploadedTenders = $uploadedTenders->sortByDesc('ctd_updated_at');
+
+
+
     return view('document-viewer', compact(['uploadedTenders']));
 })->name('showme.tenders');
 Route::get('archives', function () {

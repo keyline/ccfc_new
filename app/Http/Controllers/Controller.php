@@ -92,110 +92,97 @@ class Controller extends BaseController
 
         $headers = [
             'Authorization: Bearer ' . $accessToken['access_token'],
-            'Content-Type: application/json',
+            'Content-Type: application/json'
         ];
 
-        $ch = curl_init($url);
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($message));
 
         $response = curl_exec($ch);
-
-        if ($response === false) {
+        
+        if (curl_errno($ch)) {
             throw new Exception(curl_error($ch));
         }
 
         curl_close($ch);
 
-        return $response;
+        return json_decode($response, true);
     }
     public function sendCommonPushNotification($token, $title, $body, $type = '', $image = '')
     {
-        try {
-            // $credentialsPath = public_path('uploads/ccfc-83373-firebase-adminsdk-qauj0-66a7cd8a2f.json'); // Replace with the path to your service account JSON file
-            // echo $credentialsPath;die;
+        // try {
 
-            // Get the Firebase credentials from environment variable
-            $jsonCredentials = getenv('FIREBASE_CREDENTIALS');
+            $jsonCredentials = config('services.firebase.credentials');
+
             if (!$jsonCredentials) {
-                throw new Exception("Firebase credentials not found in environment variables.");
+                throw new Exception("Firebase credentials not found.");
             }
 
             $credentialsArray = json_decode($jsonCredentials, true);
+
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Invalid JSON format in environment variable.');
+                throw new Exception('Invalid Firebase JSON.');
             }
 
-            $projectId = 'ccfc-83373'; // Replace with your Firebase project ID
+            $projectId = $credentialsArray['project_id'];
 
-            // Get access token
             $accessToken = $this->getAccessToken($credentialsArray);
 
-            // Define your message payload
-            if($image != '') {
-                $message = [
-                    'message' => [
-                        'token' => $token, // Replace with the recipient device token
-                        'data' => [
-                            'type' => $type,
-                            // 'picture' => $image
-                        ],
-                        'notification' => [
-                            'title' => $title,
-                            'body'  => $body,
-                            'image' => $image
-                        ]
-                    ]
-                ];
-                $iosPayload = [
-                    'aps' => [
-                        'alert' => [
-                            'title' => $title,
-                            'body' => $body,
-                        ],
-                        'sound' => 'default',
-                        'mutable-content' => 1,
-                    ],
-                    'media-url' => $image
-                ];
-            } else {
-                $message = [
-                    'message' => [
-                        'token' => $token, // Replace with the recipient device token
-                        'data' => [
-                            'type' => $type
-                        ],
-                        'notification' => [
-                            'title' => $title,
-                            'body'  => $body
-                        ]
-                    ]
-                ];
-                $iosPayload = [
-                    'aps' => [
-                        'alert' => [
-                            'title' => $title,
-                            'body' => $body,
-                        ],
-                        'sound' => 'default',
-                        'mutable-content' => 1,
-                    ]
-                ];
-            }
+            $message = [
+                "message" => [
+                    "token" => $token,
 
-            // Send FCM message
+                    "notification" => [
+                        "title" => $title,
+                        "body"  => $body
+                    ],
+
+                    "data" => [
+                        "type" => (string)$type,
+                        "image" => (string)$image
+                    ],
+
+                    "android" => [
+                        "priority" => "high",
+                        "notification" => [
+                            "image" => $image
+                        ]
+                    ],
+
+                    "apns" => [
+                        "headers" => [
+                            "apns-priority" => "10"
+                        ],
+                        "payload" => [
+                            "aps" => [
+                                "alert" => [
+                                    "title" => $title,
+                                    "body"  => $body
+                                ],
+                                "sound" => "default",
+                                "mutable-content" => 1
+                            ]
+                        ],
+                        "fcm_options" => [
+                            "image" => $image
+                        ]
+                    ]
+                ]
+            ];
+            
             $response = $this->sendFCMMessage($accessToken, $projectId, $message);
-            $response = $this->sendFCMMessage($accessToken, $projectId, $iosPayload);
-            return true;
-            // return "Response: " . $response;
-            // return redirect()->to('admin/create/settinglist')->with('status', "Response: " . $response);
-        } catch (Exception $e) {
-            return false;
-            // return "Error: " . $e->getMessage();
-            // return redirect()->to('admin/create/settinglist')->with('error_message', "Error: " . $e->getMessage());
-        }
+            
+            return $response;
+
+        // } catch (Exception $e) {
+
+        //     return false;
+        // }
     }
     // send sms
     public function sendSMS($mobileNo, $messageBody)

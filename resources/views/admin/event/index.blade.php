@@ -18,7 +18,7 @@
                         </th> -->
 
                         <th>
-                            Sl No
+                            #
                         </th>
                         <th>
                             Publish of date
@@ -41,13 +41,13 @@
                             Details 2
                         </th>
 
-                        <th>
+                        <!-- <th>
                             Event Icon
                         </th>
 
                         <th>
                             Event Image
-                        </th>
+                        </th> -->
                         <th>
                             Event Validity
                         </th>
@@ -61,10 +61,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($event as $value)
+                    <?php
+                    $sl=1;
+                    if($event){ foreach($event as $value){
+                    ?>
                     <tr>
                         <td>
-                            {{$value->id}}
+                            <?= $sl++ ?>
                         </td>
 
                         <td>
@@ -86,8 +89,8 @@
                         <td>
                             {!! $value->details_2 !!}
                         </td>
-                        
-                        <td>
+
+                        <!-- <td>
                             <img src="{{ asset('uploads/enentimg/'.$value->event_image)}}" width="100px" height="100px"
                                 alt="">
                         </td>
@@ -96,9 +99,9 @@
                         <td>
                             <img src="{{ asset('uploads/enentimg/'.$value->event_image_2)}}" width="100px"
                                 height="100px" alt="">
-                        </td>
+                        </td> -->
                         <td>
-                            <?=(($value->validity != '')?date_format(date_create($value->validity), "d-M-Y"):'')?>
+                            <?= (($value->validity != '') ? date_format(date_create($value->validity), "d-M-Y") : '') ?>
                         </td>
                         <td>
                             <a href="{{ url('admin/create/edit-event/'.$value->id)}}"
@@ -109,16 +112,16 @@
                         <td>
                             <!-- <a href="{{ url('admin/create/delete-event/'.$value->id)}}"
                                 class="btn btn-danger btn-sm">Delete</a> -->
-                            <?php if($value->status){?>
-                                <a href="<?=url('admin/create/deactive-event/' . $value->id)?>" class="btn btn-danger btn-sm" onclick="return confirm('Do you want to deactive this event ?');"><i class="fa fa-times"></i> Deactive</a>
-                            <?php } else {?>
+                            <?php if ($value->status) { ?>
+                                <a href="<?= url('admin/create/deactive-event/' . $value->id) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Do you want to deactive this event ?');"><i class="fa fa-times"></i> Deactive</a>
+                            <?php } else { ?>
                                 <span class="badge badge-danger">Already Deactivated</span>
                             <?php } ?>
                         </td>
 
                     </tr>
 
-                    @endforeach
+                    <?php } }?>
 
                 </tbody>
             </table>
@@ -132,66 +135,66 @@
 @section('scripts')
 @parent
 <script>
-$(function() {
-    let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
-    @can('content_block_delete')
-    let deleteButtonTrans = '{{ trans('
-    global.datatables.delete ') }}'
-    let deleteButton = {
-        text: deleteButtonTrans,
-        url: "{{ route('admin.content-blocks.massDestroy') }}",
-        className: 'btn-danger',
-        action: function(e, dt, node, config) {
-            var ids = $.map(dt.rows({
-                selected: true
-            }).nodes(), function(entry) {
-                return $(entry).data('entry-id')
-            });
+    $(function() {
+        let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
+        @can('content_block_delete')
+        let deleteButtonTrans = '{{ trans('
+        global.datatables.delete ') }}'
+        let deleteButton = {
+            text: deleteButtonTrans,
+            url: "{{ route('admin.content-blocks.massDestroy') }}",
+            className: 'btn-danger',
+            action: function(e, dt, node, config) {
+                var ids = $.map(dt.rows({
+                    selected: true
+                }).nodes(), function(entry) {
+                    return $(entry).data('entry-id')
+                });
 
-            if (ids.length === 0) {
-                alert('{{ trans('
-                    global.datatables.zero_selected ') }}')
+                if (ids.length === 0) {
+                    alert('{{ trans('
+                        global.datatables.zero_selected ') }}')
 
-                return
-            }
+                    return
+                }
 
-            if (confirm('{{ trans('
-                    global.areYouSure ') }}')) {
-                $.ajax({
-                        headers: {
-                            'x-csrf-token': _token
-                        },
-                        method: 'POST',
-                        url: config.url,
-                        data: {
-                            ids: ids,
-                            _method: 'DELETE'
-                        }
-                    })
-                    .done(function() {
-                        location.reload()
-                    })
+                if (confirm('{{ trans('
+                        global.areYouSure ') }}')) {
+                    $.ajax({
+                            headers: {
+                                'x-csrf-token': _token
+                            },
+                            method: 'POST',
+                            url: config.url,
+                            data: {
+                                ids: ids,
+                                _method: 'DELETE'
+                            }
+                        })
+                        .done(function() {
+                            location.reload()
+                        })
+                }
             }
         }
-    }
-    dtButtons.push(deleteButton)
-    @endcan
+        dtButtons.push(deleteButton)
+        @endcan
 
-    $.extend(true, $.fn.dataTable.defaults, {
-        orderCellsTop: true,
-        order: [
-            [1, 'desc']
-        ],
-        pageLength: 100,
-    });
-    let table = $('.datatable-ContentBlock:not(.ajaxTable)').DataTable({
-        buttons: dtButtons
+        $.extend(true, $.fn.dataTable.defaults, {
+            orderCellsTop: true,
+            order: [
+                [1, 'desc']
+            ],
+            pageLength: 100,
+        });
+        let table = $('.datatable-ContentBlock:not(.ajaxTable)').DataTable({
+            buttons: dtButtons
+        })
+        $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e) {
+            $($.fn.dataTable.tables(true)).DataTable()
+                .columns.adjust();
+        });
+
     })
-    $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e) {
-        $($.fn.dataTable.tables(true)).DataTable()
-            .columns.adjust();
-    });
-
-})
 </script>
 @endsection

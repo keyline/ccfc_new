@@ -861,6 +861,9 @@ nav.navbar .navbar-nav>li.active>a.nav-link {
     margin-bottom: 20px;
     text-align: center;
 }
+.advise .advise-img img{
+    max-width: 150px;
+}
 
 /* ********|| ADVISE END ||******** */
 

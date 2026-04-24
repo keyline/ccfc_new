@@ -1792,14 +1792,14 @@ class ApiController extends Controller
                 if ($checkUser) {
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
                         $currentDate = date('Y-m-d');
-                        $getCookingDaySpecialMenus = CookingDaySpecial::where('status', '=', 1)->where('menu_date', '>=', $currentDate)->get();
+                        $getCookingDaySpecialMenus = CookingDaySpecial::select('image_name')->where('status', '=', 1)->where('menu_date', '>=', $currentDate)->get();
                         /* notification read & count */
-                        $notificationIds = Notification::select('id')->where('type', '=', 'dayspecial')->get();
-                        if ($notificationIds) {
-                            foreach ($notificationIds as $notificationId) {
-                                UserNotification::where('user_id', '=', $uId)->where('notification_id', '=', $notificationId->id)->update(['status' => 1]);
-                            }
-                        }
+                        // $notificationIds = Notification::select('id')->where('type', '=', 'dayspecial')->get();
+                        // if ($notificationIds) {
+                        //     foreach ($notificationIds as $notificationId) {
+                        //         UserNotification::where('user_id', '=', $uId)->where('notification_id', '=', $notificationId->id)->update(['status' => 1]);
+                        //     }
+                        // }
                         /* notification read & count */
                         if ($getCookingDaySpecialMenus) {
                             foreach ($getCookingDaySpecialMenus as $getCookingDaySpecialMenu) {
@@ -2974,6 +2974,7 @@ class ApiController extends Controller
                                             // 'popup_validity_time'   => $noti->popup_validity_time,
                                             // 'popup_validity'        => $noti->popup_validity_date.' '.$noti->popup_validity_time,
                                             'created_at'            => Helper::time_ago($noti->created_at),
+                                            'validity'              => $validity,
                                         ];
                                     }
                                 }
@@ -3341,7 +3342,7 @@ class ApiController extends Controller
         $apiExtraData       = '';
         $this->isJSON(file_get_contents('php://input'));
         $requestData        = $this->extract_json(file_get_contents('php://input'));
-        $requiredFields     = ['title', 'body', 'type', 'image_link'];
+        $requiredFields     = ['title', 'body', 'type', 'image_link', 'fcm_token'];
         $headerData         = $request->header();
         if (!$this->validateArray($requiredFields, $requestData)) {
             $apiStatus          = FALSE;
@@ -3355,6 +3356,8 @@ class ApiController extends Controller
             $body                       = $requestData['body'];
             $type                       = $requestData['type'];
             $image_link                 = $requestData['image_link'];
+            $fcm_token                  = $requestData['fcm_token'];
+
             if ($getTokenValue['status']) {
                 $uId                        = $getTokenValue['data'][1];
                 $expiry                     = date('d/m/Y H:i:s', $getTokenValue['data'][4]);
@@ -3362,7 +3365,7 @@ class ApiController extends Controller
                 if ($checkUser) {
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
                         /* push notification */
-                        $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '!=', '')->get();
+                        $getUserFCMTokens   = UserDevice::select('fcm_token')->where('fcm_token', '=', $fcm_token)->get();
                         $tokens             = [];
                         if ($getUserFCMTokens) {
                             foreach ($getUserFCMTokens as $getUserFCMToken) {

@@ -62,7 +62,7 @@
             <!-- Main content -->
             <section class="content" style="padding-top: 20px">
                 @if(session('message'))
-                <div class="row mb-2">
+                <div class="row mb-2 autoHideAlert">
                     <div class="col-lg-12">
                         <div class="alert alert-success" role="alert">{{ session('message') }}</div>
                     </div>
@@ -527,6 +527,14 @@
     });
     //# sourceMappingURL=adminlte.min.js.map
     </script>
+
+    <script>
+    setTimeout(function() {
+        $('.autoHideAlert').fadeOut('slow');
+    }, 3000);
+    </script>
+
+    
     @yield('scripts')
 </body>
 

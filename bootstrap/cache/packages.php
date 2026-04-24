@@ -1,13 +1,13 @@
 <?php return array (
   'facade/ignition' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Facade\\Ignition\\IgnitionServiceProvider',
-    ),
     'aliases' => 
     array (
       'Flare' => 'Facade\\Ignition\\Facades\\Flare',
+    ),
+    'providers' => 
+    array (
+      0 => 'Facade\\Ignition\\IgnitionServiceProvider',
     ),
   ),
   'fideloper/proxy' => 
@@ -33,13 +33,13 @@
   ),
   'intervention/image' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Intervention\\Image\\ImageServiceProvider',
-    ),
     'aliases' => 
     array (
       'Image' => 'Intervention\\Image\\Facades\\Image',
+    ),
+    'providers' => 
+    array (
+      0 => 'Intervention\\Image\\ImageServiceProvider',
     ),
   ),
   'laravel/dusk' => 
@@ -51,13 +51,13 @@
   ),
   'laravel/horizon' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Laravel\\Horizon\\HorizonServiceProvider',
-    ),
     'aliases' => 
     array (
       'Horizon' => 'Laravel\\Horizon\\Horizon',
+    ),
+    'providers' => 
+    array (
+      0 => 'Laravel\\Horizon\\HorizonServiceProvider',
     ),
   ),
   'laravel/sail' => 
@@ -118,24 +118,24 @@
   ),
   'tzsk/payu' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Tzsk\\Payu\\PayuServiceProvider',
-    ),
     'aliases' => 
     array (
       'Payu' => 'Tzsk\\Payu\\Facades\\Payu',
     ),
+    'providers' => 
+    array (
+      0 => 'Tzsk\\Payu\\PayuServiceProvider',
+    ),
   ),
   'yajra/laravel-datatables-oracle' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Yajra\\DataTables\\DataTablesServiceProvider',
-    ),
     'aliases' => 
     array (
       'DataTables' => 'Yajra\\DataTables\\Facades\\DataTables',
+    ),
+    'providers' => 
+    array (
+      0 => 'Yajra\\DataTables\\DataTablesServiceProvider',
     ),
   ),
 );

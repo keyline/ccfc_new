@@ -12,8 +12,8 @@
             <div class="form-group">
               <label for="myDropdown" class="mb-2">Select an year:</label>
               <select class="custom-select" name="folder_year">
+              <option selected disabled>Select Year</option>
                 @foreach($folders as $folder)
-              
               <option value="{{ $folder->cdo_id }}">{{ $folder->cdo_name}}</option>
               
               @endforeach

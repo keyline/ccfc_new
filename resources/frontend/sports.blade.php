@@ -851,49 +851,30 @@
                                             @endforeach
                                             --}}
 
-                                            {{-- DEBUG --}}
-                                            <div style="background:#ffffcc;padding:10px;font-size:11px;word-break:break-all;margin-bottom:10px;border:1px solid #ccc;">
-                                            <b>P060 Debug:</b><br>
-                                            @php $p060member = $members->first(fn($m) => optional($m->select_member)->user_code == 'P060'); @endphp
-                                            P060 found in members: {{ $p060member ? 'YES — sport_id='.$p060member->select_sport_id.' name='.$p060member->select_member->name : 'NOT FOUND IN MEMBERS TABLE' }}<br>
-                                            @php $p060detail = $userDetails->first(fn($ud) => optional($ud->user_code)->user_code == 'P060'); @endphp
-                                            P060 found in userDetails: {{ $p060detail ? 'YES — id='.$p060detail->id.' user_code_id='.$p060detail->user_code_id : 'NOT FOUND IN USER_DETAILS' }}<br>
+                                            {{-- NEW CODE: show spouse details of member P060 (user_code_id=1568) --}}
+                                            @php $p060detail = $userDetails->firstWhere('user_code_id', 1568); @endphp
                                             @if($p060detail)
-                                                spouse_name: {{ $p060detail->spouse_name ?? 'EMPTY' }}<br>
-                                                spouse_image empty: {{ empty($p060detail->spouse_image) ? 'YES' : 'NO' }}<br>
-                                                spouse_image length: {{ strlen($p060detail->spouse_image ?? '') }}<br>
-                                                member_image empty: {{ empty($p060detail->member_image) ? 'YES' : 'NO' }}<br>
-                                            @endif
-                                            </div>
-                                            {{-- END DEBUG --}}
-
-                                            {{-- NEW CODE: show all swimming members with member image and name --}}
-                                            @foreach($members->where("select_sport_id","12") as $member)
-                                            @foreach($userDetails->where("user_code_id",$member->select_member->id) as $key => $userDetail)
-
                                             <div class="col-sm-6 col-md-6 col-lg-3 px-2">
                                                 <div class="sports_tabcontent_inner">
 
-                                                    @if(empty($userDetail['member_image']))
+                                                    @if(empty($p060detail->spouse_image))
                                                     <div class="sport_tab_ceibity-img">
                                                         <img src="{{ asset('img/demopic.png') }}" alt="" />
                                                     </div>
                                                     @else
                                                     <div class="sport_tab_ceibity-img">
-                                                        <img class="img-fluid" src="data:image/png;base64,{{ $userDetail['member_image'] }}" alt="" />
+                                                        <img class="img-fluid" src="data:image/png;base64,{{ $p060detail->spouse_image }}" alt="" />
                                                     </div>
                                                     @endif
 
                                                     <div class="sport_player">
-                                                        <h3>{{ $member->select_title->titles ?? '' }}</h3>
                                                         <div class="sport_player_detail">
-                                                            <h4>{{ $member->select_member->name ?? '' }}</h4>
+                                                            <h4>{{ $p060detail->spouse_name ?? '' }}</h4>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            @endforeach
-                                            @endforeach
+                                            @endif
 
                                         </div>
                                     </div>

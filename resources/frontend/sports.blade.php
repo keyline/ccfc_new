@@ -853,22 +853,17 @@
 
                                             {{-- DEBUG --}}
                                             <div style="background:#ffffcc;padding:10px;font-size:11px;word-break:break-all;margin-bottom:10px;border:1px solid #ccc;">
-                                            <b>Swimming Debug:</b><br>
-                                            Total members with sport_id=12: {{ $members->where("select_sport_id","12")->count() }}<br>
-                                            @foreach($members->where("select_sport_id","12") as $dm)
-                                                member row id: {{ $dm->id }} |
-                                                select_member_id: {{ $dm->select_member_id }} |
-                                                select_member loaded: {{ $dm->select_member ? 'YES' : 'NO' }} |
-                                                user_code: {{ $dm->select_member->user_code ?? 'NULL' }} |
-                                                user id: {{ $dm->select_member->id ?? 'NULL' }}<br>
-                                                userDetails match count: {{ $userDetails->where("user_code_id", $dm->select_member->id ?? 0)->count() }}<br>
-                                                @foreach($userDetails->where("user_code_id", $dm->select_member->id ?? 0) as $dud)
-                                                &nbsp;&nbsp;→ userDetail id: {{ $dud->id }} |
-                                                user_code_id: {{ $dud->user_code_id }} |
-                                                member_image empty: {{ empty($dud->member_image) ? 'YES' : 'NO' }} |
-                                                member_image length: {{ strlen($dud->member_image ?? '') }}<br>
-                                                @endforeach
-                                            @endforeach
+                                            <b>P060 Debug:</b><br>
+                                            @php $p060member = $members->first(fn($m) => optional($m->select_member)->user_code == 'P060'); @endphp
+                                            P060 found in members: {{ $p060member ? 'YES — sport_id='.$p060member->select_sport_id.' name='.$p060member->select_member->name : 'NOT FOUND IN MEMBERS TABLE' }}<br>
+                                            @php $p060detail = $userDetails->first(fn($ud) => optional($ud->user_code)->user_code == 'P060'); @endphp
+                                            P060 found in userDetails: {{ $p060detail ? 'YES — id='.$p060detail->id.' user_code_id='.$p060detail->user_code_id : 'NOT FOUND IN USER_DETAILS' }}<br>
+                                            @if($p060detail)
+                                                spouse_name: {{ $p060detail->spouse_name ?? 'EMPTY' }}<br>
+                                                spouse_image empty: {{ empty($p060detail->spouse_image) ? 'YES' : 'NO' }}<br>
+                                                spouse_image length: {{ strlen($p060detail->spouse_image ?? '') }}<br>
+                                                member_image empty: {{ empty($p060detail->member_image) ? 'YES' : 'NO' }}<br>
+                                            @endif
                                             </div>
                                             {{-- END DEBUG --}}
 

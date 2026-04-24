@@ -859,14 +859,13 @@
                                             <div class="col-sm-6 col-md-6 col-lg-3 px-2">
                                                 <div class="sports_tabcontent_inner">
 
-                                                    @if($userDetail['spouse_image'] == '')
+                                                    @if(empty($userDetail['spouse_image']))
                                                     <div class="sport_tab_ceibity-img">
                                                         <img src="{{ asset('img/demopic.png') }}" alt="" />
                                                     </div>
                                                     @else
                                                     <div class="sport_tab_ceibity-img">
-                                                        <img class="img-fluid" src="data:image/png;base64,
-                                                                {{ $userDetail['spouse_image'] }}" alt="" />
+                                                        <img class="img-fluid" src="data:image/png;base64,{{ $userDetail['spouse_image'] }}" alt="" />
                                                     </div>
                                                     @endif
 

@@ -851,30 +851,74 @@
                                             @endforeach
                                             --}}
 
-                                            {{-- NEW CODE: show spouse details of member P060 (user_code_id=1568) --}}
-                                            @php $p060detail = $userDetails->firstWhere('user_code_id', 1568); @endphp
-                                            @if($p060detail)
+                                            {{-- DEBUG --}}
+                                            <div style="background:#ffffcc;padding:10px;font-size:11px;word-break:break-all;margin-bottom:10px;border:1px solid #ccc;">
+                                            <b>Swimming Debug:</b><br>
+                                            Total members with sport_id=12: {{ $members->where("select_sport_id","12")->count() }}<br>
+                                            @foreach($members->where("select_sport_id","12") as $dm)
+                                                member row id: {{ $dm->id }} |
+                                                user_code: {{ $dm->select_member->user_code ?? 'NULL' }} |
+                                                name: {{ $dm->select_member->name ?? 'NULL' }} |
+                                                user id: {{ $dm->select_member->id ?? 'NULL' }} |
+                                                title: {{ $dm->select_title->titles ?? 'NULL' }}<br>
+                                                userDetails match count: {{ $userDetails->where("user_code_id", $dm->select_member->id ?? 0)->count() }}<br>
+                                                @foreach($userDetails->where("user_code_id", $dm->select_member->id ?? 0) as $dud)
+                                                &nbsp;&nbsp;→ userDetail id: {{ $dud->id }} |
+                                                member_image empty: {{ empty($dud->member_image) ? 'YES' : 'NO' }} |
+                                                member_image length: {{ strlen($dud->member_image ?? '') }} |
+                                                spouse_name: {{ $dud->spouse_name ?? 'EMPTY' }} |
+                                                spouse_image empty: {{ empty($dud->spouse_image) ? 'YES' : 'NO' }}<br>
+                                                @endforeach
+                                            @endforeach
+                                            </div>
+                                            {{-- END DEBUG --}}
+
+                                            @foreach($members->where("select_sport_id","12") as $member)
+                                            @foreach($userDetails->where("user_code_id",$member->select_member->id) as
+                                            $key =>$userDetail)
+
                                             <div class="col-sm-6 col-md-6 col-lg-3 px-2">
                                                 <div class="sports_tabcontent_inner">
 
-                                                    @if(empty($p060detail->spouse_image))
+                                                    @if($userDetail['member_image'] == '')
+
                                                     <div class="sport_tab_ceibity-img">
                                                         <img src="{{ asset('img/demopic.png') }}" alt="" />
                                                     </div>
-                                                    @else
-                                                    <div class="sport_tab_ceibity-img">
-                                                        <img class="img-fluid" src="data:image/png;base64,{{ $p060detail->spouse_image }}" alt="" />
-                                                    </div>
-                                                    @endif
 
+                                                    @else
+
+                                                    <div class="sport_tab_ceibity-img">
+
+                                                        <img class="img-fluid" src="data:image/png;base64,
+                                                                {{ $userDetail['member_image'] }}" alt="" />
+
+                                                        <!-- <img class="img-fluid"
+                                                            src="{{ asset('uploads/userimg/'.$userDetail->member_image_2)}}"
+                                                            alt="" /> -->
+                                                        </a>
+                                                    </div>
+
+                                                    @endif
                                                     <div class="sport_player">
+                                                        <h3>{{ $member->select_title->titles ?? '' }}</h3>
                                                         <div class="sport_player_detail">
-                                                            <h4>{{ $p060detail->spouse_name ?? '' }}</h4>
+                                                            <h4>{{ $member->select_member->name ?? '' }}</h4>
+
+                                                            <!-- <p><a
+                                                                    href="tel:+91 {{ $member->select_member->phone_number_1 ?? '' }}">+91
+                                                                    {{ $member->select_member->phone_number_1 ?? '' }}</a>
+                                                            </p>
+                                                            <p><a
+                                                                    href="mailto:{{ $member->select_member->email  ?? '' }}">{{ $member->select_member->email  ?? '' }}</a>
+                                                            </p> -->
+
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            @endif
+                                            @endforeach
+                                            @endforeach
 
                                         </div>
                                     </div>

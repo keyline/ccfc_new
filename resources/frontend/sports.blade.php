@@ -851,6 +851,22 @@
                                             @endforeach
                                             --}}
 
+                                            {{-- DEBUG: temporary — remove after fixing --}}
+                                            <div style="background:#fff;padding:10px;font-size:12px;word-break:break-all;margin-bottom:10px;">
+                                            <b>Swimming members in DB (select_sport_id=12):</b><br>
+                                            @foreach($members->where("select_sport_id","12") as $dm)
+                                                user_code: {{ $dm->select_member->user_code ?? 'NULL' }} |
+                                                name: {{ $dm->select_member->name ?? 'NULL' }} |
+                                                member_id: {{ $dm->select_member->id ?? 'NULL' }}<br>
+                                                @foreach($userDetails->where("user_code_id", $dm->select_member->id ?? 0) as $dud)
+                                                &nbsp;&nbsp;→ userDetail found | spouse_name: {{ $dud->spouse_name ?? 'NULL' }} |
+                                                spouse_image empty: {{ empty($dud->spouse_image) ? 'YES' : 'NO' }} |
+                                                member_image empty: {{ empty($dud->member_image) ? 'YES' : 'NO' }}<br>
+                                                @endforeach
+                                            @endforeach
+                                            </div>
+                                            {{-- END DEBUG --}}
+
                                             {{-- NEW CODE: show only member P060 — spouse name, spouse image, title --}}
                                             @foreach($members->where("select_sport_id","12") as $member)
                                             @if($member->select_member && $member->select_member->user_code == 'P060')

@@ -33,7 +33,7 @@ class JuspayService
         );
     }
 
-    public function createPaymentSession(string $orderId, string $returnUrl, string $amount = '120.30'): array
+    public function createPaymentSession(string $orderId, string $returnUrl, string $amount = '120.30', array $extra = []): array
     {
         $this->initialize();
 
@@ -48,6 +48,7 @@ class JuspayService
             'payment_page_client_id' => $config['payment_page_client_id'],
             'action' => 'paymentPage',
             'return_url' => $returnUrl,
+            'metadata' => ['udf1' => $extra['udf1'] ?? '', 'udf2' => $extra['udf2'] ?? '', 'customer_email' => $extra['customer_email'] ?? '', 'customer_phone' => $extra['customer_phone'] ?? ''],
         ], $requestOptions);
 
         $status = Order::status([

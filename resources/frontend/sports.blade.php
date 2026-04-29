@@ -814,6 +814,7 @@
                                     <div class="sport_tab_content_section">
                                         <div class="row">
 
+                                            {{-- OLD CODE: show all swimming members
                                             @foreach($members->where("select_sport_id","12") as $member)
                                             @foreach($userDetails->where("user_code_id",$member->select_member->id) as
                                             $key =>$userDetail)
@@ -831,12 +832,9 @@
 
                                                     <div class="sport_tab_ceibity-img">
 
-                                                        <img class="img-fluid" src="data:image/png;base64,                          
+                                                        <img class="img-fluid" src="data:image/png;base64,
                                                                 {{ $userDetail['member_image'] }}" alt="" />
 
-                                                        <!-- <img class="img-fluid"
-                                                            src="{{ asset('uploads/userimg/'.$userDetail->member_image_2)}}"
-                                                            alt="" /> -->
                                                         </a>
                                                     </div>
 
@@ -845,17 +843,74 @@
                                                         <h3>{{ $member->select_title->titles ?? '' }}</h3>
                                                         <div class="sport_player_detail">
                                                             <h4>{{ $member->select_member->name ?? '' }}</h4>
-
-                                                            <!-- <p><a
-                                                                    href="tel:+91 {{ $member->select_member->phone_number_1 ?? '' }}">+91
-                                                                    {{ $member->select_member->phone_number_1 ?? '' }}</a>
-                                                            </p>
-                                                            <p><a
-                                                                    href="mailto:{{ $member->select_member->email  ?? '' }}">{{ $member->select_member->email  ?? '' }}</a>
-                                                            </p> -->
-
                                                         </div>
                                                     </div>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                            @endforeach
+                                            --}}
+
+                                            @foreach($members->where("select_sport_id","12") as $member)
+                                            @foreach($userDetails->where("user_code_id",$member->select_member->id) as
+                                            $key =>$userDetail)
+
+                                            <div class="col-sm-6 col-md-6 col-lg-3 px-2">
+                                                <div class="sports_tabcontent_inner">
+
+                                                    {{-- show spouse image+name for SECRETARY, member image+name for others --}}
+                                                    @if($member->select_title->titles == 'SECRETARY')
+
+                                                        @if(empty($userDetail->spouse_image))
+                                                        <div class="sport_tab_ceibity-img">
+                                                            <img src="{{ asset('img/demopic.png') }}" alt="" />
+                                                        </div>
+                                                        @else
+                                                        <div class="sport_tab_ceibity-img">
+                                                            <img class="img-fluid" src="data:image/png;base64,{{ $userDetail->spouse_image }}" alt="" />
+                                                        </div>
+                                                        @endif
+
+                                                        <div class="sport_player">
+                                                            <h3>{{ $member->select_title->titles ?? '' }}</h3>
+                                                            <div class="sport_player_detail">
+                                                                <h4>{{ $userDetail->spouse_name ?? '' }}</h4>
+                                                            </div>
+                                                        </div>
+
+                                                    @else
+
+                                                        @if($userDetail['member_image'] == '')
+                                                        <div class="sport_tab_ceibity-img">
+                                                            <img src="{{ asset('img/demopic.png') }}" alt="" />
+                                                        </div>
+                                                        @else
+                                                        <div class="sport_tab_ceibity-img">
+                                                            <img class="img-fluid" src="data:image/png;base64,
+                                                                    {{ $userDetail['member_image'] }}" alt="" />
+                                                            <!-- <img class="img-fluid"
+                                                                src="{{ asset('uploads/userimg/'.$userDetail->member_image_2)}}"
+                                                                alt="" /> -->
+                                                            </a>
+                                                        </div>
+                                                        @endif
+
+                                                        <div class="sport_player">
+                                                            <h3>{{ $member->select_title->titles ?? '' }}</h3>
+                                                            <div class="sport_player_detail">
+                                                                <h4>{{ $member->select_member->name ?? '' }}</h4>
+                                                                <!-- <p><a
+                                                                        href="tel:+91 {{ $member->select_member->phone_number_1 ?? '' }}">+91
+                                                                        {{ $member->select_member->phone_number_1 ?? '' }}</a>
+                                                                </p>
+                                                                <p><a
+                                                                        href="mailto:{{ $member->select_member->email  ?? '' }}">{{ $member->select_member->email  ?? '' }}</a>
+                                                                </p> -->
+                                                            </div>
+                                                        </div>
+
+                                                    @endif
+
                                                 </div>
                                             </div>
                                             @endforeach

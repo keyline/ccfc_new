@@ -33,18 +33,26 @@ class JuspayService
         );
     }
 
-    public function createPaymentSession(string $orderId, string $returnUrl, string $amount = '120.30'): array
+    public function createPaymentSession(string $orderId, string $returnUrl, string $amount = '120.30', array $extra = []): array
     {
         $this->initialize();
 
         $config = $this->config();
         $requestOptions = (new RequestOptions())->withCustomerId($config['customer_id']);
+        $customerPhone = preg_replace('/\D+/', '', $extra['customer_phone'] ?? '');
 
         $session = OrderSession::create([
             'amount' => $amount,
             'order_id' => $orderId,
             'merchant_id' => $config['merchant_id'],
             'customer_id' => $config['customer_id'],
+            'customer_email' => $extra['customer_email'] ?? '',
+            'customer_phone' => $customerPhone,
+            'udf1' => (string) ($extra['member_code'] ?? ''),
+            'udf2' => (string) ($extra['user_id'] ?? ''),
+            'udf3' => $customerPhone,
+            'udf6' => (string) ($extra['customer_email'] ?? ''),
+            'udf7' => (string) ($extra['member_name'] ?? ''),
             'payment_page_client_id' => $config['payment_page_client_id'],
             'action' => 'paymentPage',
             'return_url' => $returnUrl,

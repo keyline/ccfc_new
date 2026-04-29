@@ -666,7 +666,7 @@ class PaymentController extends Controller
             $tokenId = $request->token_id ?? null;
             $memberCode = $request->member_code ?? $user->user_code;
             $orderId = uniqid('order_');
-            $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpaycallback'), $amount);
+            $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpaycallback'), $amount, ['udf1' => $user->id,'udf2' => $user->user_code,'customer_email' => $user->email, 'customer_phone' => $user->phone_number_1,]);
             $payloadToStore = $result['sdk_payload'] ?? [];
             $payloadToStore['settlement_context'] = [
                 'token_id' => $tokenId,

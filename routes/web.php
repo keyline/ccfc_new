@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\OtherFoodItemController;
 use App\Http\Controllers\Auth\MagicLinkLoginController;
 use App\Http\Controllers\Member\MemberDuesController;
 use App\Http\Controllers\Member\PaymentController;
+use App\Http\Controllers\Member\HdfcGatewayTestingController;
 
 // use App\Http\Controllers\Api\V2\Member\ApiController;
 
@@ -1009,3 +1010,4 @@ Route::get('archives', function () {
 Route::get('/download/tender/{file}', [TenderDownloadController::class, 'download'])->name('download.tender');
 
 Route::get('/payment/{token}', 'PaymentController@showPaymentPage')->name('payment.page');
+

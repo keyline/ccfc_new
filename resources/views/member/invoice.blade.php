@@ -5,6 +5,44 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <style>
+        /* File: resources/views/member/invoice.blade.php | Improve spacing and alignment for payment gateway radio options only */
+        .invoicepayment_section .invocie_paymentlogo ul {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px 22px;
+            margin: 14px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .invoicepayment_section .invocie_paymentlogo li {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .invoicepayment_section .invocie_paymentlogo .form-check-input {
+            margin: 0;
+            position: static;
+            flex-shrink: 0;
+        }
+
+        .invoicepayment_section .invocie_paymentlogo .form-check-label {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .invoicepayment_section .invocie_paymentlogo img {
+            max-height: 28px;
+            width: auto;
+            display: block;
+        }
+    </style>
 
     <!-- ?php include 'assets/inc/header.php';?> -->
 
@@ -111,6 +149,9 @@
                                         <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
                                         <input type="hidden" name="razorpay_signature" id="razorpay_signature">
                                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="active_token_id"
+                                            value="{{ session()->get('tokenPayment.active_id') }}">
+                                        <input type="hidden" name="member_code" value="{{ $userData->user_code }}">
 
                                         @csrf
                                         <div class="invoice_input_bank">
@@ -120,6 +161,18 @@
                                             </div>
                                             <div class="invocie_paymentlogo">
                                                 <ul>
+                                                {{-- </?php if ($userData->user_code == 'B47CEO') { ?> --}}
+                                                    <li>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="paymentGatewayOptions" id="exampleRadios5"
+                                                            onclick="hdfcSmartSubmit(this);">
+                                                        <label class="form-check-label" for="exampleRadios5">
+                                                            <img class="img-fluid"
+                                                                src="{{ asset('img/HdfcLogo.svg') }}"
+                                                                alt="" />
+                                                        </label>
+                                                    </li>
+                                                    {{-- </?php } ?> --}}
                                                     <li>
                                                         <input class="form-check-input" type="radio"
                                                             name="paymentGatewayOptions" id="exampleRadios1"
@@ -128,17 +181,6 @@
                                                         <label class="form-check-label" for="exampleRadios1">
                                                             <img class="img-fluid"
                                                                 src="{{ asset('img/invoice_payu_logo.png') }}"
-                                                                alt="" />
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <input class="form-check-input" type="radio"
-                                                            name="paymentGatewayOptions" id="exampleRadios3"
-                                                            value="{{ route('member.axischeckout') }}"
-                                                            onclick="setPaymentAction('axis')">
-                                                        <label class="form-check-label" for="exampleRadios3">
-                                                            <img class="img-fluid"
-                                                                src="{{ asset('img/invoice_axis_logo.jpg') }}"
                                                                 alt="" />
                                                         </label>
                                                     </li>
@@ -154,18 +196,17 @@
                                                         </label>
                                                     </li>
                                                     <!-- ?php } ?> -->
-                                                    <?php if ($userData->user_code == 'B47CEO') { ?>
                                                     <li>
                                                         <input class="form-check-input" type="radio"
-                                                            name="paymentGatewayOptions" id="exampleRadios5"
-                                                            onclick="hdfcSmartSubmit(this);">
-                                                        <label class="form-check-label" for="exampleRadios5">
+                                                            name="paymentGatewayOptions" id="exampleRadios3"
+                                                            value="{{ route('member.axischeckout') }}"
+                                                            onclick="setPaymentAction('axis')">
+                                                        <label class="form-check-label" for="exampleRadios3">
                                                             <img class="img-fluid"
-                                                                src="{{ asset('img/HdfcLogo.svg') }}"
+                                                                src="{{ asset('img/invoice_axis_logo.jpg') }}"
                                                                 alt="" />
                                                         </label>
                                                     </li>
-                                                    <?php } ?>
                                                 </ul>
                                             </div>
 
@@ -421,15 +462,40 @@
         if (!el.checked) {
             return;
         }
+
+        // changed: lightweight loader so the user sees progress before gateway redirection.
+        let loader = document.getElementById('hdfc-smart-loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'hdfc-smart-loader';
+            loader.innerHTML =
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;font-family:Arial,sans-serif;">' +
+                '<div style="width:42px;height:42px;border:4px solid rgba(255,255,255,0.35);border-top-color:#ffffff;border-radius:50%;animation:hdfcSmartSpin 0.8s linear infinite;"></div>' +
+                '<div style="font-size:16px;font-weight:600;">Please wait, redirecting to payment gateway...</div>' +
+                '</div>';
+            loader.style.cssText =
+                'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;';
+            document.body.appendChild(loader);
+
+            const loaderStyle = document.createElement('style');
+            loaderStyle.innerHTML = '@keyframes hdfcSmartSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+            document.head.appendChild(loaderStyle);
+        }
+
+        loader.style.display = 'flex';
+
         const payNowButton = document.querySelector('.btn-primary');
         payNowButton.style.display = 'none';
         // Get amount from the input
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
+        let tokenPayment = document.querySelector('input[name="active_token_id"]');
+        let memberCode = document.querySelector('input[name="member_code"]');
 
         if (!amountValue || amountValue <= 0) {
             alert("Please enter a valid amount before choosing HDFC Smart gateway.");
             el.checked = false;
+            loader.style.display = 'none';
             //payNowButton.disabled =false;
             return;
         }
@@ -441,7 +507,9 @@
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                 },
                 body: JSON.stringify({
-                    amount: amountValue
+                    amount: amountValue,
+                    token_id: tokenPayment?.value || null,
+                    member_code: memberCode?.value || null
                 })
             })
             .then(response => {
@@ -455,17 +523,18 @@
 
             })
             .then(data => {
-                console.log(data);
-                if (data.status === 'NEW') {
-                    const url = data.paymentLinks.web;
+                if (data.data.order_status === 'NEW') {
+                    const url = data.data.payment_link;
                     return window.location.href = url;
                     console.log("yes");
                 }
                 console.log(data);
+                loader.style.display = 'none';
                 alert(`Unexpected status: ${data.status}`);
             })
             .catch(err => {
                 el.checked = false;
+                loader.style.display = 'none';
                 console.error(err);
                 alert("Error connecting to hdfcsmartpay.");
             });

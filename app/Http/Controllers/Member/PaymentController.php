@@ -483,8 +483,8 @@ class PaymentController extends Controller
         new ServerEnv($config);
 
         // block:start:read-keys-from-file
-        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path($config["PRIVATE_KEY_PATH"]));
-        $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents(storage_path($config["PUBLIC_KEY_PATH"]));
+        $privateKey = array_key_exists("PRIVATE_KEY", $config) ? $config["PRIVATE_KEY"] : file_get_contents(storage_path('app/juspay/' . $config["PRIVATE_KEY_PATH"]));
+        $publicKey =  array_key_exists("PUBLIC_KEY", $config) ? $config["PUBLIC_KEY"] : file_get_contents(storage_path('app/juspay/' . $config["PUBLIC_KEY_PATH"]));
         // block:end:read-keys-from-file
 
         if ($privateKey == false || $publicKey == false) {
@@ -503,8 +503,8 @@ class PaymentController extends Controller
 
         // block:start:initialize-juspay-config
         JuspayEnvironment::init()
-        ->withBaseUrl("https://smartgateway.hdfc.bank.in")
-        // ->withBaseUrl("https://smartgatewayuat.hdfcbank.com")
+        // ->withBaseUrl("https://smartgateway.hdfc.bank.in")
+        ->withBaseUrl("https://smartgateway.hdfcuat.bank.in")
         //->withBaseUrl("https://smartgateway.hdfcbank.com/")
         ->withMerchantId($config["MERCHANT_ID"])
         ->withJuspayJWT(new JuspayJWT($config["KEY_UUID"], $publicKey, $privateKey)); #Add key id
@@ -561,13 +561,13 @@ class PaymentController extends Controller
 
             // $session = OrderSession::create($params, $requestOption);
             $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "params" => $params, "requestOption" => $requestOption);
-            return response()->json($response);
+            // return response()->json($response);
             try {
                 $session = OrderSession::create($params, $requestOption);
-                return response()->json([
-                                        "success" => true,
-                                        "data" => $session->{'*'}   // 🔥 IMPORTANT
-                                    ]);
+                // return response()->json([
+                //                         "success" => true,
+                //                         "data" => $session->{'*'}   // 🔥 IMPORTANT
+                //                     ]);
 
             } catch (\Throwable $e) {
                         return response()->json([
@@ -581,6 +581,8 @@ class PaymentController extends Controller
             
         // $response = array("user" => $user, "session" => $session_user, "config" => $config, "amount" => $amount, "orderId" => $orderId, "session" => $session);
         //  return response()->json($response);
+            // return response()->json($session);
+
             if ($session->status == "NEW") {
                 $response = array("orderId" => $session->orderId, "id" => $session->id, "status" => $session->status, "paymentLinks" =>  $session->paymentLinks, "sdkPayload" => $session->sdkPayload );
 

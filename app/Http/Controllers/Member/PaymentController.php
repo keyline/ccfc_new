@@ -885,8 +885,7 @@ class PaymentController extends Controller
                 // dd($dueDetails);
 
 
-                // if($dueDetails->outstanding_balance > $amount)
-                if(1)
+                if($dueDetails)
                 {
                     Log::info('HDFC MAIL DEBUG [5] — updating member_dues');
                     DB::table('member_dues')

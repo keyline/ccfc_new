@@ -116,6 +116,7 @@
                                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="active_token_id"
                                             value="{{ session()->get('tokenPayment.active_id') }}">
+                                        <input type="hidden" name="member_code" value="{{ $userData->user_code }}">
 
                                         @csrf
                                         <div class="invoice_input_bank">

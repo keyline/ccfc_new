@@ -851,25 +851,46 @@ class PaymentController extends Controller
 
 
                 //find user
+                Log::info('HDFC MAIL DEBUG [1] — user lookup', [
+                    'hdfcsmartpaycustomerid' => session::get('hdfcsmartpaycustomerid'),
+                ]);
                 $user = User::find(session::get('hdfcsmartpaycustomerid'));
+                Log::info('HDFC MAIL DEBUG [2] — user found', [
+                    'user_found' => !empty($user),
+                    'user_id'    => $user->id ?? null,
+                    'user_name'  => $user->name ?? null,
+                    'user_email' => $user->email ?? 'NO EMAIL',
+                    'user_code'  => $user->user_code ?? null,
+                ]);
+
                 $amount = $order->amount ?? 0;
 
-                $currentMonth = Carbon::now()->month; 
+                $currentMonth = Carbon::now()->month;
                 $currentYear  = Carbon::now()->year;
                 //code by deblina to update member dues on payment
+                Log::info('HDFC MAIL DEBUG [3] — looking up member due', [
+                    'member_code' => $user->user_code ?? null,
+                    'month_no'    => $currentMonth,
+                    'year'        => $currentYear,
+                ]);
                 $dueDetails = MemberDue::where('member_code', $user->user_code)
                                         ->where('month_no', $currentMonth)
                                         ->where('year', $currentYear)
                                     ->first();
+                Log::info('HDFC MAIL DEBUG [4] — dueDetails result', [
+                    'due_found'           => !empty($dueDetails),
+                    'outstanding_balance' => $dueDetails->outstanding_balance ?? null,
+                    'amount'              => $amount,
+                ]);
                 // dd($dueDetails);
 
 
-                // if($dueDetails->outstanding_balance > $amount)
-                if(1)
-                {                        
+                if($dueDetails)
+                {
+                    Log::info('HDFC MAIL DEBUG [5] — updating member_dues');
                     DB::table('member_dues')
                         ->where('member_code', $user->user_code)
-                        ->where('month_no', $currentMonth)   
+                        ->where('month_no', $currentMonth)
                         ->where('year', $currentYear)
                         ->update(
                             [
@@ -879,6 +900,7 @@ class PaymentController extends Controller
                                 'updated_at' => Carbon::now('Asia/Kolkata'),
                             ]
                         );
+                    Log::info('HDFC MAIL DEBUG [6] — member_dues updated successfully');
                 }
 
 
@@ -887,7 +909,17 @@ class PaymentController extends Controller
                     'body'     => "Thank you for making payment of Rs.$order->amount . Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
                 );
 
-                Notification::send($user, new PayUEmailNotification($emailInfo));
+                Log::info('HDFC MAIL DEBUG [7] — attempting to send mail', [
+                    'to_email' => $user->email ?? 'NO EMAIL',
+                ]);
+                try {
+                    Notification::send($user, new PayUEmailNotification($emailInfo));
+                    Log::info('HDFC MAIL DEBUG [8] — mail sent successfully');
+                } catch (\Exception $mailEx) {
+                    Log::error('HDFC MAIL DEBUG [8] — mail FAILED', [
+                        'error' => $mailEx->getMessage(),
+                    ]);
+                }
 
                 if (config('auth.logout_after_payment')) {
                     Auth::guard('members')->logout();
@@ -940,10 +972,10 @@ class PaymentController extends Controller
         http_response_code(400);
 
         $status = [
-            'status' =>  $response['order_status'],
+            'status' =>  isset($response['order_status']) && $response['order_status'] === 'CHARGED' ? 'success' : ($response['order_status'] ?? 'failed'),
             'transactionid' => $response['order_id'] ?? '',
             'amount' => $order->amount ?? 0,
-            'message' => $ex->getMessage() ?? ''
+            'message' => isset($ex) ? $ex->getMessage() : ''
         ];
 
         Session::forget(['hdfcsmartpayTransactionid', 'hdfcsmartpaycustomerid']);

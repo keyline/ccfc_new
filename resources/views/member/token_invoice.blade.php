@@ -24,8 +24,7 @@
 
                             <div class="about-img">
 
-                                <img class="img-fluid" src="{{ asset('img/past-president/banner1.jpg') }}"
-                                    alt="" />
+                                <img class="img-fluid" src="{{ asset('img/past-president/banner1.jpg') }}" alt="" />
 
                             </div>
 
@@ -55,10 +54,8 @@
                                         </div>
                                     @else
                                         <div class="member_profileimg">
-                                            <img class="img-fluid"
-                                                src="data:image/png;base64,                          
-                                        {{ $userData->userCodeUserDetails[0]->member_image }} "
-                                                alt="" />
+                                            <img class="img-fluid" src="data:image/png;base64,                          
+                                            {{ $userData->userCodeUserDetails[0]->member_image }} " alt="" />
                                         </div>
                                     @endif
                                 </div>
@@ -94,8 +91,7 @@
                                     </div>
                                 @endif
                                 <h3>Total payable amount for {{ $balanceFortheMonth }} : INR. <span
-                                        id="comparable_amount"
-                                        style="font-size: 22px;
+                                        id="comparable_amount" style="font-size: 22px;
                                         font-weight: 600;
                                         font-family: 'IBM Plex Serif', serif;
                                         color: #be1f24;
@@ -120,12 +116,13 @@
                                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="active_token_id"
                                             value="{{ session()->get('tokenPayment.active_id') }}">
+                                        <input type="hidden" name="member_code" value="{{ $userData->user_code }}">
 
                                         @csrf
                                         <div class="invoice_input_bank">
                                             <div class="invoice_input_feild">
-                                                <input type="text" name="amount"
-                                                    placeholder="Enter amount being paid" id="compare_with_amount">
+                                                <input type="text" name="amount" placeholder="Enter amount being paid"
+                                                    id="compare_with_amount">
                                             </div>
                                             <div class="invocie_paymentlogo">
                                                 <ul>
@@ -136,8 +133,7 @@
                                                             onclick="setPaymentAction('payu')">
                                                         <label class="form-check-label" for="exampleRadios1">
                                                             <img class="img-fluid"
-                                                                src="{{ asset('img/invoice_payu_logo.png') }}"
-                                                                alt="" />
+                                                                src="{{ asset('img/invoice_payu_logo.png') }}" alt="" />
                                                         </label>
                                                     </li>
                                                     <li>
@@ -147,8 +143,7 @@
                                                             onclick="setPaymentAction('axis')">
                                                         <label class="form-check-label" for="exampleRadios3">
                                                             <img class="img-fluid"
-                                                                src="{{ asset('img/invoice_axis_logo.jpg') }}"
-                                                                alt="" />
+                                                                src="{{ asset('img/invoice_axis_logo.jpg') }}" alt="" />
                                                         </label>
                                                     </li>
                                                     <!-- ?php if($userData->user_code == 'B47CEO') { ?> -->
@@ -213,7 +208,7 @@
                                                 form.submit();
                                             }
 
-                                            errorMsg.forEach(function(message) {
+                                            errorMsg.forEach(function (message) {
                                                 messageHtml += "<li>" + message + "</li>";
                                             });
 
@@ -274,65 +269,67 @@
                                     </thead>
                                     @foreach ($userTransactions as $user)
                                         <tbody>
-                                        @if($loop->iteration == 1)
-                                            <tr>
-                                                <td>{{ $user['Month'] }}</td>
-                                                {{-- <td>{{ $user['LastBalance'] }}</td> --}}
-                                                {{-- <td>{{ $user['paidamount'] }}</td> --}}
-                                                {{-- <td>{{ $user['debitamount'] }}</td> --}}
-                                                {{-- <td>{{ $user['Balance'] }}</td> --}}
-                                                <!-- summary -->
-                                                <td>
-                                                    @if (SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
-                                                            !empty(SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $user['Month'])))
-                                                        <a href="{{ SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $user['Month']) }}"
-                                                            target="_blank"><img class="img-fluid"
-                                                                src="{{ asset('img/invoice_pdficon.png') }}"
-                                                                alt="" /></a>
-                                                    @else
+                                            @if($loop->iteration == 1)
+                                                <tr>
+                                                    <td>{{ $user['Month'] }}</td>
+                                                    {{-- <td>{{ $user['LastBalance'] }}</td> --}}
+                                                    {{-- <td>{{ $user['paidamount'] }}</td> --}}
+                                                    {{-- <td>{{ $user['debitamount'] }}</td> --}}
+                                                    {{-- <td>{{ $user['Balance'] }}</td> --}}
+                                                    <!-- summary -->
+                                                    <td>
+                                                        @if (
+                                                                SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
+                                                                !empty(SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $user['Month']))
+                                                            )
+                                                            <a href="{{ SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $user['Month']) }}"
+                                                                target="_blank"><img class="img-fluid"
+                                                                    src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a>
+                                                        @else
+                                                            <span>&#8211;</span>
+                                                        @endif
+                                                    </td>
+                                                    <!-- Detail -->
+                                                    <td>
+                                                        @if (
+                                                                    SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
+                                                                    !empty(SearchInvoicePdf::getDetailBillLink($userData['user_code'], $user['Month']))
+                                                                )
+                                                                <a href="{{ SearchInvoicePdf::getDetailBillLink($userData['user_code'], $user['Month']) }}"
+                                                                    target="_blank"><img class="img-fluid"
+                                                                        src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a>
+                                                            </td>
+                                                        @else
                                                         <span>&#8211;</span>
                                                     @endif
-                                                </td>
-                                                <!-- Detail -->
-                                                <td>
-                                                    @if (SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
-                                                            !empty(SearchInvoicePdf::getDetailBillLink($userData['user_code'], $user['Month'])))
-                                                        <a href="{{ SearchInvoicePdf::getDetailBillLink($userData['user_code'], $user['Month']) }}"
-                                                            target="_blank"><img class="img-fluid"
-                                                                src="{{ asset('img/invoice_pdficon.png') }}"
-                                                                alt="" /></a>
-                                                </td>
-                                            @else
-                                                <span>&#8211;</span>
-                                    @endif
-                                    <!-- <td>Payment</td> -->
-                                    </tr>
-                                    @endif
-                                    <!-- <tr>
-                                                <td>Jan 2022</td>
-                                                <td>10773.82</td>
-                                                <td>11827.59</td>
-                                                <td>6106</td>
-                                                <td>11826.96</td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td>Payment</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Dec 2021</td>
-                                                <td>7954.72</td>
-                                                <td>11827.59</td>
-                                                <td>6106</td>
-                                                <td>11826.96</td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td>Payment</td>
-                                            </tr> -->
-                                    </tbody>
+                                                    <!-- <td>Payment</td> -->
+                                                </tr>
+                                            @endif
+                                            <!-- <tr>
+                                                    <td>Jan 2022</td>
+                                                    <td>10773.82</td>
+                                                    <td>11827.59</td>
+                                                    <td>6106</td>
+                                                    <td>11826.96</td>
+                                                    <td><a href="#" target="_blank"><img class="img-fluid"
+                                                                src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
+                                                    <td><a href="#" target="_blank"><img class="img-fluid"
+                                                                src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
+                                                    <td>Payment</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Dec 2021</td>
+                                                    <td>7954.72</td>
+                                                    <td>11827.59</td>
+                                                    <td>6106</td>
+                                                    <td>11826.96</td>
+                                                    <td><a href="#" target="_blank"><img class="img-fluid"
+                                                                src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
+                                                    <td><a href="#" target="_blank"><img class="img-fluid"
+                                                                src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
+                                                    <td>Payment</td>
+                                                </tr> -->
+                                        </tbody>
                                     @endforeach
                                 </table>
                             </div>
@@ -376,15 +373,15 @@
         let amountInPaise = Math.round(amountValue * 100);
 
         fetch("{{ route('member.razorpay') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    amount: amountInPaise
-                })
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({
+                amount: amountInPaise
             })
+        })
             .then(res => res.json())
             .then(data => {
                 if (!data.order_id) {
@@ -400,7 +397,7 @@
                     description: "Invoice Payment",
                     image: "{{ asset('img/logo.png') }}",
                     order_id: data.order_id,
-                    handler: function(response) {
+                    handler: function (response) {
                         debugger;
                         // Fill hidden fields and submit form
                         document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
@@ -442,17 +439,40 @@
         if (!el.checked) {
             return;
         }
+
+        // changed: lightweight loader so the user sees progress before gateway redirection.
+        let loader = document.getElementById('hdfc-smart-loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'hdfc-smart-loader';
+            loader.innerHTML =
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;font-family:Arial,sans-serif;">' +
+                '<div style="width:42px;height:42px;border:4px solid rgba(255,255,255,0.35);border-top-color:#ffffff;border-radius:50%;animation:hdfcSmartSpin 0.8s linear infinite;"></div>' +
+                '<div style="font-size:16px;font-weight:600;">Please wait, redirecting to payment gateway...</div>' +
+                '</div>';
+            loader.style.cssText =
+                'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;';
+            document.body.appendChild(loader);
+
+            const loaderStyle = document.createElement('style');
+            loaderStyle.innerHTML = '@keyframes hdfcSmartSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+            document.head.appendChild(loaderStyle);
+        }
+
+        loader.style.display = 'flex';
+
         const payNowButton = document.querySelector('.btn-primary');
         payNowButton.style.display = 'none';
         // Get amount from the input
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
-
         let tokenPayment = document.querySelector('input[name="active_token_id"]');
+        let memberCode = document.querySelector('input[name="member_code"]');
 
         if (!amountValue || amountValue <= 0) {
             alert("Please enter a valid amount before choosing HDFC Smart gateway.");
             el.checked = false;
+            loader.style.display = 'none';
             //payNowButton.disabled =false;
             return;
         }
@@ -465,7 +485,8 @@
                 },
                 body: JSON.stringify({
                     amount: amountValue,
-                    token_id: tokenPayment.value
+                    token_id: tokenPayment?.value || null,
+                    member_code: memberCode?.value || null
                 })
             })
             .then(response => {
@@ -474,31 +495,32 @@
                         throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
                     });
                 }
+                
                 return response.json();
 
             })
             .then(data => {
-                if (data.status === 'NEW') {
-                    const url = data.paymentLinks.web;
+                if (data.data.order_status === 'NEW') {
+                    const url = data.data.payment_link;
                     return window.location.href = url;
+                    console.log("yes");
                 }
+                console.log(data);
+                loader.style.display = 'none';
                 alert(`Unexpected status: ${data.status}`);
-
             })
             .catch(err => {
                 el.checked = false;
+                loader.style.display = 'none';
                 console.error(err);
                 alert("Error connecting to hdfcsmartpay.");
             });
-
-
-
     }
 </script>
 
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
+{{-- <script>
+    document.addEventListener('DOMContentLoaded', function () {
 
         const payableEl = document.getElementById('comparable_amount');
         const payInput = document.getElementById('compare_with_amount');
@@ -526,7 +548,7 @@
 
         const payableCompareValue = normalizeForCompare(payableEl.innerText);
 
-        payInput.addEventListener('change', function() {
+        payInput.addEventListener('change', function () {
 
             const enteredCompareValue = normalizeForCompare(this.value);
 
@@ -547,7 +569,7 @@
         });
 
     });
-</script>
+</script> --}}
 
 
 

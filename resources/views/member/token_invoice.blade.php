@@ -158,7 +158,7 @@
                                                         </label>
                                                     </li>
                                                     <!-- ?php } ?> -->
-                                                    <?php if ($userData->user_code == 'G001') { ?>
+                                                    <?php if ($userData->user_code == 'B47CEO') { ?>
                                                     <li>
                                                         <input class="form-check-input" type="radio"
                                                             name="paymentGatewayOptions" id="exampleRadios5"
@@ -519,7 +519,7 @@
 </script>
 
 
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function () {
 
         const payableEl = document.getElementById('comparable_amount');
@@ -569,7 +569,7 @@
         });
 
     });
-</script>
+</script> --}}
 
 
 

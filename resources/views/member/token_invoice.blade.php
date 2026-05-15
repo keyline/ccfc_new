@@ -519,7 +519,7 @@
 </script>
 
 
-{{-- <script>
+<script>
     document.addEventListener('DOMContentLoaded', function () {
 
         const payableEl = document.getElementById('comparable_amount');
@@ -569,7 +569,7 @@
         });
 
     });
-</script> --}}
+</script>
 
 
 

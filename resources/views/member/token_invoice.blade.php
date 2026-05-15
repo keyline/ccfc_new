@@ -163,7 +163,8 @@
                                                             name="paymentGatewayOptions" id="exampleRadios5"
                                                             onclick="hdfcSmartSubmit(this);">
                                                         <label class="form-check-label" for="exampleRadios5">
-                                                            <img class="img-fluid" src="{{ asset('img/HdfcLogo.svg') }}"
+                                                            <img class="img-fluid"
+                                                                src="{{ asset('img/HdfcLogo.svg') }}"
                                                                 alt="" />
                                                         </label>
                                                     </li>
@@ -437,57 +438,82 @@
         if (!el.checked) {
             return;
         }
+
+        // changed: lightweight loader so the user sees progress before gateway redirection.
+        let loader = document.getElementById('hdfc-smart-loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'hdfc-smart-loader';
+            loader.innerHTML =
+                '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;font-family:Arial,sans-serif;">' +
+                '<div style="width:42px;height:42px;border:4px solid rgba(255,255,255,0.35);border-top-color:#ffffff;border-radius:50%;animation:hdfcSmartSpin 0.8s linear infinite;"></div>' +
+                '<div style="font-size:16px;font-weight:600;">Please wait, redirecting to payment gateway...</div>' +
+                '</div>';
+            loader.style.cssText =
+                'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;';
+            document.body.appendChild(loader);
+
+            const loaderStyle = document.createElement('style');
+            loaderStyle.innerHTML = '@keyframes hdfcSmartSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+            document.head.appendChild(loaderStyle);
+        }
+
+        loader.style.display = 'flex';
+
         const payNowButton = document.querySelector('.btn-primary');
         payNowButton.style.display = 'none';
         // Get amount from the input
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
-
         let tokenPayment = document.querySelector('input[name="active_token_id"]');
+        let memberCode = document.querySelector('input[name="member_code"]');
 
         if (!amountValue || amountValue <= 0) {
             alert("Please enter a valid amount before choosing HDFC Smart gateway.");
             el.checked = false;
+            loader.style.display = 'none';
             //payNowButton.disabled =false;
             return;
         }
 
         fetch("{{ route('member.hdfcsmartpg') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json;charset=UTF-8",
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-            },
-            body: JSON.stringify({
-                amount: amountValue,
-                token_id: tokenPayment.value
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json;charset=UTF-8",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    amount: amountValue,
+                    token_id: tokenPayment?.value || null,
+                    member_code: memberCode?.value || null
+                })
             })
-        })
             .then(response => {
                 if (!response.ok) {
                     return response.json().then(data => {
                         throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
                     });
                 }
+                
                 return response.json();
 
             })
             .then(data => {
-                if (data.status === 'NEW') {
-                    const url = data.paymentLinks.web;
+                if (data.data.order_status === 'NEW') {
+                    const url = data.data.payment_link;
                     return window.location.href = url;
+                    console.log("yes");
                 }
+                console.log(data);
+                loader.style.display = 'none';
                 alert(`Unexpected status: ${data.status}`);
-
             })
             .catch(err => {
                 el.checked = false;
+                loader.style.display = 'none';
                 console.error(err);
                 alert("Error connecting to hdfcsmartpay.");
             });
-
-
-
     }
 </script>
 

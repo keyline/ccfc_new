@@ -126,39 +126,7 @@
                                             </div>
                                             <div class="invocie_paymentlogo">
                                                 <ul>
-                                                    <li>
-                                                        <input class="form-check-input" type="radio"
-                                                            name="paymentGatewayOptions" id="exampleRadios1"
-                                                            value="{{ route('member.payment') }}"
-                                                            onclick="setPaymentAction('payu')">
-                                                        <label class="form-check-label" for="exampleRadios1">
-                                                            <img class="img-fluid"
-                                                                src="{{ asset('img/invoice_payu_logo.png') }}" alt="" />
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <input class="form-check-input" type="radio"
-                                                            name="paymentGatewayOptions" id="exampleRadios3"
-                                                            value="{{ route('member.axischeckout') }}"
-                                                            onclick="setPaymentAction('axis')">
-                                                        <label class="form-check-label" for="exampleRadios3">
-                                                            <img class="img-fluid"
-                                                                src="{{ asset('img/invoice_axis_logo.jpg') }}" alt="" />
-                                                        </label>
-                                                    </li>
-                                                    <!-- ?php if($userData->user_code == 'B47CEO') { ?> -->
-                                                    <li>
-                                                        <input class="form-check-input" type="radio"
-                                                            name="paymentGatewayOptions" id="exampleRadios4"
-                                                            onclick="razorpaySubmit(this);">
-                                                        <label class="form-check-label" for="exampleRadios4">
-                                                            <img class="img-fluid"
-                                                                src="{{ asset('img/invoice_razorpay_logo.png') }}"
-                                                                alt="" />
-                                                        </label>
-                                                    </li>
-                                                    <!-- ?php } ?> -->
-                                                    <?php if ($userData->user_code == 'G001') { ?>
+                                                    <?php if ($userData->user_code == 'B47CEO') { ?>
                                                     <li>
                                                         <input class="form-check-input" type="radio"
                                                             name="paymentGatewayOptions" id="exampleRadios5"
@@ -170,6 +138,40 @@
                                                         </label>
                                                     </li>
                                                     <?php } ?>
+
+                                                    <li>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="paymentGatewayOptions" id="exampleRadios1"
+                                                            value="{{ route('member.payment') }}"
+                                                            onclick="setPaymentAction('payu')">
+                                                        <label class="form-check-label" for="exampleRadios1">
+                                                            <img class="img-fluid"
+                                                                src="{{ asset('img/invoice_payu_logo.png') }}" alt="" />
+                                                        </label>
+                                                    </li>
+
+                                                    <li>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="paymentGatewayOptions" id="exampleRadios4"
+                                                            onclick="razorpaySubmit(this);">
+                                                        <label class="form-check-label" for="exampleRadios4">
+                                                            <img class="img-fluid"
+                                                                src="{{ asset('img/invoice_razorpay_logo.png') }}"
+                                                                alt="" />
+                                                        </label>
+                                                    </li>
+
+                                                    <li>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="paymentGatewayOptions" id="exampleRadios3"
+                                                            value="{{ route('member.axischeckout') }}"
+                                                            onclick="setPaymentAction('axis')">
+                                                        <label class="form-check-label" for="exampleRadios3">
+                                                            <img class="img-fluid"
+                                                                src="{{ asset('img/invoice_axis_logo.jpg') }}" alt="" />
+                                                        </label>
+                                                    </li>
+                                                                                                        
                                                 </ul>
                                             </div>
 
@@ -519,7 +521,7 @@
 </script>
 
 
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function () {
 
         const payableEl = document.getElementById('comparable_amount');
@@ -569,7 +571,7 @@
         });
 
     });
-</script>
+</script> --}}
 
 
 

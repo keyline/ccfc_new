@@ -126,7 +126,7 @@
                                             </div>
                                             <div class="invocie_paymentlogo">
                                                 <ul>
-                                                    <?php if ($userData->user_code == 'B47CEO') { ?>
+                                                    {{-- ?php if ($userData->user_code == 'B47CEO') { ?> --}}
                                                     <li>
                                                         <input class="form-check-input" type="radio"
                                                             name="paymentGatewayOptions" id="exampleRadios5"
@@ -137,7 +137,7 @@
                                                                 alt="" />
                                                         </label>
                                                     </li>
-                                                    <?php } ?>
+                                                    {{-- ?php } ?> --}}
 
                                                     <li>
                                                         <input class="form-check-input" type="radio"
@@ -521,7 +521,7 @@
 </script>
 
 
-{{-- <script>
+<script>
     document.addEventListener('DOMContentLoaded', function () {
 
         const payableEl = document.getElementById('comparable_amount');
@@ -571,7 +571,7 @@
         });
 
     });
-</script> --}}
+</script>
 
 
 

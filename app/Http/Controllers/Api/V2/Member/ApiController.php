@@ -2037,7 +2037,7 @@ class ApiController extends Controller
                         $url = "https://ccfcmemberdata.in/api/MemberMonthlyBalance/?MCODE=" . $checkUser->user_code . "&FromDate=01-apr-2020&ToDate=01-jun-2021";
                         $postData = ['MCODE' => $checkUser->user_code, 'FromDate' => '01-apr-2020', 'ToDate' => '01-jun-2021'];
                         $response = $this->makeCurlRequest($url, $postData);
-                        // echo $response;die;
+                        echo $response;die;
                         $transactions = json_decode($response, true)['data'];
 
 

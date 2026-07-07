@@ -173,11 +173,12 @@ class HomeController extends Controller
 
             $tansactionUrl = 'https://ccfcmemberdata.in/api/MemberMonthlyBalance/?' . http_build_query($transactionFields);
 
-            $transactions = Http::withoutVerifying()
+            $transactionResponse = Http::withoutVerifying()
                         ->withHeaders(['Authorization' => 'Bearer ' . $token, 'Cache-Control' => 'no-cache', 'Accept' => '/',
                                         'Content-Type' => 'application/json',])
                         ->withOptions(["verify" => false])
-                        ->post($tansactionUrl)->json()['data'];
+                        ->post($tansactionUrl);
+            $transactions = $this->getClubmanResponseData($transactionResponse);
 
             if (session()->has('tokenPayment.active_id')) {
                 // active_id exists
@@ -612,11 +613,12 @@ class HomeController extends Controller
 
             $tansactionUrl = 'https://ccfcmemberdata.in/api/MemberMonthlyBalance/?' . http_build_query($transactionFields);
 
-            $transactions = Http::withoutVerifying()
+            $transactionResponse = Http::withoutVerifying()
                         ->withHeaders(['Authorization' => 'Bearer ' . $token, 'Cache-Control' => 'no-cache', 'Accept' => '/',
                                         'Content-Type' => 'application/json',])
                         ->withOptions(["verify" => false])
-                        ->post($tansactionUrl)->json()['data'];
+                        ->post($tansactionUrl);
+            $transactions = $this->getClubmanResponseData($transactionResponse);
 
             // payment details from api //
 
@@ -643,5 +645,21 @@ class HomeController extends Controller
         } catch (\Exception $ex) {
             //throw $th;
         }
+    }
+
+    private function getClubmanResponseData($response)
+    {
+        $decodedResponse = $response->json();
+
+        if (!is_array($decodedResponse) || !array_key_exists('data', $decodedResponse)) {
+            Log::warning('Invalid Clubman API response', [
+                'status' => $response->status(),
+                'response' => substr($response->body(), 0, 500),
+            ]);
+
+            return [];
+        }
+
+        return is_array($decodedResponse['data']) ? $decodedResponse['data'] : [];
     }
 }

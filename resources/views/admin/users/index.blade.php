@@ -31,6 +31,23 @@
         @endif
     </div>
 
+    <div id="member-sync-overlay" class="member-sync-overlay" aria-hidden="true"
+        aria-labelledby="member-sync-title" aria-describedby="member-sync-description">
+        <div class="member-sync-dialog" role="status" aria-live="assertive">
+            <div class="member-sync-loader" aria-hidden="true">
+                <span></span>
+                <i class="fas fa-user" aria-hidden="true"></i>
+            </div>
+            <span class="member-sync-eyebrow">Clubman synchronization</span>
+            <h2 id="member-sync-title">Member data updating</h2>
+            <p id="member-sync-description">
+                Importing the latest member profile and securely saving it to the database.
+            </p>
+            <div class="member-sync-progress" aria-hidden="true"><span></span></div>
+            <small>Please keep this page open until the update completes.</small>
+        </div>
+    </div>
+
     <div class="users-page-actions">
         <div>
             @can('user_create')
@@ -297,10 +314,27 @@
                     }, 7000);
                 }
 
+                function showSyncOverlay(memberName) {
+                    var $overlay = $('#member-sync-overlay');
+                    var description = memberName
+                        ? 'Importing the latest Clubman profile for ' + memberName + ' and securely saving it to the database.'
+                        : 'Importing the latest member profile and securely saving it to the database.';
+
+                    $overlay.find('#member-sync-description').text(description);
+                    $overlay.addClass('is-visible').attr('aria-hidden', 'false');
+                    $('body').addClass('member-sync-active');
+                }
+
+                function hideSyncOverlay() {
+                    $('#member-sync-overlay').removeClass('is-visible').attr('aria-hidden', 'true');
+                    $('body').removeClass('member-sync-active');
+                }
+
                 $('.user-profile-sync').on('click', function () {
                     var $button = $(this);
                     var $row = $button.closest('tr');
                     var $icon = $button.find('i');
+                    var memberName = $.trim($row.find('.users-member-name').text());
 
                     if ($button.prop('disabled')) {
                         return;
@@ -308,6 +342,7 @@
 
                     $button.prop('disabled', true).addClass('syncing');
                     $icon.addClass('fa-spin');
+                    showSyncOverlay(memberName);
 
                     $.ajax({
                         method: 'POST',
@@ -350,6 +385,7 @@
                     }).always(function () {
                         $button.prop('disabled', false).removeClass('syncing');
                         $icon.removeClass('fa-spin');
+                        hideSyncOverlay();
                     });
                 });
             });

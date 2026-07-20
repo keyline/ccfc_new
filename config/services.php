@@ -34,4 +34,12 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS'),
     ],
 
+    'clubman' => [
+        'member_profile_url' => env(
+            'CLUBMAN_MEMBER_PROFILE_URL',
+            'https://ccfcmemberdata.in/Api/MemberProfile'
+        ),
+        'token' => env('CLUBMAN_API_TOKEN'),
+    ],
+
 ];

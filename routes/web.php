@@ -569,7 +569,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
 
     Route::get('contactus', 'ContactController@index')->name('contactus');
     //Ajax Request
-    Route::get('/saveUserJson/{code}', [UsersController::class, 'saveUserJson'])->name('saveUserJson');
+    Route::post('/saveUserJson/{code}', [UsersController::class, 'saveUserJson'])->name('saveUserJson');
 
     Route::get('/auto-memberprofileupdate', function () {
         $query = \App\Models\User::query();

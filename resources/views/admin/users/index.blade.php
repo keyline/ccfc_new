@@ -3,6 +3,34 @@
 @section('title', 'Members')
 
 @section('content')
+    <div id="users-sync-notice" aria-live="polite">
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show autoHideAlert" role="alert">
+                <span class="alert-icon"><i class="fas fa-check" aria-hidden="true"></i></span>
+                <div>
+                    <strong>Profile synchronized</strong>
+                    <span>{{ session('success') }}</span>
+                </div>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span class="alert-icon"><i class="fas fa-exclamation" aria-hidden="true"></i></span>
+                <div>
+                    <strong>Profile synchronization failed</strong>
+                    <span>{{ session('error') }}</span>
+                </div>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+    </div>
+
     <div class="users-page-actions">
         <div>
             @can('user_create')
@@ -122,7 +150,7 @@
                                         {{ strtoupper(substr(trim($user->name ?: 'M'), 0, 1)) }}
                                     </span>
                                     <div>
-                                        <strong>{{ $user->name ?: 'Unnamed member' }}</strong>
+                                        <strong class="users-member-name">{{ $user->name ?: 'Unnamed member' }}</strong>
                                         <span>#{{ $user->id }}</span>
                                     </div>
                                 </div>
@@ -132,8 +160,12 @@
                             </td>
                             <td>
                                 <div class="users-contact-cell">
-                                    <span title="{{ $user->email }}">{{ $user->email ?: 'No email' }}</span>
-                                    <small>{{ $user->phone_number_1 ?: 'No phone number' }}</small>
+                                    <span class="users-member-email" title="{{ $user->email }}">
+                                        {{ $user->email ?: 'No email' }}
+                                    </span>
+                                    <small class="users-member-phone">
+                                        {{ $user->phone_number_1 ?: 'No phone number' }}
+                                    </small>
                                 </div>
                             </td>
                             <td>
@@ -164,13 +196,11 @@
                                             Pending
                                         </span>
                                     @endif
-                                    @if($user->status)
-                                        <small>{{ $user->status }}</small>
-                                    @endif
+                                    <small class="users-club-status">{{ $user->status ?: 'No Clubman status' }}</small>
                                 </div>
                             </td>
                             <td>
-                                <span class="users-updated-at">
+                                <span class="users-updated-at user-updated-value">
                                     {{ optional($user->updated_at)->format('d M Y') ?: '—' }}
                                 </span>
                             </td>
@@ -184,12 +214,14 @@
                                     @endcan
 
                                     @can('user_edit')
-                                        <a class="users-icon-action {{ $user->user_code_user_details_count > 0 ? 'profile-ready' : 'profile-pending' }}"
-                                            href="{{ route('admin.saveUserJson', $user->user_code) }}"
-                                            title="{{ trans('global.updatedetails') }}"
-                                            aria-label="Update details for {{ $user->name ?: 'member' }}">
+                                        <button type="button"
+                                            class="users-icon-action user-profile-sync {{ $user->user_code_user_details_count > 0 ? 'profile-ready' : 'profile-pending' }}"
+                                            data-url="{{ route('admin.saveUserJson', $user->user_code) }}"
+                                            data-member-code="{{ $user->user_code }}"
+                                            title="{{ $user->user_code_user_details_count > 0 ? 'Refresh Clubman details' : 'Import Clubman details' }}"
+                                            aria-label="Update Clubman details for {{ $user->name ?: 'member' }}">
                                             <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                                        </a>
+                                        </button>
                                     @endcan
 
                                     @can('user_delete')
@@ -235,6 +267,95 @@
 
 @section('scripts')
     @parent
+    @can('user_edit')
+        <script>
+            $(function () {
+                function showSyncNotice(type, heading, message) {
+                    var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                    var iconClass = type === 'success' ? 'fa-check' : 'fa-exclamation';
+                    var $alert = $('<div>', {
+                        class: 'alert ' + alertClass + ' alert-dismissible fade show',
+                        role: 'alert'
+                    });
+                    var $icon = $('<span>', { class: 'alert-icon' })
+                        .append($('<i>', { class: 'fas ' + iconClass, 'aria-hidden': 'true' }));
+                    var $copy = $('<div>')
+                        .append($('<strong>').text(heading))
+                        .append($('<span>').text(message));
+                    var $close = $('<button>', {
+                        type: 'button',
+                        class: 'close',
+                        'data-dismiss': 'alert',
+                        'aria-label': 'Close'
+                    }).append($('<span>', { 'aria-hidden': 'true' }).html('&times;'));
+
+                    $alert.append($icon, $copy, $close);
+                    $('#users-sync-notice').empty().append($alert);
+
+                    window.setTimeout(function () {
+                        $alert.alert('close');
+                    }, 7000);
+                }
+
+                $('.user-profile-sync').on('click', function () {
+                    var $button = $(this);
+                    var $row = $button.closest('tr');
+                    var $icon = $button.find('i');
+
+                    if ($button.prop('disabled')) {
+                        return;
+                    }
+
+                    $button.prop('disabled', true).addClass('syncing');
+                    $icon.addClass('fa-spin');
+
+                    $.ajax({
+                        method: 'POST',
+                        url: $button.data('url'),
+                        dataType: 'json',
+                        headers: {
+                            Accept: 'application/json',
+                            'x-csrf-token': $('meta[name="csrf-token"]').attr('content')
+                        }
+                    }).done(function (response) {
+                        var user = response.user || {};
+
+                        $button
+                            .removeClass('profile-pending')
+                            .addClass('profile-ready')
+                            .attr('title', 'Refresh Clubman details');
+
+                        if (user.name) {
+                            $row.find('.users-member-name').text(user.name);
+                        }
+
+                        $row.find('.users-member-email')
+                            .text(user.email || 'No email')
+                            .attr('title', user.email || '');
+                        $row.find('.users-member-phone').text(user.phone_number || 'No phone number');
+                        $row.find('.users-club-status').text(user.status || 'No Clubman status');
+                        $row.find('.user-updated-value').text(user.updated_at || '—');
+
+                        showSyncNotice(
+                            'success',
+                            'Profile synchronized',
+                            response.message || 'The Clubman profile was saved successfully.'
+                        );
+                    }).fail(function (xhr) {
+                        var message = xhr.responseJSON && xhr.responseJSON.message
+                            ? xhr.responseJSON.message
+                            : 'The Clubman profile could not be updated. Please try again.';
+
+                        showSyncNotice('error', 'Synchronization failed', message);
+                    }).always(function () {
+                        $button.prop('disabled', false).removeClass('syncing');
+                        $icon.removeClass('fa-spin');
+                    });
+                });
+            });
+        </script>
+    @endcan
+
     @can('user_delete')
         <script>
             $(function () {

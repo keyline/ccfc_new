@@ -1585,6 +1585,19 @@ body.ccfc-admin {
     color: #a96a12;
 }
 
+.users-icon-action.syncing,
+.users-icon-action.syncing:hover {
+    background: #eef3f8;
+    border-color: #d8e0e8;
+    color: #52657b;
+    cursor: wait;
+    opacity: 1;
+}
+
+.users-icon-action:disabled {
+    box-shadow: none;
+}
+
 .users-icon-action.delete {
     background: #fff5f6;
     border-color: #f2dadd;

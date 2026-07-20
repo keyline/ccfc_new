@@ -20,13 +20,68 @@ use Carbon\Carbon;
 
 class UsersController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         abort_if(Gate::denies('user_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $users = User::with(['roles'])->get();
+        $search = trim((string) $request->input('search', ''));
+        $verification = $request->input('verification');
+        $perPage = (int) $request->input('per_page', 50);
 
-        return view('admin.users.index', compact('users'));
+        if (!in_array($perPage, [25, 50, 100], true)) {
+            $perPage = 50;
+        }
+
+        $usersQuery = User::query()
+            ->select([
+                'id',
+                'name',
+                'email',
+                'email_verified_at',
+                'two_factor',
+                'user_code',
+                'status',
+                'phone_number_1',
+                'updated_at',
+            ])
+            ->with([
+                'roles' => function ($query) {
+                    $query->select(['roles.id', 'roles.title']);
+                },
+            ])
+            ->withCount('userCodeUserDetails');
+
+        if ($search !== '') {
+            $usersQuery->where(function ($query) use ($search) {
+                if (ctype_digit($search)) {
+                    $query->orWhere('id', (int) $search);
+                }
+
+                $query->orWhere('name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('user_code', 'like', '%' . $search . '%')
+                    ->orWhere('phone_number_1', 'like', '%' . $search . '%')
+                    ->orWhere('status', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($verification === 'verified') {
+            $usersQuery->whereNotNull('email_verified_at');
+        } elseif ($verification === 'pending') {
+            $usersQuery->whereNull('email_verified_at');
+        }
+
+        $users = $usersQuery
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('admin.users.index', compact(
+            'users',
+            'search',
+            'verification',
+            'perPage'
+        ));
     }
 
     public function create()

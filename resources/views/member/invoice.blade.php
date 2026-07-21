@@ -44,7 +44,6 @@
         }
 
         .clubman-financial-summary {
-            border: 2px solid #dc1f26;
             margin-top: 12px;
             padding: 12px 14px;
         }

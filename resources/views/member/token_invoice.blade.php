@@ -47,15 +47,16 @@
                                     <!-- <div class="member_profileimg">
                                         <img class="img-fluid" src="{{ asset('img/demopic.png') }}" alt="" />
                                     </div> -->
-                                    @if ($userData->userCodeUserDetails[0]['member_image'] == '')
+                                    @php($memberDetails = $userData->userCodeUserDetails->first())
+                                    @if (!$memberDetails || !$memberDetails->has_member_image)
                                         <div class="member_profileimg">
                                             <img class="img-fluid ifnotpic" src="{{ asset('img/Profile-Icon-01.svg') }}"
                                                 alt="" />
                                         </div>
                                     @else
                                         <div class="member_profileimg">
-                                            <img class="img-fluid" src="data:image/png;base64,                          
-                                            {{ $userData->userCodeUserDetails[0]->member_image }} " alt="" />
+                                            <img class="img-fluid" src="{{ route('member.profile-image') }}"
+                                                loading="lazy" decoding="async" alt="" />
                                         </div>
                                     @endif
                                 </div>
@@ -64,7 +65,7 @@
                                         <h4>Welcome</h4>
                                         <h2>{{ $userData->name }}</h2>
 
-                                        <p><strong>Ph No:</strong>{{ $userData->userCodeUserDetails[0]->mobile_no }}
+                                        <p><strong>Ph No:</strong>{{ optional($memberDetails)->mobile_no }}
                                         </p>
                                         <p><strong>Mail ID:</strong>{{ $userData->email }}
                                         </p>

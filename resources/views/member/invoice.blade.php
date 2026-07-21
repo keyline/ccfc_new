@@ -88,17 +88,16 @@
                                         <img class="img-fluid" src="{{ asset('img/demopic.png') }}" alt="" />
                                     </div> -->
 
-                                    @if ($userData->userCodeUserDetails[0]['member_image'] == '')
+                                    @php($memberDetails = $userData->userCodeUserDetails->first())
+                                    @if (!$memberDetails || !$memberDetails->has_member_image)
                                         <div class="member_profileimg">
                                             <img class="img-fluid ifnotpic" src="{{ asset('img/Profile-Icon-01.svg') }}"
                                                 alt="" />
                                         </div>
                                     @else
                                         <div class="member_profileimg">
-                                            <img class="img-fluid"
-                                                src="data:image/png;base64,                          
-                                        {{ $userData->userCodeUserDetails[0]->member_image }} "
-                                                alt="" />
+                                            <img class="img-fluid" src="{{ route('member.profile-image') }}"
+                                                loading="lazy" decoding="async" alt="" />
                                         </div>
                                     @endif
 
@@ -109,7 +108,7 @@
                                         <h4>Welcome</h4>
                                         <h2>{{ $userData->name }}</h2>
 
-                                        <p><strong>Ph No:</strong>{{ $userData->userCodeUserDetails[0]->mobile_no }}
+                                        <p><strong>Ph No:</strong>{{ optional($memberDetails)->mobile_no }}
                                         </p>
                                         <p><strong>Mail ID:</strong>{{ $userData->email }}
                                         </p>
@@ -136,12 +135,13 @@
                                         </ul>
                                     </div>
                                 @endif
-                                @foreach ($userTransactions as $user)
-                                    @if ($loop->first)
-                                        <h3>Total current outstanding : INR. {{ $user['Balance'] }}</h3>
-                                    @endif
-                                @endforeach
-                                <p>(As of last usage 24 hours ago as updated from club servers)</p>
+                                @php($latestTransaction = $userTransactions[0] ?? null)
+                                <h3>Total current outstanding : INR.
+                                    <span id="invoice-outstanding-balance">
+                                        {{ $latestTransaction['Balance'] ?? 'Loading...' }}
+                                    </span>
+                                </h3>
+                                <p id="invoice-data-status">Updating invoice data from club servers...</p>
 
                                 <div class="invoice_outstading_payment">
                                     <form action="" method="POST" id="payment-form">
@@ -301,8 +301,8 @@
                                             <!-- <th scope="col">Status</th> -->
                                         </tr>
                                     </thead>
-                                    @foreach ($userTransactions as $user)
-                                        <tbody>
+                                    <tbody id="invoice-transactions-body">
+                                        @forelse ($userTransactions as $user)
                                             <tr>
                                                 <td>{{ $user['Month'] }}</td>
                                                 <td>{{ $user['LastBalance'] }}</td>
@@ -327,38 +327,17 @@
                                                             target="_blank"><img class="img-fluid"
                                                                 src="{{ asset('img/invoice_pdficon.png') }}"
                                                                 alt="" /></a>
+                                                    @else
+                                                        <span>&#8211;</span>
+                                                    @endif
                                                 </td>
-                                            @else
-                                                <span>&#8211;</span>
-                                    @endif
-                                    <!-- <td>Payment</td> -->
-                                    </tr>
-                                    <!-- <tr>
-                                                <td>Jan 2022</td>
-                                                <td>10773.82</td>
-                                                <td>11827.59</td>
-                                                <td>6106</td>
-                                                <td>11826.96</td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td>Payment</td>
                                             </tr>
-                                            <tr>
-                                                <td>Dec 2021</td>
-                                                <td>7954.72</td>
-                                                <td>11827.59</td>
-                                                <td>6106</td>
-                                                <td>11826.96</td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td>Payment</td>
-                                            </tr> -->
+                                        @empty
+                                            <tr id="invoice-loading-row">
+                                                <td colspan="7" class="text-center">Loading invoice data...</td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
-                                    @endforeach
                                 </table>
                             </div>
                         </div>
@@ -372,8 +351,130 @@
             </body>
 
 </html>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+    (function() {
+        const invoiceDataUrl = @json(route('member.invoice.data'));
+        const pdfIconUrl = @json(asset('img/invoice_pdficon.png'));
+
+        function textCell(value) {
+            const cell = document.createElement('td');
+            cell.textContent = value === null || value === undefined || value === '' ? '\u2013' : value;
+            return cell;
+        }
+
+        function billCell(url) {
+            const cell = document.createElement('td');
+
+            if (!url) {
+                cell.textContent = '\u2013';
+                return cell;
+            }
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener';
+
+            const icon = document.createElement('img');
+            icon.className = 'img-fluid';
+            icon.src = pdfIconUrl;
+            icon.alt = '';
+
+            link.appendChild(icon);
+            cell.appendChild(link);
+
+            return cell;
+        }
+
+        function renderTransactions(transactions) {
+            const body = document.getElementById('invoice-transactions-body');
+            const balance = document.getElementById('invoice-outstanding-balance');
+
+            if (!body || !balance) return;
+
+            body.textContent = '';
+
+            if (!Array.isArray(transactions) || transactions.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 7;
+                cell.className = 'text-center';
+                cell.textContent = 'Invoice data is temporarily unavailable. Please try again shortly.';
+                row.appendChild(cell);
+                body.appendChild(row);
+                balance.textContent = '\u2013';
+                return;
+            }
+
+            transactions.forEach(function(transaction) {
+                const row = document.createElement('tr');
+                row.appendChild(textCell(transaction.Month));
+                row.appendChild(textCell(transaction.LastBalance));
+                row.appendChild(textCell(transaction.paidamount));
+                row.appendChild(textCell(transaction.debitamount));
+                row.appendChild(textCell(transaction.Balance));
+                row.appendChild(billCell(transaction.summary_bill_url));
+                row.appendChild(billCell(transaction.detail_bill_url));
+                body.appendChild(row);
+            });
+
+            balance.textContent = transactions[0].Balance ?? '\u2013';
+        }
+
+        async function refreshInvoiceData() {
+            const status = document.getElementById('invoice-data-status');
+
+            try {
+                const response = await fetch(invoiceDataUrl, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+
+                const payload = await response.json();
+                renderTransactions(payload.transactions);
+
+                if (status) {
+                    status.textContent = 'As of last usage 24 hours ago as updated from club servers.';
+                }
+            } catch (error) {
+                if (status) {
+                    status.textContent = 'Showing the last available invoice data. Refresh again shortly.';
+                }
+                console.error('Unable to refresh invoice data.', error);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', refreshInvoiceData);
+        } else {
+            refreshInvoiceData();
+        }
+    })();
+</script>
+<script>
+    let razorpayCheckoutPromise;
+
+    function loadRazorpayCheckout() {
+        if (window.Razorpay) return Promise.resolve();
+        if (razorpayCheckoutPromise) return razorpayCheckoutPromise;
+
+        razorpayCheckoutPromise = new Promise(function(resolve, reject) {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = function() {
+                razorpayCheckoutPromise = null;
+                reject(new Error('Unable to load Razorpay checkout.'));
+            };
+            document.head.appendChild(script);
+        });
+
+        return razorpayCheckoutPromise;
+    }
+
     function razorpaySubmit(el) {
         if (!el.checked) return;
 
@@ -393,7 +494,8 @@
         // Convert to paise (e.g., ₹100 -> 10000)
         let amountInPaise = Math.round(amountValue * 100);
 
-        fetch("{{ route('member.razorpay') }}", {
+        loadRazorpayCheckout().then(function() {
+            return fetch("{{ route('member.razorpay') }}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -402,7 +504,8 @@
                 body: JSON.stringify({
                     amount: amountInPaise
                 })
-            })
+            });
+        })
             .then(res => res.json())
             .then(data => {
                 if (!data.order_id) {

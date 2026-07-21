@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use pcrov\JsonReader\JsonReader;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -154,7 +155,7 @@ class HomeController extends Controller
     public function invoice()
     {
         $user = $this->authenticatedMember();
-        $transactions = $this->invoiceTransactions($user);
+        $transactions = $this->cachedInvoiceTransactions($user);
 
         $memberDue = null;
 
@@ -169,6 +170,61 @@ class HomeController extends Controller
             'balanceFortheMonth' => $memberDue
                 ? $memberDue->month_name . ' ' . $memberDue->year
                 : '',
+        ]);
+    }
+
+    public function invoiceData()
+    {
+        $user = $this->authenticatedUser();
+
+        return response()->json([
+            'transactions' => $this->invoiceTransactions($user),
+        ]);
+    }
+
+    public function profileImage()
+    {
+        $user = $this->authenticatedUser();
+
+        $encodedImage = DB::table('user_details')
+            ->where('user_code_id', $user->id)
+            ->whereNull('deleted_at')
+            ->value('member_image');
+
+        abort_if(empty($encodedImage), 404);
+
+        if (preg_match('/^data:image\/[a-z0-9.+-]+;base64,/i', $encodedImage)) {
+            $encodedImage = substr($encodedImage, strpos($encodedImage, ',') + 1);
+        }
+
+        $image = base64_decode(preg_replace('/\s+/', '', $encodedImage), true);
+
+        abort_if($image === false || $image === '', 404);
+
+        $mimeType = 'image/jpeg';
+
+        if (class_exists(\finfo::class)) {
+            $detectedMimeType = (new \finfo(FILEINFO_MIME_TYPE))->buffer($image);
+
+            if (is_string($detectedMimeType) && strpos($detectedMimeType, 'image/') === 0) {
+                $mimeType = $detectedMimeType;
+            }
+        }
+
+        $etag = '"' . sha1($image) . '"';
+
+        if (request()->header('If-None-Match') === $etag) {
+            return response('', 304)->withHeaders([
+                'Cache-Control' => 'private, max-age=3600',
+                'ETag' => $etag,
+            ]);
+        }
+
+        return response($image, 200)->withHeaders([
+            'Cache-Control' => 'private, max-age=3600',
+            'Content-Length' => strlen($image),
+            'Content-Type' => $mimeType,
+            'ETag' => $etag,
         ]);
     }
 
@@ -551,11 +607,44 @@ class HomeController extends Controller
 
     private function authenticatedMember(): User
     {
+        $user = $this->authenticatedUser();
+
+        if (! $user->relationLoaded('userCodeUserDetails')) {
+            $details = $user->userCodeUserDetails()
+                ->select(['id', 'user_code_id', 'mobile_no'])
+                ->selectRaw(
+                    "CASE WHEN member_image IS NULL OR member_image = '' THEN 0 ELSE 1 END AS has_member_image"
+                )
+                ->get();
+
+            $user->setRelation('userCodeUserDetails', $details);
+        }
+
+        return $user;
+    }
+
+    private function authenticatedUser(): User
+    {
         $user = Auth::guard('members')->user();
 
         abort_unless($user instanceof User, 401);
 
-        return $user->loadMissing('userCodeUserDetails');
+        return $user;
+    }
+
+    private function cachedInvoiceTransactions(User $user): array
+    {
+        $cacheKey = 'member_invoice_transactions:' . $user->id;
+
+        foreach ([$cacheKey, $cacheKey . ':stale'] as $key) {
+            $transactions = Cache::get($key);
+
+            if (is_array($transactions)) {
+                return $transactions;
+            }
+        }
+
+        return [];
     }
 
     private function invoiceTransactions(User $user): array

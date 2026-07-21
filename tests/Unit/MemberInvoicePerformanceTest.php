@@ -67,6 +67,29 @@ class MemberInvoicePerformanceTest extends TestCase
         $this->assertArrayHasKey('detail_bill_url', $first[0]);
     }
 
+    public function test_initial_page_data_lookup_never_calls_clubman(): void
+    {
+        $user = new User();
+        $user->id = 42;
+
+        $method = new ReflectionMethod(HomeController::class, 'cachedInvoiceTransactions');
+        $method->setAccessible(true);
+        $controller = new HomeController();
+
+        $this->assertSame([], $method->invoke($controller, $user));
+        $this->assertSame(0, $this->http->postCount);
+
+        $this->cache->values['member_invoice_transactions:42:stale'] = [
+            ['Month' => 'Jan 2024', 'Balance' => '85'],
+        ];
+
+        $this->assertSame(
+            [['Month' => 'Jan 2024', 'Balance' => '85']],
+            $method->invoke($controller, $user)
+        );
+        $this->assertSame(0, $this->http->postCount);
+    }
+
     public function test_bill_lookup_checks_the_exact_file_instead_of_scanning_a_directory(): void
     {
         $summaryPath = 'monthly_invoices/JAN_2024/M42-JANUARY-2024bill.PDF';

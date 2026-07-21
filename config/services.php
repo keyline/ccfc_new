@@ -39,7 +39,14 @@ return [
             'CLUBMAN_MEMBER_PROFILE_URL',
             'https://ccfcmemberdata.in/Api/MemberProfile'
         ),
+        'monthly_balance_url' => env(
+            'CLUBMAN_MONTHLY_BALANCE_URL',
+            'https://ccfcmemberdata.in/api/MemberMonthlyBalance/'
+        ),
+        'monthly_balance_from_date' => env('CLUBMAN_MONTHLY_BALANCE_FROM_DATE', '01-apr-2020'),
         'token' => env('CLUBMAN_API_TOKEN'),
+        'timeout' => env('CLUBMAN_TIMEOUT', 15),
+        'connect_timeout' => env('CLUBMAN_CONNECT_TIMEOUT', 5),
     ],
 
 ];

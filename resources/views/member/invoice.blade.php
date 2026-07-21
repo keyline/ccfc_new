@@ -136,11 +136,12 @@
                                         </ul>
                                     </div>
                                 @endif
-                                @foreach ($userTransactions as $user)
-                                    @if ($loop->first)
-                                        <h3>Total current outstanding : INR. {{ $user['Balance'] }}</h3>
-                                    @endif
-                                @endforeach
+                                @php($latestTransaction = $userTransactions[0] ?? null)
+                                @if ($latestTransaction)
+                                    <h3>Total current outstanding : INR. {{ $latestTransaction['Balance'] ?? '-' }}</h3>
+                                @elseif ($invoiceError)
+                                    <p class="text-danger">{{ $invoiceError }}</p>
+                                @endif
                                 <p>(As of last usage 24 hours ago as updated from club servers)</p>
 
                                 <div class="invoice_outstading_payment">
@@ -301,19 +302,20 @@
                                             <!-- <th scope="col">Status</th> -->
                                         </tr>
                                     </thead>
-                                    @foreach ($userTransactions as $user)
-                                        <tbody>
+                                    <tbody>
+                                        @forelse ($userTransactions as $transaction)
                                             <tr>
-                                                <td>{{ $user['Month'] }}</td>
-                                                <td>{{ $user['LastBalance'] }}</td>
-                                                <td>{{ $user['paidamount'] }}</td>
-                                                <td>{{ $user['debitamount'] }}</td>
-                                                <td>{{ $user['Balance'] }}</td>
+                                                <td>{{ $transaction['Month'] ?? '-' }}</td>
+                                                <td>{{ $transaction['LastBalance'] ?? '-' }}</td>
+                                                <td>{{ $transaction['paidamount'] ?? '-' }}</td>
+                                                <td>{{ $transaction['debitamount'] ?? '-' }}</td>
+                                                <td>{{ $transaction['Balance'] ?? '-' }}</td>
                                                 <!-- summary -->
                                                 <td>
-                                                    @if (SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
-                                                            !empty(SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $user['Month'])))
-                                                        <a href="{{ SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $user['Month']) }}"
+                                                    @if (!empty($transaction['Month']) &&
+                                                            SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $transaction['Month']))) &&
+                                                            !empty(SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $transaction['Month'])))
+                                                        <a href="{{ SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $transaction['Month']) }}"
                                                             target="_blank"><img class="img-fluid"
                                                                 src="{{ asset('img/invoice_pdficon.png') }}"
                                                                 alt="" /></a>
@@ -323,44 +325,26 @@
                                                 </td>
                                                 <!-- Detail -->
                                                 <td>
-                                                    @if (SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
-                                                            !empty(SearchInvoicePdf::getDetailBillLink($userData['user_code'], $user['Month'])))
-                                                        <a href="{{ SearchInvoicePdf::getDetailBillLink($userData['user_code'], $user['Month']) }}"
+                                                    @if (!empty($transaction['Month']) &&
+                                                            SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $transaction['Month']))) &&
+                                                            !empty(SearchInvoicePdf::getDetailBillLink($userData['user_code'], $transaction['Month'])))
+                                                        <a href="{{ SearchInvoicePdf::getDetailBillLink($userData['user_code'], $transaction['Month']) }}"
                                                             target="_blank"><img class="img-fluid"
                                                                 src="{{ asset('img/invoice_pdficon.png') }}"
                                                                 alt="" /></a>
+                                                    @else
+                                                        <span>&#8211;</span>
+                                                    @endif
                                                 </td>
-                                            @else
-                                                <span>&#8211;</span>
-                                    @endif
-                                    <!-- <td>Payment</td> -->
-                                    </tr>
-                                    <!-- <tr>
-                                                <td>Jan 2022</td>
-                                                <td>10773.82</td>
-                                                <td>11827.59</td>
-                                                <td>6106</td>
-                                                <td>11826.96</td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td>Payment</td>
                                             </tr>
+                                        @empty
                                             <tr>
-                                                <td>Dec 2021</td>
-                                                <td>7954.72</td>
-                                                <td>11827.59</td>
-                                                <td>6106</td>
-                                                <td>11826.96</td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td><a href="#" target="_blank"><img class="img-fluid"
-                                                            src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a></td>
-                                                <td>Payment</td>
-                                            </tr> -->
+                                                <td colspan="7" class="text-center">
+                                                    {{ $invoiceError ?: 'No invoice records were returned by Clubman.' }}
+                                                </td>
+                                            </tr>
+                                        @endforelse
                                     </tbody>
-                                    @endforeach
                                 </table>
                             </div>
                         </div>

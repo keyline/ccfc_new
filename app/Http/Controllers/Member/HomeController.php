@@ -248,6 +248,41 @@ class HomeController extends Controller
             'Content-Length' => strlen($image),
             'Content-Type' => $mimeType,
             'ETag' => $etag,
+    public function invoice(ClubmanInvoiceLookup $clubmanInvoiceLookup)
+    {
+        $loggedMember = session('LoggedMember');
+        $memberId = is_array($loggedMember) ? ($loggedMember['id'] ?? null) : $loggedMember;
+        $user = User::with('userCodeUserDetails')->find($memberId);
+
+        abort_unless($user, 401);
+
+        $invoiceError = null;
+
+        try {
+            $transactions = $clubmanInvoiceLookup->lookup($user);
+        } catch (\Throwable $exception) {
+            Log::warning('Unable to load Clubman invoices.', [
+                'member_id' => $user->id,
+                'member_code' => $user->user_code,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $transactions = [];
+            $invoiceError = 'Invoice data is temporarily unavailable. Please try again shortly.';
+        }
+
+        $memberDue = session()->has('tokenPayment.active_id')
+            ? \App\Models\MemberDue::find(session('tokenPayment.due_id'))
+            : null;
+
+        return view('member.invoice', [
+            'userData' => $user,
+            'userTransactions' => $transactions,
+            'invoiceError' => $invoiceError,
+            'outstandingBalance' => $memberDue?->outstanding_balance ?? 0,
+            'balanceFortheMonth' => $memberDue
+                ? $memberDue->month_name . ' ' . $memberDue->year
+                : '',
         ]);
     }
 

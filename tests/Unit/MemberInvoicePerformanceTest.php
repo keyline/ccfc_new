@@ -5,8 +5,8 @@ namespace Tests\Unit;
 use App\Helpers\SearchInvoicePdf;
 use App\Http\Controllers\Member\HomeController;
 use App\Models\User;
+use App\Services\ClubmanInvoiceLookup;
 use Illuminate\Container\Container;
-use Illuminate\Http\Client\Factory;
 use Illuminate\Support\Facades\Facade;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -16,7 +16,7 @@ class MemberInvoicePerformanceTest extends TestCase
     private $app;
     private $cache;
     private $filesystem;
-    private $http;
+    private $lookup;
 
     protected function setUp(): void
     {
@@ -28,11 +28,10 @@ class MemberInvoicePerformanceTest extends TestCase
 
         $this->cache = new InvoiceArrayCache();
         $this->filesystem = new InvoiceFilesystem();
-        $this->http = new InvoiceHttpClient();
+        $this->lookup = new InvoiceLookupStub();
 
         $this->app->instance('cache', $this->cache);
         $this->app->instance('filesystem', $this->filesystem);
-        $this->app->instance(Factory::class, $this->http);
         $this->app->instance('url', new InvoiceUrlGenerator());
     }
 
@@ -55,12 +54,10 @@ class MemberInvoicePerformanceTest extends TestCase
         $method->setAccessible(true);
         $controller = new HomeController();
 
-        $first = $method->invoke($controller, $user);
-        $second = $method->invoke($controller, $user);
+        $first = $method->invoke($controller, $user, $this->lookup);
+        $second = $method->invoke($controller, $user, $this->lookup);
 
-        $this->assertSame(1, $this->http->postCount);
-        $this->assertSame(8, $this->http->timeoutSeconds);
-        $this->assertSame(3, $this->http->options['connect_timeout']);
+        $this->assertSame(1, $this->lookup->lookupCount);
         $this->assertSame($first, $second);
         $this->assertCount(2, $this->filesystem->checkedPaths);
         $this->assertArrayHasKey('summary_bill_url', $first[0]);
@@ -77,9 +74,9 @@ class MemberInvoicePerformanceTest extends TestCase
         $controller = new HomeController();
 
         $this->assertSame([], $method->invoke($controller, $user));
-        $this->assertSame(0, $this->http->postCount);
+        $this->assertSame(0, $this->lookup->lookupCount);
 
-        $this->cache->values['member_invoice_transactions:42:stale'] = [
+        $this->cache->values['member_invoice_transactions:v2:42:stale'] = [
             ['Month' => 'Jan 2024', 'Balance' => '85'],
         ];
 
@@ -87,7 +84,7 @@ class MemberInvoicePerformanceTest extends TestCase
             [['Month' => 'Jan 2024', 'Balance' => '85']],
             $method->invoke($controller, $user)
         );
-        $this->assertSame(0, $this->http->postCount);
+        $this->assertSame(0, $this->lookup->lookupCount);
     }
 
     public function test_bill_lookup_checks_the_exact_file_instead_of_scanning_a_directory(): void
@@ -135,77 +132,23 @@ class InvoiceFilesystem
     }
 }
 
-class InvoiceHttpClient
+class InvoiceLookupStub extends ClubmanInvoiceLookup
 {
-    public $options = [];
-    public $postCount = 0;
-    public $timeoutSeconds;
+    public $lookupCount = 0;
 
-    public function withoutVerifying()
+    public function lookup(User $user): array
     {
-        return $this;
-    }
+        $this->lookupCount++;
 
-    public function acceptJson()
-    {
-        return $this;
-    }
-
-    public function withToken($token)
-    {
-        return $this;
-    }
-
-    public function timeout($seconds)
-    {
-        $this->timeoutSeconds = $seconds;
-
-        return $this;
-    }
-
-    public function withOptions(array $options)
-    {
-        $this->options = $options;
-
-        return $this;
-    }
-
-    public function post($url)
-    {
-        $this->postCount++;
-
-        return new InvoiceHttpResponse();
-    }
-}
-
-class InvoiceHttpResponse
-{
-    public function successful()
-    {
-        return true;
-    }
-
-    public function status()
-    {
-        return 200;
-    }
-
-    public function json()
-    {
         return [
-            'data' => [[
+            [
                 'Month' => 'Jan 2024',
                 'LastBalance' => '100',
                 'paidamount' => '25',
                 'debitamount' => '10',
                 'Balance' => '85',
-            ]],
+            ],
         ];
-    }
-
-    public function body()
-    {
-        return '';
     }
 }
 

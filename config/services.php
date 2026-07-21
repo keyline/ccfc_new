@@ -50,16 +50,13 @@ return [
         // Clubman's server currently omits the issuer chain required by PHP/cURL.
         // Keep this configurable so verification can be re-enabled once fixed upstream.
         'verify_ssl' => env('CLUBMAN_VERIFY_SSL', false),
-        'timeout' => env('CLUBMAN_TIMEOUT', 8),
-        'connect_timeout' => env('CLUBMAN_CONNECT_TIMEOUT', 3),
+        'timeout' => env('CLUBMAN_TIMEOUT', 15),
+        'connect_timeout' => env('CLUBMAN_CONNECT_TIMEOUT', 5),
         'monthly_balance_url' => env(
             'CLUBMAN_MONTHLY_BALANCE_URL',
             'https://ccfcmemberdata.in/api/MemberMonthlyBalance/'
         ),
         'monthly_balance_from_date' => env('CLUBMAN_MONTHLY_BALANCE_FROM_DATE', '01-apr-2020'),
-        'token' => env('CLUBMAN_API_TOKEN'),
-        'timeout' => env('CLUBMAN_TIMEOUT', 15),
-        'connect_timeout' => env('CLUBMAN_CONNECT_TIMEOUT', 5),
     ],
 
 ];

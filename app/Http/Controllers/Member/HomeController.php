@@ -19,6 +19,7 @@ use pcrov\JsonReader\JsonReader;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Services\ClubmanInvoiceLookup;
 use App\Services\ClubmanMemberLookup;
 
 class HomeController extends Controller
@@ -176,12 +177,12 @@ class HomeController extends Controller
         ]);
     }
 
-    public function invoiceData()
+    public function invoiceData(ClubmanInvoiceLookup $clubmanInvoiceLookup)
     {
         $user = $this->authenticatedUser();
 
         return response()->json([
-            'transactions' => $this->invoiceTransactions($user),
+            'transactions' => $this->invoiceTransactions($user, $clubmanInvoiceLookup),
         ]);
     }
 
@@ -248,41 +249,6 @@ class HomeController extends Controller
             'Content-Length' => strlen($image),
             'Content-Type' => $mimeType,
             'ETag' => $etag,
-    public function invoice(ClubmanInvoiceLookup $clubmanInvoiceLookup)
-    {
-        $loggedMember = session('LoggedMember');
-        $memberId = is_array($loggedMember) ? ($loggedMember['id'] ?? null) : $loggedMember;
-        $user = User::with('userCodeUserDetails')->find($memberId);
-
-        abort_unless($user, 401);
-
-        $invoiceError = null;
-
-        try {
-            $transactions = $clubmanInvoiceLookup->lookup($user);
-        } catch (\Throwable $exception) {
-            Log::warning('Unable to load Clubman invoices.', [
-                'member_id' => $user->id,
-                'member_code' => $user->user_code,
-                'error' => $exception->getMessage(),
-            ]);
-
-            $transactions = [];
-            $invoiceError = 'Invoice data is temporarily unavailable. Please try again shortly.';
-        }
-
-        $memberDue = session()->has('tokenPayment.active_id')
-            ? \App\Models\MemberDue::find(session('tokenPayment.due_id'))
-            : null;
-
-        return view('member.invoice', [
-            'userData' => $user,
-            'userTransactions' => $transactions,
-            'invoiceError' => $invoiceError,
-            'outstandingBalance' => $memberDue?->outstanding_balance ?? 0,
-            'balanceFortheMonth' => $memberDue
-                ? $memberDue->month_name . ' ' . $memberDue->year
-                : '',
         ]);
     }
 
@@ -640,10 +606,10 @@ class HomeController extends Controller
 
     }
 
-    public function tokenInvoice()
+    public function tokenInvoice(ClubmanInvoiceLookup $clubmanInvoiceLookup)
     {
         $user = $this->authenticatedMember();
-        $transactions = $this->invoiceTransactions($user);
+        $transactions = $this->invoiceTransactions($user, $clubmanInvoiceLookup);
 
         $memberDue = null;
 
@@ -692,7 +658,7 @@ class HomeController extends Controller
 
     private function cachedInvoiceTransactions(User $user): array
     {
-        $cacheKey = 'member_invoice_transactions:' . $user->id;
+        $cacheKey = 'member_invoice_transactions:v2:' . $user->id;
 
         foreach ([$cacheKey, $cacheKey . ':stale'] as $key) {
             $transactions = Cache::get($key);
@@ -705,9 +671,12 @@ class HomeController extends Controller
         return [];
     }
 
-    private function invoiceTransactions(User $user): array
+    private function invoiceTransactions(
+        User $user,
+        ClubmanInvoiceLookup $clubmanInvoiceLookup
+    ): array
     {
-        $cacheKey = 'member_invoice_transactions:' . $user->id;
+        $cacheKey = 'member_invoice_transactions:v2:' . $user->id;
         $staleCacheKey = $cacheKey . ':stale';
         $cachedTransactions = Cache::get($cacheKey);
 
@@ -715,29 +684,9 @@ class HomeController extends Controller
             return $cachedTransactions;
         }
 
-        $token = "5tdpn6yeoycRKbWd0311m1B5S-ZKMfU2syAD50kiquOX20GbmXF89Z1-vvsN01WTAIRWHdRESd8nRWZJrC7xuHkClh63BPg1PCpZHKpDOjmtvgJL8ErYrup7PLG2LZHkbjDh6bFb54VyUsvZm4OzzIPI9QVKhTf2ui5Pmd8CzHJZUK-4Jd-aOmQFfhuertA5KuIRrNdHTzA7w1hEYHO9Hq9J_pkME7BhNpjWp44Z3R2YeLuQbskl_rMypzLj5icdoPWgCsxA1bU9iGo5x3heaP8lHliiSx3SeeYpBMe22DRaarXJYc5pxFJ1tuEKDoxn";
-        $transactionFields = [
-            'MCODE'    => $user->user_code,
-            'FromDate' => '01-apr-2020',
-            'ToDate'   => '01-jun-2021',
-        ];
-        $transactionUrl = 'https://ccfcmemberdata.in/api/MemberMonthlyBalance/?'
-            . http_build_query($transactionFields);
-
         try {
-            $response = Http::withoutVerifying()
-                ->acceptJson()
-                ->withToken($token)
-                ->timeout(8)
-                ->withOptions(['connect_timeout' => 3])
-                ->post($transactionUrl);
-
-            if (! $response->successful()) {
-                throw new \RuntimeException('Clubman returned HTTP ' . $response->status() . '.');
-            }
-
             $transactions = $this->addInvoiceLinks(
-                $this->getClubmanResponseData($response),
+                $clubmanInvoiceLookup->lookup($user),
                 $user
             );
 

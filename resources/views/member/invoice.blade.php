@@ -177,6 +177,12 @@
                                     </span>
                                 </h3>
                                 <p id="invoice-data-status">Updating invoice data from club servers...</p>
+                                @if ($latestTransaction)
+                                    <h3>Total current outstanding : INR. {{ $latestTransaction['Balance'] ?? '-' }}</h3>
+                                @elseif ($invoiceError)
+                                    <p class="text-danger">{{ $invoiceError }}</p>
+                                @endif
+                                <p>(As of last usage 24 hours ago as updated from club servers)</p>
 
                                 <div class="invoice_outstading_payment">
                                     <form action="" method="POST" id="payment-form">
@@ -366,6 +372,8 @@
                                         </tr>
                                     </thead>
                                     <tbody id="invoice-transactions-body">
+                                        @forelse ($userTransactions as $user)
+                                    <tbody>
                                         @forelse ($userTransactions as $transaction)
                                             <tr>
                                                 <td>{{ $transaction['Month'] ?? '-' }}</td>
@@ -375,8 +383,12 @@
                                                 <td>{{ $transaction['Balance'] ?? '-' }}</td>
                                                 <!-- summary -->
                                                 <td>
-                                                    @if (!empty($transaction['summary_bill_url']))
-                                                        <a href="{{ $transaction['summary_bill_url'] }}"
+                                                    @if (!empty($user['summary_bill_url']))
+                                                        <a href="{{ $user['summary_bill_url'] }}"
+                                                    @if (!empty($transaction['Month']) &&
+                                                            SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $transaction['Month']))) &&
+                                                            !empty(SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $transaction['Month'])))
+                                                        <a href="{{ SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $transaction['Month']) }}"
                                                             target="_blank"><img class="img-fluid"
                                                                 src="{{ asset('img/invoice_pdficon.png') }}"
                                                                 alt="" /></a>
@@ -386,8 +398,12 @@
                                                 </td>
                                                 <!-- Detail -->
                                                 <td>
-                                                    @if (!empty($transaction['detail_bill_url']))
-                                                        <a href="{{ $transaction['detail_bill_url'] }}"
+                                                    @if (!empty($user['detail_bill_url']))
+                                                        <a href="{{ $user['detail_bill_url'] }}"
+                                                    @if (!empty($transaction['Month']) &&
+                                                            SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $transaction['Month']))) &&
+                                                            !empty(SearchInvoicePdf::getDetailBillLink($userData['user_code'], $transaction['Month'])))
+                                                        <a href="{{ SearchInvoicePdf::getDetailBillLink($userData['user_code'], $transaction['Month']) }}"
                                                             target="_blank"><img class="img-fluid"
                                                                 src="{{ asset('img/invoice_pdficon.png') }}"
                                                                 alt="" /></a>
@@ -399,6 +415,10 @@
                                         @empty
                                             <tr id="invoice-loading-row">
                                                 <td colspan="7" class="text-center">Loading invoice data...</td>
+                                            <tr>
+                                                <td colspan="7" class="text-center">
+                                                    {{ $invoiceError ?: 'No invoice records were returned by Clubman.' }}
+                                                </td>
                                             </tr>
                                         @endforelse
                                     </tbody>

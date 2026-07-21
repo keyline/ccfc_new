@@ -37,7 +37,7 @@ class ClubmanMemberLookupTest extends TestCase
                     'username' => 'api-user',
                     'password' => 'api-password',
                     'token' => null,
-                    'verify_ssl' => true,
+                    'verify_ssl' => false,
                     'timeout' => 8,
                     'connect_timeout' => 3,
                 ],
@@ -71,6 +71,7 @@ class ClubmanMemberLookupTest extends TestCase
         $this->assertStringContainsString('MCODE=B47CEO', $this->http->requests[1]['url']);
         $this->assertSame('B47CEO', $this->http->requests[1]['data']['MCODE']);
         $this->assertSame('generated-token', $this->http->requests[1]['token']);
+        $this->assertGreaterThan(0, $this->http->withoutVerificationCalls);
         $this->assertSame(-12698.25, $first['outstanding']);
         $this->assertSame(0.0, $first['minimum_due_amount']);
         $this->assertSame(1.0, $service->minimumPaymentAmount($user));
@@ -115,6 +116,7 @@ class ClubmanLookupHttpClient
 {
     public $requests = [];
     public $minimumDue = 0.0;
+    public $withoutVerificationCalls = 0;
     private $headers = [];
     private $token;
 
@@ -135,6 +137,8 @@ class ClubmanLookupHttpClient
 
     public function withoutVerifying()
     {
+        $this->withoutVerificationCalls++;
+
         return $this;
     }
 

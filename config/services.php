@@ -47,7 +47,9 @@ return [
         'username' => env('CLUBMAN_USERNAME', 'CCFC'),
         'password' => env('CLUBMAN_PASSWORD'),
         'token' => env('CLUBMAN_API_TOKEN'),
-        'verify_ssl' => env('CLUBMAN_VERIFY_SSL', true),
+        // Clubman's server currently omits the issuer chain required by PHP/cURL.
+        // Keep this configurable so verification can be re-enabled once fixed upstream.
+        'verify_ssl' => env('CLUBMAN_VERIFY_SSL', false),
         'timeout' => env('CLUBMAN_TIMEOUT', 8),
         'connect_timeout' => env('CLUBMAN_CONNECT_TIMEOUT', 3),
     ],

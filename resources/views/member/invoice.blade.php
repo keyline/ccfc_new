@@ -45,7 +45,7 @@
 
         .clubman-financial-summary {
             margin-top: 12px;
-            padding: 12px 14px;
+            padding: 0;
         }
 
         .clubman-financial-summary p {

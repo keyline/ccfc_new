@@ -40,122 +40,86 @@ class SearchInvoicePdf
 
     public static function getDetailBillLink(string $memberCode, string $monthlyFolderPath="")
     {
-
-        //Replace three letter month
-        // $m_array contains matched elements of array.
-        //$m_array = preg_grep("/$monthlyFolderPath\s.*/", self::$months);
-        $monthlyFolderPath= strtoupper($monthlyFolderPath);
-
-        $extract= explode(" ", $monthlyFolderPath);
-
-        $results = array_filter(self::$months, function ($value) use (&$extract) {
-            return stripos($value, $extract[0]) !== false;
-        });
-
-        list($billmonth) = array_values($results);
-         
-        //Build array for string replacement
-        $input= [
-            '{member_code}' => $memberCode,
-            '{month}'       => strtoupper($billmonth),
-            '{year}'         => $extract[1]
-        ];
-        
-        $fileName= strtr(self::$detailBillFormat, $input);
-
-        // list all filenames in given path
-        $allFiles = Storage::allFiles(self::$basepath . implode("_", $extract));
-
-        $pattern= "/{$fileName}.PDF/i";
-
-        // filter the ones that match the filename.*
-        $matchingFiles = preg_grep($pattern, $allFiles);
-
-        $downloadURl= route('member.download', ['month' => $extract[0], 'year'=> $extract[1], 'filename'=> "{$fileName}.PDF"]);
-        
-        return (!empty($matchingFiles)) ?  $downloadURl : null;
+        return self::getBillLink(
+            $memberCode,
+            $monthlyFolderPath,
+            self::$detailBillFormat,
+            'member.download'
+        );
     }
 
     public static function getSummaryBillLink(string $memberCode, string $monthlyFolderPath="")
     {
-        $monthlyFolderPath= strtoupper($monthlyFolderPath);
-
-        $extract= explode(" ", $monthlyFolderPath);
-
-        $results = array_filter(self::$months, function ($value) use (&$extract) {
-            return stripos($value, $extract[0]) !== false;
-        });
-
-        list($billmonth) = array_values($results);
-         
-        //Build array for string replacement
-        $input= [
-            '{member_code}' => $memberCode,
-            '{month}'       => strtoupper($billmonth),
-            '{year}'         => $extract[1]
-        ];
-
-        $fileName= strtr(self::$summaryBillFormat, $input);
-
-        // list all filenames in given path
-        $allFiles = Storage::allFiles(self::$basepath . implode("_", $extract));
-
-        $pattern= "/{$fileName}+.PDF/i";
-
-        // filter the ones that match the filename.*
-        $matchingFiles = preg_grep($pattern, $allFiles);
-
-        $downloadURl= route('member.download', ['month' => $extract[0], 'year'=> $extract[1], 'filename'=> "{$fileName}.PDF"]);
-
-        return (!empty($matchingFiles)) ? $downloadURl : null;
+        return self::getBillLink(
+            $memberCode,
+            $monthlyFolderPath,
+            self::$summaryBillFormat,
+            'member.download'
+        );
     }
     public static function getDetailBillLinkApp(string $memberCode, string $monthlyFolderPath="")
     {
-        //Replace three letter month
-        // $m_array contains matched elements of array.
-        //$m_array = preg_grep("/$monthlyFolderPath\s.*/", self::$months);
-        $monthlyFolderPath= strtoupper($monthlyFolderPath);
-        $extract= explode(" ", $monthlyFolderPath);
-        $results = array_filter(self::$months, function ($value) use (&$extract) {
-            return stripos($value, $extract[0]) !== false;
-        });
-        list($billmonth) = array_values($results);         
-        //Build array for string replacement
-        $input= [
-            '{member_code}' => $memberCode,
-            '{month}'       => strtoupper($billmonth),
-            '{year}'         => $extract[1]
-        ];        
-        $fileName= strtr(self::$detailBillFormat, $input);
-        // list all filenames in given path
-        $allFiles = Storage::allFiles(self::$basepath . implode("_", $extract));
-        $pattern= "/{$fileName}.PDF/i";
-        // filter the ones that match the filename.*
-        $matchingFiles = preg_grep($pattern, $allFiles);
-        $downloadURl= route('download', ['month' => $extract[0], 'year'=> $extract[1], 'filename'=> "{$fileName}.PDF"]);        
-        return (!empty($matchingFiles)) ?  $downloadURl : null;
+        return self::getBillLink(
+            $memberCode,
+            $monthlyFolderPath,
+            self::$detailBillFormat,
+            'download'
+        );
     }
     public static function getSummaryBillLinkApp(string $memberCode, string $monthlyFolderPath="")
     {
-        $monthlyFolderPath= strtoupper($monthlyFolderPath);
-        $extract= explode(" ", $monthlyFolderPath);
-        $results = array_filter(self::$months, function ($value) use (&$extract) {
-            return stripos($value, $extract[0]) !== false;
-        });
-        list($billmonth) = array_values($results);         
-        //Build array for string replacement
-        $input= [
+        return self::getBillLink(
+            $memberCode,
+            $monthlyFolderPath,
+            self::$summaryBillFormat,
+            'download'
+        );
+    }
+
+    private static function getBillLink(
+        string $memberCode,
+        string $monthlyFolderPath,
+        string $billFormat,
+        string $routeName
+    ) {
+        $extract = preg_split('/\s+/', trim(strtoupper($monthlyFolderPath)));
+
+        if (count($extract) !== 2) {
+            return null;
+        }
+
+        [$month, $year] = $extract;
+
+        $billMonth = null;
+
+        foreach (self::$months as $candidate) {
+            if (stripos($candidate, $month) === 0) {
+                $billMonth = strtoupper($candidate);
+                break;
+            }
+        }
+
+        if ($billMonth === null) {
+            return null;
+        }
+
+        $fileName = strtr($billFormat, [
             '{member_code}' => $memberCode,
-            '{month}'       => strtoupper($billmonth),
-            '{year}'         => $extract[1]
-        ];
-        $fileName= strtr(self::$summaryBillFormat, $input);
-        // list all filenames in given path
-        $allFiles = Storage::allFiles(self::$basepath . implode("_", $extract));
-        $pattern= "/{$fileName}+.PDF/i";
-        // filter the ones that match the filename.*
-        $matchingFiles = preg_grep($pattern, $allFiles);
-        $downloadURl= route('download', ['month' => $extract[0], 'year'=> $extract[1], 'filename'=> "{$fileName}.PDF"]);
-        return (!empty($matchingFiles)) ? $downloadURl : null;
+            '{month}'       => $billMonth,
+            '{year}'        => $year,
+        ]);
+
+        $folder = $month . '_' . $year;
+        $storedPath = self::$basepath . $folder . '/' . $fileName . '.PDF';
+
+        if (! Storage::exists($storedPath)) {
+            return null;
+        }
+
+        return route($routeName, [
+            'month' => $month,
+            'year' => $year,
+            'filename' => $fileName . '.PDF',
+        ]);
     }
 }

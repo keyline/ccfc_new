@@ -14,10 +14,10 @@ use App\Helpers\SearchInvoicePdf;
 use Illuminate\Support\Facades\Storage;
 use File;
 use Response;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Log;
 use pcrov\JsonReader\JsonReader;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -153,86 +153,23 @@ class HomeController extends Controller
 
     public function invoice()
     {
-        try {
-            $user = User::with('userCodeUserDetails')->find(session('LoggedMember'))->first();
+        $user = $this->authenticatedMember();
+        $transactions = $this->invoiceTransactions($user);
 
-            // $token = "N3bwPrgB4wzHytcBkrvd6duSAX46ksfh9zOGPGnzwL8YladUpD-XH0DD_ZVBfdktfuPvgMbHg4uvBNBzibf2qEvPWh-HlzMFwnWJCfI8uW7-RBbpBj5oPlL9KPj7jxL8kaHDB6Fvl1fc8KZfYpZlRKRRTXIqsOkWt4Wenzz8I-D42AQzY5u-4FF1lDN3pepkwSL6xxXEb6wHExSHYlqT_9mKOB-6P-h6uWeqLETbFnft0CBvzwo9rJ14Gvu1YesR_Yte88Xg9R1K4_2mlY93YxYJGI7I3LkPSsVBfPW1SkzmdWo3HRJci6nRl36U_Llc";
-            $token = "5tdpn6yeoycRKbWd0311m1B5S-ZKMfU2syAD50kiquOX20GbmXF89Z1-vvsN01WTAIRWHdRESd8nRWZJrC7xuHkClh63BPg1PCpZHKpDOjmtvgJL8ErYrup7PLG2LZHkbjDh6bFb54VyUsvZm4OzzIPI9QVKhTf2ui5Pmd8CzHJZUK-4Jd-aOmQFfhuertA5KuIRrNdHTzA7w1hEYHO9Hq9J_pkME7BhNpjWp44Z3R2YeLuQbskl_rMypzLj5icdoPWgCsxA1bU9iGo5x3heaP8lHliiSx3SeeYpBMe22DRaarXJYc5pxFJ1tuEKDoxn";
+        $memberDue = null;
 
-            $fields = [
-            'MCODE' => $user->user_code
-            ];
-
-            $url = "https://ccfcmemberdata.in/Api/MemberProfile/?".http_build_query($fields);
-
-            $transactionFields = [
-            'MCODE'     => $user->user_code,
-            'FromDate'  => '01-apr-2020',
-            'ToDate'    => '01-jun-2021',
-        ];
-
-            $tansactionUrl = 'https://ccfcmemberdata.in/api/MemberMonthlyBalance/?' . http_build_query($transactionFields);
-
-            $transactionResponse = Http::withoutVerifying()
-                        ->withHeaders(['Authorization' => 'Bearer ' . $token, 'Cache-Control' => 'no-cache', 'Accept' => '/',
-                                        'Content-Type' => 'application/json',])
-                        ->withOptions(["verify" => false])
-                        ->post($tansactionUrl);
-            $transactions = $this->getClubmanResponseData($transactionResponse);
-
-            if (session()->has('tokenPayment.active_id')) {
-                // active_id exists
-                $dueId = session()->get('tokenPayment.due_id');
-                $memberDue = \App\Models\MemberDue::find($dueId);
-
-                $outstandingBalance = $memberDue?->outstanding_balance ?? 0;
-                $balanceFortheMonth = $memberDue?->month_name . ' ' . $memberDue?->year;
-            }
-
-            return view('member.invoice', [
-                'userData'          => $user,
-                // 'userProfile'       => $profile,
-                'userTransactions'  => $transactions,
-                'outstandingBalance' => $outstandingBalance ?? 0,
-                'balanceFortheMonth' => $balanceFortheMonth ?? '',
-            ]);
-
-        } catch (RequestException $e) {
-            //throw $th;
-            // Handle the timeout exception
-            Log::error('Request timed out: ' . $e->getMessage());
-            return view('member.dashboard_local', [
-            // 'userData'          => $data,
-            'userProfile'       => $user,
-            // 'userTransactions'  => $transactions,
-            ]);
+        if (session()->has('tokenPayment.active_id')) {
+            $memberDue = \App\Models\MemberDue::find(session()->get('tokenPayment.due_id'));
         }
 
-        
-
-        // dd($userProfile);
-
-        // $user = User::where('id', '=', session('LoggedMember'))->first();
-
-        // $data= ['LoggedMemberInfo' => $user];
-
-        //get member profile
-        //$token= "YyHqs47HJOhJUM5Kf1pi5Jz_N8Ss573cxqE2clymSK5G4QLGWsfcxZY8HIKAVvM4vSRsXxCCde4lNfrPvvh93hlLbffZiTwqd_mAu1kAKN6YZWSKd6RDiya8lX50yRIUgaDfeITNUwGWWil3aUlOl3Is-6FFL1Dk8PcJT2iezWOPRYXNVg0TwG1H85v-QT17f1z2Vwr3nhBEfFsUbij0CLRKJwXEoMN4yovVY0QakIHxikwt2lvgibtMnJNZOawklBkpQtC87PcXuG-aGtCqATl0UgjwYr61_oIpRmbuiEk";
-
-
-
-
-        //dd(openssl_get_cert_locations());
-
-
-        // $profile = Http::withoutVerifying()
-        //             ->withHeaders(['Authorization' => 'Bearer ' . $token, 'Cache-Control' => 'no-cache', 'Accept' => '/',
-        //                             'Content-Type' => 'application/json',])
-        //             ->withOptions(["verify"=>false])
-        //             ->post($url)->json()['data'];
-
-
-
+        return view('member.invoice', [
+            'userData'           => $user,
+            'userTransactions'   => $transactions,
+            'outstandingBalance' => $memberDue?->outstanding_balance ?? 0,
+            'balanceFortheMonth' => $memberDue
+                ? $memberDue->month_name . ' ' . $memberDue->year
+                : '',
+        ]);
     }
 
     /**
@@ -591,60 +528,101 @@ class HomeController extends Controller
 
     public function tokenInvoice()
     {
+        $user = $this->authenticatedMember();
+        $transactions = $this->invoiceTransactions($user);
+
+        $memberDue = null;
+
+        if (session()->has('tokenPayment.active_id')) {
+            $memberDue = \App\Models\MemberDue::find(session()->get('tokenPayment.due_id'));
+        }
+
+        return view('member.token_invoice', [
+            'userData'           => $user,
+            'userTransactions'   => $transactions,
+            'outstandingBalance' => $memberDue?->outstanding_balance ?? 0,
+            'balanceFortheMonth' => $memberDue
+                ? $memberDue->month_name . ' ' . $memberDue->year
+                : '',
+            'paymentAdjustment'  => $memberDue?->paid_amount ?? 0,
+            'dues_for_this_month' => $memberDue?->dues_for_this_month ?? 0,
+        ]);
+    }
+
+    private function authenticatedMember(): User
+    {
+        $user = Auth::guard('members')->user();
+
+        abort_unless($user instanceof User, 401);
+
+        return $user->loadMissing('userCodeUserDetails');
+    }
+
+    private function invoiceTransactions(User $user): array
+    {
+        $cacheKey = 'member_invoice_transactions:' . $user->id;
+        $staleCacheKey = $cacheKey . ':stale';
+        $cachedTransactions = Cache::get($cacheKey);
+
+        if (is_array($cachedTransactions)) {
+            return $cachedTransactions;
+        }
+
+        $token = "5tdpn6yeoycRKbWd0311m1B5S-ZKMfU2syAD50kiquOX20GbmXF89Z1-vvsN01WTAIRWHdRESd8nRWZJrC7xuHkClh63BPg1PCpZHKpDOjmtvgJL8ErYrup7PLG2LZHkbjDh6bFb54VyUsvZm4OzzIPI9QVKhTf2ui5Pmd8CzHJZUK-4Jd-aOmQFfhuertA5KuIRrNdHTzA7w1hEYHO9Hq9J_pkME7BhNpjWp44Z3R2YeLuQbskl_rMypzLj5icdoPWgCsxA1bU9iGo5x3heaP8lHliiSx3SeeYpBMe22DRaarXJYc5pxFJ1tuEKDoxn";
+        $transactionFields = [
+            'MCODE'    => $user->user_code,
+            'FromDate' => '01-apr-2020',
+            'ToDate'   => '01-jun-2021',
+        ];
+        $transactionUrl = 'https://ccfcmemberdata.in/api/MemberMonthlyBalance/?'
+            . http_build_query($transactionFields);
+
         try {
+            $response = Http::withoutVerifying()
+                ->acceptJson()
+                ->withToken($token)
+                ->timeout(8)
+                ->withOptions(['connect_timeout' => 3])
+                ->post($transactionUrl);
 
-            $user = User::with('userCodeUserDetails')->find(session('LoggedMember'))->first();
-
-            // payment details from api //
-            // $token = "N3bwPrgB4wzHytcBkrvd6duSAX46ksfh9zOGPGnzwL8YladUpD-XH0DD_ZVBfdktfuPvgMbHg4uvBNBzibf2qEvPWh-HlzMFwnWJCfI8uW7-RBbpBj5oPlL9KPj7jxL8kaHDB6Fvl1fc8KZfYpZlRKRRTXIqsOkWt4Wenzz8I-D42AQzY5u-4FF1lDN3pepkwSL6xxXEb6wHExSHYlqT_9mKOB-6P-h6uWeqLETbFnft0CBvzwo9rJ14Gvu1YesR_Yte88Xg9R1K4_2mlY93YxYJGI7I3LkPSsVBfPW1SkzmdWo3HRJci6nRl36U_Llc";
-            $token = "5tdpn6yeoycRKbWd0311m1B5S-ZKMfU2syAD50kiquOX20GbmXF89Z1-vvsN01WTAIRWHdRESd8nRWZJrC7xuHkClh63BPg1PCpZHKpDOjmtvgJL8ErYrup7PLG2LZHkbjDh6bFb54VyUsvZm4OzzIPI9QVKhTf2ui5Pmd8CzHJZUK-4Jd-aOmQFfhuertA5KuIRrNdHTzA7w1hEYHO9Hq9J_pkME7BhNpjWp44Z3R2YeLuQbskl_rMypzLj5icdoPWgCsxA1bU9iGo5x3heaP8lHliiSx3SeeYpBMe22DRaarXJYc5pxFJ1tuEKDoxn";
-
-            $fields = [
-                'MCODE' => $user->user_code
-                ];
-
-            $url = "https://ccfcmemberdata.in/Api/MemberProfile/?".http_build_query($fields);
-
-            $transactionFields = [
-                    'MCODE'     => $user->user_code,
-                    'FromDate'  => '01-apr-2020',
-                    'ToDate'    => '01-jun-2021',
-                ];
-
-            $tansactionUrl = 'https://ccfcmemberdata.in/api/MemberMonthlyBalance/?' . http_build_query($transactionFields);
-
-            $transactionResponse = Http::withoutVerifying()
-                        ->withHeaders(['Authorization' => 'Bearer ' . $token, 'Cache-Control' => 'no-cache', 'Accept' => '/',
-                                        'Content-Type' => 'application/json',])
-                        ->withOptions(["verify" => false])
-                        ->post($tansactionUrl);
-            $transactions = $this->getClubmanResponseData($transactionResponse);
-
-            // payment details from api //
-
-            if (session()->has('tokenPayment.active_id')) {
-                // active_id exists
-                $dueId = session()->get('tokenPayment.due_id');
-                $memberDue = \App\Models\MemberDue::find($dueId);
-
-                $outstandingBalance         = $memberDue?->outstanding_balance ?? 0;
-                $balanceFortheMonth         = $memberDue?->month_name . ' ' . $memberDue?->year;
-                $paidAmount                 = $memberDue?->paid_amount ?? 0;
-                $dues_for_this_month        = $memberDue?->dues_for_this_month ?? 0;
+            if (! $response->successful()) {
+                throw new \RuntimeException('Clubman returned HTTP ' . $response->status() . '.');
             }
 
-            return view('member.token_invoice', [
-                            'userData'          => $user,
-                            // 'userProfile'       => $profile,
-                            'userTransactions'  => $transactions,
-                            'outstandingBalance' => $outstandingBalance ?? 0,
-                            'balanceFortheMonth' => $balanceFortheMonth ?? '',
-                            'paymentAdjustment'  => $paidAmount,
-                            'dues_for_this_month' => $dues_for_this_month
-                        ]);
-        } catch (\Exception $ex) {
-            //throw $th;
+            $transactions = $this->addInvoiceLinks(
+                $this->getClubmanResponseData($response),
+                $user
+            );
+
+            Cache::put($cacheKey, $transactions, now()->addMinutes(10));
+            Cache::put($staleCacheKey, $transactions, now()->addDay());
+        } catch (\Throwable $exception) {
+            Log::warning('Unable to refresh member invoice transactions.', [
+                'member_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $transactions = Cache::get($staleCacheKey, []);
         }
+
+        return is_array($transactions) ? $transactions : [];
+    }
+
+    private function addInvoiceLinks(array $transactions, User $user): array
+    {
+        return array_map(function ($transaction) use ($user) {
+            $month = (string) ($transaction['Month'] ?? '');
+            $transaction['summary_bill_url'] = SearchInvoicePdf::getSummaryBillLink(
+                $user->user_code,
+                $month
+            );
+            $transaction['detail_bill_url'] = SearchInvoicePdf::getDetailBillLink(
+                $user->user_code,
+                $month
+            );
+
+            return $transaction;
+        }, array_values(array_filter($transactions, 'is_array')));
     }
 
     private function getClubmanResponseData($response)

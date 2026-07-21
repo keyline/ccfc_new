@@ -280,11 +280,8 @@
                                                     {{-- <td>{{ $user['Balance'] }}</td> --}}
                                                     <!-- summary -->
                                                     <td>
-                                                        @if (
-                                                                SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
-                                                                !empty(SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $user['Month']))
-                                                            )
-                                                            <a href="{{ SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $user['Month']) }}"
+                                                        @if (!empty($user['summary_bill_url']))
+                                                            <a href="{{ $user['summary_bill_url'] }}"
                                                                 target="_blank"><img class="img-fluid"
                                                                     src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a>
                                                         @else
@@ -293,11 +290,8 @@
                                                     </td>
                                                     <!-- Detail -->
                                                     <td>
-                                                        @if (
-                                                                    SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $user['Month']))) &&
-                                                                    !empty(SearchInvoicePdf::getDetailBillLink($userData['user_code'], $user['Month']))
-                                                                )
-                                                                <a href="{{ SearchInvoicePdf::getDetailBillLink($userData['user_code'], $user['Month']) }}"
+                                                        @if (!empty($user['detail_bill_url']))
+                                                                <a href="{{ $user['detail_bill_url'] }}"
                                                                     target="_blank"><img class="img-fluid"
                                                                         src="{{ asset('img/invoice_pdficon.png') }}" alt="" /></a>
                                                             </td>

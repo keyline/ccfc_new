@@ -29,23 +29,22 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use App\Models\MemberDue;
 use App\Services\Juspay\JuspayService;
+use App\Services\ClubmanMemberLookup;
+use Illuminate\Validation\ValidationException;
 
 use function Symfony\Component\VarDumper\Dumper\esc;
 
 class PaymentController extends Controller
 {
     //
-    public function payment(Request $request)
+    public function payment(Request $request, ClubmanMemberLookup $clubmanMemberLookup)
     {
 
         //$user = User::where('id', '=', session('LoggedMember'))->first();
-        $user = User::find(session('LoggedMember'))->first();
+        $user = $this->paymentUser();
 
         if ($user) {
-            $validated = $request->validate([
-                'amount' => 'required|numeric|min:1',
-                'paymentGatewayOptions' => 'required',
-            ]);
+            $amount = $this->validatedPaymentAmount($request, $user, $clubmanMemberLookup, false, true);
 
             $customer = Customer::make()
                             ->firstName($user->name)
@@ -58,7 +57,7 @@ class PaymentController extends Controller
 
             // Associate the transaction with your invoice
             $transaction = Transaction::make()
-                            ->charge($request->amount)
+                            ->charge($amount)
                             ->for($user->user_code)
                             ->with($attributes) // Only when using any custom attributes
                             ->against($user)
@@ -67,7 +66,7 @@ class PaymentController extends Controller
 
             return Payu::initiate($transaction)->redirect(route('member.payment.status'));
         } else {
-            dd($user);
+            abort(401);
         }
     }
 
@@ -95,19 +94,22 @@ class PaymentController extends Controller
         return view('member.paymentstatus', compact('status'));
     }
 
-    public function PayWithHdfc(PaymentGatewayInterface $hdfcPaymentService, Request $request)
+    public function PayWithHdfc(
+        PaymentGatewayInterface $hdfcPaymentService,
+        Request $request,
+        ClubmanMemberLookup $clubmanMemberLookup
+    )
     {
-        $user = User::find(session('LoggedMember'))->first();
+        $user = $this->paymentUser();
 
         if ($user) {
-            $validated = $request->validate([
-                'amount' => 'required|numeric|min:1',
-                'paymentGatewayOptions' => 'required',
-            ]);
+            $amount = $this->validatedPaymentAmount($request, $user, $clubmanMemberLookup, false, true);
 
-            $data = $hdfcPaymentService->processPayment($request->amount, $user);
+            $data = $hdfcPaymentService->processPayment($amount, $user);
             return view('member.hdfcredirectform', $data);
         }
+
+        abort(401);
     }
 
     public function statusForHdfc(PaymentGatewayInterface $hdfcPaymentService, Request $request)
@@ -226,20 +228,17 @@ class PaymentController extends Controller
         //return response()->json(['success' => true]);
     }
 
-    public function checkout(Request $request)
+    public function checkout(Request $request, ClubmanMemberLookup $clubmanMemberLookup)
     {
-        $user = User::find(session('LoggedMember'))->first();
+        $user = $this->paymentUser();
         if ($user) {
-            $validated = $request->validate([
-        'amount' => 'required|numeric|min:1',
-        'paymentGatewayOptions' => 'required',
-        ]);
+            $amount = $this->validatedPaymentAmount($request, $user, $clubmanMemberLookup, false, true);
 
             $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
 
             $order = $api->order->create([
                 'receipt' => 'ord_axis_' . Str::random(10), // Replace with your own unique identifier for the order
-                'amount' => $request->amount * 100, // Replace with the actual amount from your form or request
+                'amount' => (int) round($amount * 100), // Replace with the actual amount from your form or request
                 'currency' => 'INR', // Replace with your desired currency
                 'payment_capture' => 1,
                 'notes' => [
@@ -273,18 +272,25 @@ class PaymentController extends Controller
 
         }
 
-
-
+        abort(401);
     }
 
-    public function razorpay(Request $request)
+    public function razorpay(Request $request, ClubmanMemberLookup $clubmanMemberLookup)
     {
-        $user = User::find(session('LoggedMember'))->first();
+        $user = $this->paymentUser();
+        abort_unless($user, 401);
+
+        $amountInPaise = $this->validatedPaymentAmount(
+            $request,
+            $user,
+            $clubmanMemberLookup,
+            true
+        );
         $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
 
         $order = $api->order->create([
             'receipt' => 'INV_' . rand(10000, 99999),
-            'amount' => $request->amount,
+            'amount' => (int) $amountInPaise,
             'currency' => 'INR',
             'payment_capture' => 1,
             'notes' => [
@@ -647,24 +653,27 @@ class PaymentController extends Controller
     //     return response()->json($response);
     // }
 
-    public function initiateJuspayPayment(Request $request, JuspayService $juspay)
+    public function initiateJuspayPayment(
+        Request $request,
+        JuspayService $juspay,
+        ClubmanMemberLookup $clubmanMemberLookup
+    )
     {
-        $amount = $request->amount;
+        $user = $this->paymentUser();
+
+        if (! $user) {
+            return response()->json([
+                'status' => false,
+                'error' => 'User not logged in'
+            ], 401);
+        }
+
+        $amount = $this->validatedPaymentAmount($request, $user, $clubmanMemberLookup);
 
         try {
             // changed: restore the old pre-callback bookkeeping before returning the AJAX payload.
-            $userId = session('LoggedMember');
-            $user = User::where('id', $userId)->first();
-
-            if (! $user) {
-                return response()->json([
-                    'status' => false,
-                    'error' => 'User not logged in'
-                ], 401);
-            }
-
             $tokenId = $request->token_id ?? null;
-            $memberCode = $request->member_code ?? $user->user_code;
+            $memberCode = $user->user_code;
             $orderId = uniqid('order_');
             $result = $juspay->createPaymentSession($orderId, route('member.hdfcsmartpaycallback'), $amount, ['member_code' => $user->user_code, 'user_id' => $user->id, 'member_name' => $user->name, 'customer_email' => $user->email, 'customer_phone' => $user->phone_number_1]);
             $payloadToStore = $result['sdk_payload'] ?? [];
@@ -989,6 +998,56 @@ class PaymentController extends Controller
 
     }
 
+
+    private function paymentUser(): ?User
+    {
+        $sessionMember = session('LoggedMember');
+        $userId = is_array($sessionMember) ? ($sessionMember['id'] ?? null) : $sessionMember;
+
+        return $userId ? User::find($userId) : null;
+    }
+
+    private function validatedPaymentAmount(
+        Request $request,
+        User $user,
+        ClubmanMemberLookup $clubmanMemberLookup,
+        bool $amountIsInPaise = false,
+        bool $requireGateway = false
+    ): float {
+        try {
+            $minimumAmount = $clubmanMemberLookup->minimumPaymentAmount($user);
+        } catch (\Throwable $exception) {
+            Log::warning('Unable to verify the Clubman minimum payment amount.', [
+                'member_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            throw ValidationException::withMessages([
+                'amount' => 'The minimum payment amount could not be verified. Please try again shortly.',
+            ]);
+        }
+
+        $submittedMinimum = $amountIsInPaise
+            ? (int) round($minimumAmount * 100)
+            : $minimumAmount;
+        $rules = [
+            'amount' => [
+                'required',
+                $amountIsInPaise ? 'integer' : 'numeric',
+                'min:' . $submittedMinimum,
+            ],
+        ];
+
+        if ($requireGateway) {
+            $rules['paymentGatewayOptions'] = ['required'];
+        }
+
+        $validated = $request->validate($rules, [
+            'amount.min' => 'The minimum payment amount is INR ' . number_format($minimumAmount, 2) . '.',
+        ]);
+
+        return (float) $validated['amount'];
+    }
 
     private function JpgetOrder($orderId, $config)
     {

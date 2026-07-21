@@ -682,6 +682,7 @@ Route::group([
 
     Route::get('/invoice', [HomeController::class, 'invoice'])->name('invoice');
     Route::get('/invoice/data', [HomeController::class, 'invoiceData'])->name('invoice.data');
+    Route::get('/invoice/financials', [HomeController::class, 'invoiceFinancials'])->name('invoice.financials');
     Route::get('/profile-image', [HomeController::class, 'profileImage'])->name('profile-image');
 
     Route::get('/token/payment', [HomeController::class, 'tokenPayment'])->name('token.payment');

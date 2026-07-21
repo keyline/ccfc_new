@@ -35,11 +35,21 @@ return [
     ],
 
     'clubman' => [
+        'token_url' => env('CLUBMAN_TOKEN_URL', 'https://ccfcmemberdata.in/token'),
+        'member_lookup_url' => env(
+            'CLUBMAN_MEMBER_LOOKUP_URL',
+            'https://ccfcmemberdata.in/api/MemberLookup'
+        ),
         'member_profile_url' => env(
             'CLUBMAN_MEMBER_PROFILE_URL',
             'https://ccfcmemberdata.in/Api/MemberProfile'
         ),
+        'username' => env('CLUBMAN_USERNAME', 'CCFC'),
+        'password' => env('CLUBMAN_PASSWORD'),
         'token' => env('CLUBMAN_API_TOKEN'),
+        'verify_ssl' => env('CLUBMAN_VERIFY_SSL', true),
+        'timeout' => env('CLUBMAN_TIMEOUT', 8),
+        'connect_timeout' => env('CLUBMAN_CONNECT_TIMEOUT', 3),
     ],
 
 ];

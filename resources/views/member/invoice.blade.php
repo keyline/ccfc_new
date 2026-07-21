@@ -42,6 +42,25 @@
             width: auto;
             display: block;
         }
+
+        .clubman-financial-summary {
+            border: 2px solid #dc1f26;
+            margin-top: 12px;
+            padding: 12px 14px;
+        }
+
+        .clubman-financial-summary p {
+            margin: 0 0 6px;
+        }
+
+        .clubman-financial-summary p:last-of-type {
+            margin-bottom: 4px;
+        }
+
+        .clubman-financial-summary small {
+            color: #666;
+            display: block;
+        }
     </style>
 
     <!-- ?php include 'assets/inc/header.php';?> -->
@@ -112,6 +131,23 @@
                                         </p>
                                         <p><strong>Mail ID:</strong>{{ $userData->email }}
                                         </p>
+                                        @php($clubmanMinimumDue = $memberFinancials['minimum_due_amount'] ?? null)
+                                        @php($clubmanMinimumPayment = $clubmanMinimumDue === null ? 1 : max(1, (float) $clubmanMinimumDue))
+                                        <div class="clubman-financial-summary" aria-live="polite">
+                                            <p><strong>Outstanding:</strong> INR
+                                                <span id="clubman-outstanding">
+                                                    {{ $memberFinancials ? number_format((float) $memberFinancials['outstanding'], 2) : 'Loading...' }}
+                                                </span>
+                                            </p>
+                                            <p><strong>Minimum Due Amount:</strong> INR
+                                                <span id="clubman-minimum-due">
+                                                    {{ $clubmanMinimumDue !== null ? number_format((float) $clubmanMinimumDue, 2) : 'Loading...' }}
+                                                </span>
+                                            </p>
+                                            <small id="member-financials-status">
+                                                {{ $memberFinancials ? 'Showing the latest available Clubman balance.' : 'Updating balance from Clubman...' }}
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- <div class="col-md-12">
@@ -156,8 +192,14 @@
                                         @csrf
                                         <div class="invoice_input_bank">
                                             <div class="invoice_input_feild">
-                                                <input type="text" name="amount"
-                                                    placeholder="Enter amount being paid">
+                                                <input type="number" name="amount" id="payment-amount"
+                                                    value="{{ old('amount', $clubmanMinimumDue !== null ? number_format((float) $clubmanMinimumDue, 2, '.', '') : '') }}"
+                                                    min="{{ number_format($clubmanMinimumPayment, 2, '.', '') }}"
+                                                    step="0.01" inputmode="decimal"
+                                                    data-minimum-payment="{{ number_format($clubmanMinimumPayment, 2, '.', '') }}"
+                                                    data-user-edited="{{ old('amount') !== null ? 'true' : 'false' }}"
+                                                    placeholder="Enter amount being paid"
+                                                    aria-describedby="member-financials-status">
                                             </div>
                                             <div class="invocie_paymentlogo">
                                                 <ul>
@@ -235,8 +277,9 @@
                                                 errorMsg.push("Please check one of payment gateway before making payment");
                                             }
                                             //console.log(checkAmount(amountInput));
-                                            if (!checkAmount(amountInput)) {
-                                                errorMsg.push("Amount not valid!");
+                                            const amountError = paymentAmountValidationMessage(amountInput);
+                                            if (amountError) {
+                                                errorMsg.push(amountError);
                                             }
 
                                             if (Array.isArray(errorMsg) && !errorMsg.length) {
@@ -267,11 +310,33 @@
                                         return null;
                                     }
 
-                                    function checkAmount(amount) {
-
-                                        //const amountRegex = /^(?!0)\d+$/;
+                                    function paymentAmountValidationMessage(amount) {
                                         const amountRegex = /^\d+(\.\d{1,2})?$/;
-                                        return amountRegex.test(amount);
+                                        const amountInput = document.getElementById('payment-amount');
+                                        const minimum = parseFloat(amountInput?.dataset.minimumPayment || '1');
+                                        const numericAmount = parseFloat(amount);
+
+                                        if (!amountRegex.test(amount) || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+                                            return 'Please enter a valid payment amount.';
+                                        }
+
+                                        if (numericAmount + Number.EPSILON < minimum) {
+                                            return 'The minimum payment amount is INR ' + minimum.toFixed(2) + '.';
+                                        }
+
+                                        return '';
+                                    }
+
+                                    function validateEnteredPaymentAmount() {
+                                        const input = document.getElementById('payment-amount');
+                                        const message = paymentAmountValidationMessage(input?.value || '');
+
+                                        if (message) {
+                                            alert(message);
+                                            return false;
+                                        }
+
+                                        return true;
                                     }
                                 </script>
                             </div>
@@ -354,7 +419,13 @@
 <script>
     (function() {
         const invoiceDataUrl = @json(route('member.invoice.data'));
+        const memberFinancialsUrl = @json(route('member.invoice.financials'));
         const pdfIconUrl = @json(asset('img/invoice_pdficon.png'));
+        const paymentAmountInput = document.getElementById('payment-amount');
+
+        paymentAmountInput?.addEventListener('input', function() {
+            paymentAmountInput.dataset.userEdited = 'true';
+        });
 
         function textCell(value) {
             const cell = document.createElement('td');
@@ -421,6 +492,33 @@
             balance.textContent = transactions[0].Balance ?? '\u2013';
         }
 
+        function money(value) {
+            const amount = Number(value);
+
+            return Number.isFinite(amount) ? amount.toFixed(2) : '\u2013';
+        }
+
+        function renderMemberFinancials(financials) {
+            if (!financials || typeof financials !== 'object') return;
+
+            const outstanding = document.getElementById('clubman-outstanding');
+            const minimumDue = document.getElementById('clubman-minimum-due');
+            const apiMinimum = Math.max(0, Number(financials.minimum_due_amount) || 0);
+            const gatewayMinimum = Math.max(1, apiMinimum);
+
+            if (outstanding) outstanding.textContent = money(financials.outstanding);
+            if (minimumDue) minimumDue.textContent = money(apiMinimum);
+
+            if (paymentAmountInput) {
+                paymentAmountInput.min = gatewayMinimum.toFixed(2);
+                paymentAmountInput.dataset.minimumPayment = gatewayMinimum.toFixed(2);
+
+                if (paymentAmountInput.dataset.userEdited !== 'true') {
+                    paymentAmountInput.value = apiMinimum.toFixed(2);
+                }
+            }
+        }
+
         async function refreshInvoiceData() {
             const status = document.getElementById('invoice-data-status');
 
@@ -446,10 +544,40 @@
             }
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', refreshInvoiceData);
-        } else {
+        async function refreshMemberFinancials() {
+            const status = document.getElementById('member-financials-status');
+
+            try {
+                const response = await fetch(memberFinancialsUrl, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+
+                const payload = await response.json();
+                renderMemberFinancials(payload.financials);
+
+                if (status) {
+                    status.textContent = 'Updated from Clubman.';
+                }
+            } catch (error) {
+                if (status) {
+                    status.textContent = 'Balance is temporarily unavailable. Please refresh shortly.';
+                }
+                console.error('Unable to refresh member balances.', error);
+            }
+        }
+
+        function refreshPageData() {
             refreshInvoiceData();
+            refreshMemberFinancials();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', refreshPageData);
+        } else {
+            refreshPageData();
         }
     })();
 </script>
@@ -478,18 +606,17 @@
     function razorpaySubmit(el) {
         if (!el.checked) return;
 
+        if (!validateEnteredPaymentAmount()) {
+            el.checked = false;
+            return;
+        }
+
         const payNowButton = document.querySelector('.btn-primary');
         payNowButton.style.display = 'none'; // hide for Razorpay
 
         // Get amount from the input
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
-
-        if (!amountValue || amountValue <= 0) {
-            alert("Please enter a valid amount before choosing Razorpay.");
-            el.checked = false;
-            return;
-        }
 
         // Convert to paise (e.g., ₹100 -> 10000)
         let amountInPaise = Math.round(amountValue * 100);
@@ -499,6 +626,7 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
                 body: JSON.stringify({
@@ -506,7 +634,15 @@
                 })
             });
         })
-            .then(res => res.json())
+            .then(async res => {
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.errors?.amount?.[0] || data.message || 'Payment request failed.');
+                }
+
+                return data;
+            })
             .then(data => {
                 if (!data.order_id) {
                     alert("Failed to initiate Razorpay order");
@@ -552,8 +688,9 @@
             })
             .catch(err => {
                 el.checked = false;
+                payNowButton.style.display = '';
                 console.error(err);
-                alert("Error connecting to Razorpay.");
+                alert(err.message || "Error connecting to Razorpay.");
             });
     }
 </script>
@@ -561,6 +698,11 @@
 <script>
     function hdfcSmartSubmit(el) {
         if (!el.checked) {
+            return;
+        }
+
+        if (!validateEnteredPaymentAmount()) {
+            el.checked = false;
             return;
         }
 
@@ -593,18 +735,11 @@
         let tokenPayment = document.querySelector('input[name="active_token_id"]');
         let memberCode = document.querySelector('input[name="member_code"]');
 
-        if (!amountValue || amountValue <= 0) {
-            alert("Please enter a valid amount before choosing HDFC Smart gateway.");
-            el.checked = false;
-            loader.style.display = 'none';
-            //payNowButton.disabled =false;
-            return;
-        }
-
         fetch("{{ route('member.hdfcsmartpg') }}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json;charset=UTF-8",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                 },
                 body: JSON.stringify({
@@ -616,7 +751,7 @@
             .then(response => {
                 if (!response.ok) {
                     return response.json().then(data => {
-                        throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
+                        throw new Error(data.errors?.amount?.[0] || data.message || `HTTP ${response.status}: Request failed`);
                     });
                 }
                 
@@ -636,8 +771,9 @@
             .catch(err => {
                 el.checked = false;
                 loader.style.display = 'none';
+                payNowButton.style.display = '';
                 console.error(err);
-                alert("Error connecting to hdfcsmartpay.");
+                alert(err.message || "Error connecting to hdfcsmartpay.");
             });
     }
 </script>

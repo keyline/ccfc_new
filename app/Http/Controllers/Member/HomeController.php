@@ -19,6 +19,7 @@ use pcrov\JsonReader\JsonReader;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Services\ClubmanMemberLookup;
 
 class HomeController extends Controller
 {
@@ -152,10 +153,11 @@ class HomeController extends Controller
     }
 
 
-    public function invoice()
+    public function invoice(ClubmanMemberLookup $clubmanMemberLookup)
     {
         $user = $this->authenticatedMember();
         $transactions = $this->cachedInvoiceTransactions($user);
+        $memberFinancials = $clubmanMemberLookup->cached($user);
 
         $memberDue = null;
 
@@ -166,6 +168,7 @@ class HomeController extends Controller
         return view('member.invoice', [
             'userData'           => $user,
             'userTransactions'   => $transactions,
+            'memberFinancials'   => $memberFinancials,
             'outstandingBalance' => $memberDue?->outstanding_balance ?? 0,
             'balanceFortheMonth' => $memberDue
                 ? $memberDue->month_name . ' ' . $memberDue->year
@@ -180,6 +183,26 @@ class HomeController extends Controller
         return response()->json([
             'transactions' => $this->invoiceTransactions($user),
         ]);
+    }
+
+    public function invoiceFinancials(ClubmanMemberLookup $clubmanMemberLookup)
+    {
+        $user = $this->authenticatedUser();
+
+        try {
+            return response()->json([
+                'financials' => $clubmanMemberLookup->lookup($user),
+            ]);
+        } catch (\Throwable $exception) {
+            Log::warning('Unable to refresh Clubman member balances.', [
+                'member_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Member balances are temporarily unavailable. Please try again shortly.',
+            ], 503);
+        }
     }
 
     public function profileImage()

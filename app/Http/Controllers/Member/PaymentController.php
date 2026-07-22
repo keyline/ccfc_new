@@ -408,8 +408,8 @@ class PaymentController extends Controller
                 // dd($dueDetails);
 
                 // if($dueDetails->outstanding_balance > $amount)
-                if(1)
-                {                        
+                if($dueDetails)
+                {
                     DB::table('member_dues')
                         ->where('member_code', $user->user_code)
                         ->update(

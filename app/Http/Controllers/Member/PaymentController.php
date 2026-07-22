@@ -361,7 +361,7 @@ class PaymentController extends Controller
     // }
     public function razorpaycallback(Request $request)
     {
-        // dd($request->all());
+        dd($request->all());
         $input = $request->all();
 
         $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
@@ -422,15 +422,25 @@ class PaymentController extends Controller
                         );
                 }
 
+                dd([
+                    'input' => $input,
+                    'payment' => $payment->toArray(),
+                    'amount' => $amount,
+                    'user_code' => $user->user_code,
+                    'dueDetails' => $dueDetails,
+                ]);
+
                 try {
-                    app(\App\Services\ClubmanPaymentPosting::class)->post(
+                    $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->post(
                         $user->user_code,
                         $input['razorpay_payment_id'],
                         (float) $amount,
                         $input['razorpay_payment_id']
                     );
+                    // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
                 } catch (\Throwable $e) {
                     Log::error('Clubman Payment Posting Failed: ' . $e->getMessage());
+                    // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'error' => $e->getMessage()]);
                 }
 
                 $emailInfo = array(

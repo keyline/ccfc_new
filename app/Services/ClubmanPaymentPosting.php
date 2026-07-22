@@ -47,7 +47,7 @@ class ClubmanPaymentPosting
                 ->withOptions([
                     'connect_timeout' => (int) config('services.clubman.connect_timeout', 5),
                 ])
-                ->post($endpoint . '?' . http_build_query(['json' => json_encode($payload)]));
+                ->post($endpoint . '?json=' . json_encode($payload));
         } catch (Throwable $exception) {
             throw new RuntimeException(
                 'Clubman could not be reached while posting the payment.',
@@ -64,7 +64,19 @@ class ClubmanPaymentPosting
 
         $result = $response->json();
 
-        return is_array($result) ? $result : ['raw' => $response->body()];
+        if (! is_array($result)) {
+            throw new RuntimeException('Clubman returned an invalid payment posting response.');
+        }
+
+        $status = strtolower(trim((string) ($result['Status'] ?? '')));
+
+        if ($status !== 'success') {
+            $message = trim((string) ($result['StatusMessage'] ?? ''));
+
+            throw new RuntimeException($message ?: 'Clubman rejected the payment posting.');
+        }
+
+        return $result;
     }
 
     private function apiToken(): string

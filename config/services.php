@@ -57,6 +57,10 @@ return [
             'https://ccfcmemberdata.in/api/MemberMonthlyBalance/'
         ),
         'monthly_balance_from_date' => env('CLUBMAN_MONTHLY_BALANCE_FROM_DATE', '01-apr-2020'),
+        'payment_posting_url' => env(
+            'CLUBMAN_PAYMENT_POSTING_URL',
+            'https://ccfcmemberdata.in/api/Payment'
+        ),
     ],
 
 ];

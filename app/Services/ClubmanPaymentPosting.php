@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\GeneralSetting;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use RuntimeException;
+use Throwable;
+
+class ClubmanPaymentPosting
+{
+    public function post(
+        string $memberCode,
+        string $voucherNo,
+        float $amount,
+        string $instrumentNo,
+        string $description = 'Online payment against outstanding'
+    ): array {
+        $memberCode = trim($memberCode);
+
+        if ($memberCode === '') {
+            throw new RuntimeException('This member does not have a Clubman membership ID.');
+        }
+
+        $endpoint = trim((string) config('services.clubman.payment_posting_url'));
+
+        if ($endpoint === '') {
+            throw new RuntimeException('The Clubman Payment Posting URL is not configured.');
+        }
+
+        $payload = [
+            'VoucherNo' => $voucherNo,
+            'MemberId' => $memberCode,
+            'VoucherDate' => Carbon::now('Asia/Kolkata')->format('d M Y'),
+            'Amount' => round($amount, 2),
+            'InstrumentNo' => $instrumentNo,
+            'Description' => $description,
+        ];
+
+        try {
+            $response = Http::withoutVerifying()
+                ->acceptJson()
+                ->withToken($this->apiToken())
+                ->withHeaders(['Cache-Control' => 'no-cache'])
+                ->timeout((int) config('services.clubman.timeout', 15))
+                ->withOptions([
+                    'connect_timeout' => (int) config('services.clubman.connect_timeout', 5),
+                ])
+                ->post($endpoint . '?' . http_build_query(['json' => json_encode($payload)]));
+        } catch (Throwable $exception) {
+            throw new RuntimeException(
+                'Clubman could not be reached while posting the payment.',
+                0,
+                $exception
+            );
+        }
+
+        if (! $response->successful()) {
+            throw new RuntimeException(
+                'Clubman rejected the payment posting (HTTP ' . $response->status() . ').'
+            );
+        }
+
+        $result = $response->json();
+
+        return is_array($result) ? $result : ['raw' => $response->body()];
+    }
+
+    private function apiToken(): string
+    {
+        $settingToken = '';
+
+        try {
+            $setting = GeneralSetting::find(1);
+            $settingToken = $setting ? trim((string) $setting->clubman_api_token) : '';
+        } catch (Throwable $exception) {
+            // The environment token remains available during setup or DB maintenance.
+        }
+
+        $token = $settingToken ?: trim((string) config('services.clubman.token'));
+
+        if ($token === '') {
+            throw new RuntimeException(
+                'The Clubman API token is missing from Admin Settings and the environment.'
+            );
+        }
+
+        return $token;
+    }
+}

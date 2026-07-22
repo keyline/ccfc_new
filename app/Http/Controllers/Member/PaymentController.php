@@ -422,6 +422,16 @@ class PaymentController extends Controller
                         );
                 }
 
+                try {
+                    app(\App\Services\ClubmanPaymentPosting::class)->post(
+                        $user->user_code,
+                        $input['razorpay_payment_id'],
+                        (float) $amount,
+                        $input['razorpay_payment_id']
+                    );
+                } catch (\Throwable $e) {
+                    Log::error('Clubman Payment Posting Failed: ' . $e->getMessage());
+                }
 
                 $emailInfo = array(
                     'greeting' => "Dear, {$user->name}",

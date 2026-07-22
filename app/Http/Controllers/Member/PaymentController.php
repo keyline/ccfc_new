@@ -422,13 +422,7 @@ class PaymentController extends Controller
                         );
                 }
 
-                dd([
-                    'input' => $input,
-                    'payment' => $payment->toArray(),
-                    'amount' => $amount,
-                    'user_code' => $user->user_code,
-                    'dueDetails' => $dueDetails,
-                ]);
+                
 
                 try {
                     $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->post(

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\GeneralSetting;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -11,6 +10,13 @@ use Throwable;
 
 class ClubmanInvoiceLookup
 {
+    private $accessToken;
+
+    public function __construct(ClubmanAccessToken $accessToken = null)
+    {
+        $this->accessToken = $accessToken ?: new ClubmanAccessToken();
+    }
+
     public function lookup(User $user): array
     {
         $memberCode = trim((string) $user->user_code);
@@ -37,16 +43,18 @@ class ClubmanInvoiceLookup
         ]);
 
         try {
-            $response = Http::withoutVerifying()
-                ->acceptJson()
-                ->withToken($this->apiToken())
-                ->withHeaders(['Cache-Control' => 'no-cache'])
-                ->timeout((int) config('services.clubman.timeout', 15))
-                ->withOptions([
-                    'connect_timeout' => (int) config('services.clubman.connect_timeout', 5),
-                ])
-                ->post($url);
+            $response = $this->sendRequest($url, $this->accessToken->get());
+
+            if (in_array($response->status(), [401, 403], true)
+                && $this->accessToken->canRefresh()) {
+                $this->accessToken->forget();
+                $response = $this->sendRequest($url, $this->accessToken->get(true));
+            }
         } catch (Throwable $exception) {
+            if ($exception instanceof RuntimeException) {
+                throw $exception;
+            }
+
             throw new RuntimeException(
                 'Clubman could not be reached while loading invoices.',
                 0,
@@ -67,39 +75,71 @@ class ClubmanInvoiceLookup
         }
 
         $payload = $response->json();
-        $result = is_array($payload) ? strtolower(trim((string) ($payload['Result'] ?? ''))) : '';
+        $result = is_array($payload)
+            ? strtolower(trim((string) $this->value($payload, ['Result'], '')))
+            : '';
 
         if ($result !== '' && $result !== 'success') {
-            $message = trim((string) ($payload['ErrorMsg'] ?? ''));
+            $message = trim((string) $this->value($payload, ['ErrorMsg', 'Message'], ''));
             throw new RuntimeException($message ?: 'Clubman could not return invoice data.');
         }
 
-        if (! is_array($payload) || ! array_key_exists('data', $payload) || ! is_array($payload['data'])) {
+        $data = is_array($payload) ? $this->value($payload, ['data']) : null;
+
+        if (is_string($data)) {
+            $decodedData = json_decode($data, true);
+            $data = is_array($decodedData) ? $decodedData : null;
+        }
+
+        if (! is_array($data)) {
             throw new RuntimeException('Clubman returned an invalid invoice response.');
         }
 
-        return array_values(array_filter($payload['data'], 'is_array'));
+        if ($this->looksLikeTransaction($data)) {
+            $data = [$data];
+        }
+
+        return array_values(array_filter($data, 'is_array'));
     }
 
-    protected function apiToken(): string
+    private function sendRequest(string $url, string $token)
     {
-        $settingToken = '';
+        $request = Http::acceptJson()
+            ->withToken($token)
+            ->withHeaders(['Cache-Control' => 'no-cache'])
+            ->timeout((int) config('services.clubman.timeout', 15))
+            ->withOptions([
+                'connect_timeout' => (int) config('services.clubman.connect_timeout', 5),
+            ]);
 
-        try {
-            $setting = GeneralSetting::find(1);
-            $settingToken = $setting ? trim((string) $setting->clubman_api_token) : '';
-        } catch (Throwable $exception) {
-            // The environment token remains available during setup or DB maintenance.
+        if (! filter_var(config('services.clubman.verify_ssl', false), FILTER_VALIDATE_BOOLEAN)) {
+            $request->withoutVerifying();
         }
 
-        $token = $settingToken ?: trim((string) config('services.clubman.token'));
+        return $request->post($url);
+    }
 
-        if ($token === '') {
-            throw new RuntimeException(
-                'The Clubman API token is missing from Admin Settings and the environment.'
-            );
+    private function value(array $data, array $keys, $default = null)
+    {
+        foreach ($keys as $key) {
+            foreach ($data as $actualKey => $value) {
+                if (strcasecmp((string) $actualKey, $key) === 0) {
+                    return $value;
+                }
+            }
         }
 
-        return $token;
+        return $default;
+    }
+
+    private function looksLikeTransaction(array $data): bool
+    {
+        foreach (array_keys($data) as $key) {
+            if (strcasecmp((string) $key, 'Month') === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

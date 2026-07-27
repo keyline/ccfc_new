@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\GeneralSetting;
 use App\Models\User;
 use App\Models\UserDetail;
 use Carbon\Carbon;
@@ -13,6 +12,13 @@ use Throwable;
 
 class ClubmanMemberProfileSync
 {
+    private $accessToken;
+
+    public function __construct(ClubmanAccessToken $accessToken = null)
+    {
+        $this->accessToken = $accessToken ?: new ClubmanAccessToken();
+    }
+
     public function syncByMemberCode(string $memberCode): array
     {
         $user = User::where('user_code', $memberCode)->first();
@@ -68,21 +74,54 @@ class ClubmanMemberProfileSync
         }, 3);
     }
 
+    public function syncEmail(User $user): User
+    {
+        if (!$user->user_code) {
+            throw new RuntimeException('This member does not have a Clubman member code.');
+        }
+
+        $profile = $this->fetchProfile($user->user_code);
+        $email = $this->nullableString($this->value($profile, ['EMAIL']));
+
+        if ($email === null) {
+            return $user;
+        }
+
+        return DB::transaction(function () use ($user, $email) {
+            $databaseUser = User::whereKey($user->id)->lockForUpdate()->first();
+
+            if (!$databaseUser) {
+                throw new RuntimeException('The selected member no longer exists.');
+            }
+
+            $databaseUser->email = $email;
+            $databaseUser->save();
+
+            return $databaseUser->fresh();
+        }, 3);
+    }
+
     private function fetchProfile(string $memberCode): array
     {
-        $token = $this->apiToken();
         $endpoint = config(
             'services.clubman.member_profile_url',
             'https://ccfcmemberdata.in/Api/MemberProfile'
         );
+        $url = $endpoint . '?' . http_build_query(['MCODE' => $memberCode]);
 
         try {
-            $response = Http::withoutVerifying()
-                ->acceptJson()
-                ->withToken($token)
-                ->timeout(45)
-                ->post($endpoint . '?' . http_build_query(['MCODE' => $memberCode]));
+            $response = $this->sendProfileRequest($url, $this->accessToken->get());
+
+            if (in_array($response->status(), [401, 403], true)
+                && $this->accessToken->canRefresh()) {
+                $this->accessToken->forget();
+                $response = $this->sendProfileRequest($url, $this->accessToken->get(true));
+            }
         } catch (Throwable $exception) {
+            if ($exception instanceof RuntimeException) {
+                throw $exception;
+            }
+
             throw new RuntimeException(
                 'Clubman could not be reached. Please try again in a moment.',
                 0,
@@ -107,6 +146,15 @@ class ClubmanMemberProfileSync
             throw new RuntimeException('Clubman returned no profile for member code ' . $memberCode . '.');
         }
 
+        // Clubman's legacy profile JSON repeats EMAIL for the member and
+        // spouse. json_decode() keeps the last occurrence, which can erase the
+        // member email when the spouse email is blank.
+        $primaryEmail = ClubmanProfileResponse::primaryEmail($response->body());
+
+        if ($primaryEmail !== null) {
+            $profile['EMAIL'] = $primaryEmail;
+        }
+
         if ($this->nullableString($this->value($profile, ['MEMBER_NAME', 'MEMBERNAME'])) === null) {
             throw new RuntimeException('Clubman returned an incomplete profile for member code ' . $memberCode . '.');
         }
@@ -122,26 +170,20 @@ class ClubmanMemberProfileSync
         return $profile;
     }
 
-    private function apiToken(): string
+    private function sendProfileRequest(string $url, string $token)
     {
-        $settingToken = null;
+        $request = Http::acceptJson()
+            ->withToken($token)
+            ->timeout(45)
+            ->withOptions([
+                'connect_timeout' => (int) config('services.clubman.connect_timeout', 5),
+            ]);
 
-        try {
-            $setting = GeneralSetting::find(1);
-            $settingToken = $setting ? trim((string) $setting->clubman_api_token) : null;
-        } catch (Throwable $exception) {
-            // The environment token remains a valid fallback during setup.
+        if (! filter_var(config('services.clubman.verify_ssl', false), FILTER_VALIDATE_BOOLEAN)) {
+            $request->withoutVerifying();
         }
 
-        $token = $settingToken ?: trim((string) config('services.clubman.token'));
-
-        if ($token === '') {
-            throw new RuntimeException(
-                'The Clubman API token is missing. Add it under Admin Settings → General Settings.'
-            );
-        }
-
-        return $token;
+        return $request->post($url);
     }
 
     private function userValues(array $profile): array

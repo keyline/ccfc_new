@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use pcrov\JsonReader\JsonReader;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ClubmanInvoiceLookup;
+use App\Services\ClubmanMemberProfileSync;
 
 class HomeController extends Controller
 {
@@ -151,13 +152,29 @@ class HomeController extends Controller
     }
 
 
-    public function invoice(ClubmanInvoiceLookup $clubmanInvoiceLookup)
+    public function invoice(
+        ClubmanInvoiceLookup $clubmanInvoiceLookup,
+        ClubmanMemberProfileSync $profileSync
+    )
     {
         $loggedMember = session('LoggedMember');
         $memberId = is_array($loggedMember) ? ($loggedMember['id'] ?? null) : $loggedMember;
         $user = User::with('userCodeUserDetails')->find($memberId);
 
         abort_unless($user, 401);
+
+        if (trim((string) $user->email) === '') {
+            try {
+                $user = $profileSync->syncEmail($user)->load('userCodeUserDetails');
+                Auth::setUser($user);
+            } catch (\Throwable $exception) {
+                Log::warning('Unable to refresh a missing member email for the invoice page.', [
+                    'member_id' => $user->id,
+                    'member_code' => $user->user_code,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
 
         $invoiceError = null;
 

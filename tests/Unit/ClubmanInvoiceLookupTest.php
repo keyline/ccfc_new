@@ -30,9 +30,13 @@ class ClubmanInvoiceLookupTest extends TestCase
         $this->app->instance('config', new Repository([
             'services' => [
                 'clubman' => [
+                    'token_url' => 'https://clubman.test/token',
                     'monthly_balance_url' => 'https://clubman.test/api/MemberMonthlyBalance/',
                     'monthly_balance_from_date' => '01-apr-2020',
+                    'username' => 'CCFC',
+                    'password' => null,
                     'token' => 'current-settings-token',
+                    'verify_ssl' => false,
                     'timeout' => 15,
                     'connect_timeout' => 5,
                 ],
@@ -79,12 +83,47 @@ class ClubmanInvoiceLookupTest extends TestCase
 
         (new ClubmanInvoiceLookup())->lookup($user);
     }
+
+    public function test_it_accepts_case_variations_and_a_single_transaction_object(): void
+    {
+        $this->http->responsePayload = [
+            'result' => 'SUCCESS',
+            'Data' => [
+                'Month' => 'Jul 2026',
+                'LastBalance' => '100',
+                'paidamount' => '25',
+                'debitamount' => '10',
+                'Balance' => '85',
+            ],
+        ];
+        $user = new User();
+        $user->user_code = 'B47CEO';
+
+        $transactions = (new ClubmanInvoiceLookup())->lookup($user);
+
+        $this->assertCount(1, $transactions);
+        $this->assertSame('Jul 2026', $transactions[0]['Month']);
+    }
+
+    public function test_it_generates_a_fresh_access_token_when_credentials_are_configured(): void
+    {
+        $this->app['config']->set('services.clubman.password', 'clubman-password');
+        $user = new User();
+        $user->user_code = 'B47CEO';
+
+        (new ClubmanInvoiceLookup())->lookup($user);
+
+        $this->assertSame(1, $this->http->tokenRequestCount);
+        $this->assertSame('fresh-access-token', $this->http->token);
+    }
 }
 
 class ClubmanInvoiceHttpClient
 {
     public $statusCode = 200;
+    public $responsePayload;
     public $token;
+    public $tokenRequestCount = 0;
     public $url;
     public $withoutVerification = false;
 
@@ -122,21 +161,37 @@ class ClubmanInvoiceHttpClient
         return $this;
     }
 
-    public function post($url)
+    public function asForm()
     {
+        return $this;
+    }
+
+    public function post($url, array $data = [])
+    {
+        if (strpos($url, '/token') !== false) {
+            $this->tokenRequestCount++;
+
+            return new ClubmanInvoiceHttpResponse(200, [
+                'access_token' => 'fresh-access-token',
+                'expires_in' => 3600,
+            ]);
+        }
+
         $this->url = $url;
 
-        return new ClubmanInvoiceHttpResponse($this->statusCode);
+        return new ClubmanInvoiceHttpResponse($this->statusCode, $this->responsePayload);
     }
 }
 
 class ClubmanInvoiceHttpResponse
 {
     private $statusCode;
+    private $payload;
 
-    public function __construct(int $statusCode)
+    public function __construct(int $statusCode, array $payload = null)
     {
         $this->statusCode = $statusCode;
+        $this->payload = $payload;
     }
 
     public function status()
@@ -151,7 +206,7 @@ class ClubmanInvoiceHttpResponse
 
     public function json()
     {
-        return [
+        return $this->payload ?: [
             'Result' => 'success',
             'ErrorMsg' => '',
             'data' => [[

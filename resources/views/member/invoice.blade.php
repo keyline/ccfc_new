@@ -88,7 +88,8 @@
                                         <img class="img-fluid" src="{{ asset('img/demopic.png') }}" alt="" />
                                     </div> -->
 
-                                    @if ($userData->userCodeUserDetails[0]['member_image'] == '')
+                                    @php($memberDetails = $userData->userCodeUserDetails->first())
+                                    @if (!$memberDetails || empty($memberDetails->member_image))
                                         <div class="member_profileimg">
                                             <img class="img-fluid ifnotpic" src="{{ asset('img/Profile-Icon-01.svg') }}"
                                                 alt="" />
@@ -97,7 +98,7 @@
                                         <div class="member_profileimg">
                                             <img class="img-fluid"
                                                 src="data:image/png;base64,                          
-                                        {{ $userData->userCodeUserDetails[0]->member_image }} "
+                                        {{ $memberDetails->member_image }} "
                                                 alt="" />
                                         </div>
                                     @endif
@@ -109,9 +110,10 @@
                                         <h4>Welcome</h4>
                                         <h2>{{ $userData->name }}</h2>
 
-                                        <p><strong>Ph No:</strong>{{ $userData->userCodeUserDetails[0]->mobile_no }}
+                                        <p><strong>Ph No:</strong>{{ optional($memberDetails)->mobile_no }}
                                         </p>
-                                        <p><strong>Mail ID:</strong>{{ $userData->email }}
+                                        @php($memberEmail = trim((string) $userData->email) ?: trim((string) optional($memberDetails)->email))
+                                        <p><strong>Mail ID:</strong>{{ $memberEmail }}
                                         </p>
                                     </div>
                                 </div>

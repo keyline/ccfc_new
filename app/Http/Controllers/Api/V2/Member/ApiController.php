@@ -1193,6 +1193,7 @@ class ApiController extends Controller
                                                 'ITEMS'     => $ITEMS
                                             ];
                                         }
+                                        
                                     }
                                     $item_complete_list[]        = [
                                         'GROUPNAME' => (($itemGroup->GROUPNAME != '') ? $itemGroup->GROUPNAME : 'ITEMS'),

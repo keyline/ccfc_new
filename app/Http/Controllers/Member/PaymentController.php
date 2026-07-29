@@ -424,6 +424,8 @@ class PaymentController extends Controller
 
                 
 
+                $clubmanPostingFailed = false;
+
                 try {
                     $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->post(
                         $user->user_code,
@@ -433,6 +435,7 @@ class PaymentController extends Controller
                     );
                     // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
                 } catch (\Throwable $e) {
+                    $clubmanPostingFailed = true;
                     Log::error('Clubman Payment Posting Failed: ' . $e->getMessage());
                     // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'error' => $e->getMessage()]);
                 }
@@ -448,7 +451,12 @@ class PaymentController extends Controller
                     Auth::guard('members')->logout();
                 }
 
-                $status = ['status' => 'success', 'transactionid' => $input['razorpay_payment_id'], 'amount' => $amount];
+                $status = [
+                    'status' => 'success',
+                    'transactionid' => $input['razorpay_payment_id'],
+                    'amount' => $amount,
+                    'clubman_posting_failed' => $clubmanPostingFailed,
+                ];
 
 
 

@@ -57,7 +57,9 @@
                             <div class="history-inner resetbox_section text-center pb-5">
                                 <h4>Payment Ref. No.: {{ $status['mihpayid'] }}</h4>
                                 <h4>Amount : Rs.{{ $status['amount'] }}</h4>
-                                    @if ($status['status'] == 'success')
+                                    @if ($status['status'] == 'success' && !empty($status['clubman_posting_failed']))
+                                    <span class="success-msg">Payment is successful, but your payment details could not be updated due to a network issue. Please contact admin.</span>
+                                    @elseif ($status['status'] == 'success')
                                     <span class="success-msg">Thank you for your payment. The paid amount will reflect in your account within next 24 working hours.</span>
                                     @else
                                     <div class="card">

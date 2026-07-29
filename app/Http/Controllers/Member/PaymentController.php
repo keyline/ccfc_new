@@ -79,6 +79,22 @@ class PaymentController extends Controller
         $user = User::find($status['udf1']);
 
         if (!empty($user) && $transaction->successful()) {
+            $clubmanPostingFailed = false;
+
+            try {
+                app(\App\Services\ClubmanPaymentPosting::class)->post(
+                    $user->user_code,
+                    $status['mihpayid'],
+                    (float) $status['amount'],
+                    $status['mihpayid']
+                );
+            } catch (\Throwable $e) {
+                $clubmanPostingFailed = true;
+                Log::error('Clubman Payment Posting Failed (PayU): ' . $e->getMessage());
+            }
+
+            $status['clubman_posting_failed'] = $clubmanPostingFailed;
+
             $emailInfo = array(
                 'greeting' => "Dear, {$user->name}",
                 'body'     => "Thank you for making payment of Rs.{$status['amount']}. Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
@@ -126,6 +142,39 @@ class PaymentController extends Controller
             } else {
                 //send payment notification to user
                 $user = User::find($status['user']);
+
+                $dueDetails = MemberDue::where('member_code', $user->user_code)
+                                    ->first();
+
+                if ($dueDetails) {
+                    DB::table('member_dues')
+                        ->where('member_code', $user->user_code)
+                        ->update(
+                            [
+                                'status' => 'paid',
+                                'paid_amount' => $status['amount'],
+                                'dues_for_this_month' => $dueDetails->outstanding_balance - $status['amount'],
+                                'updated_at' => Carbon::now('Asia/Kolkata'),
+                            ]
+                        );
+                }
+
+                $clubmanPostingFailed = false;
+
+                try {
+                    app(\App\Services\ClubmanPaymentPosting::class)->post(
+                        $user->user_code,
+                        $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
+                        (float) $status['amount'],
+                        $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user']
+                    );
+                } catch (\Throwable $e) {
+                    $clubmanPostingFailed = true;
+                    Log::error('Clubman Payment Posting Failed (HDFC statusForHdfc): ' . $e->getMessage());
+                }
+
+                $status['clubman_posting_failed'] = $clubmanPostingFailed;
+
                 $emailInfo = array(
                 'greeting' => "Dear, {$user->name}",
                 'body'     => "Thank you for making payment of Rs.{$status['amount']}. Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
@@ -149,7 +198,7 @@ class PaymentController extends Controller
 
         // Process the payment callback logic here
         $payment = $api->payment->fetch($input['razorpay_payment_id']);
-        dd($payment);
+        // dd($payment);
 
         $amount = number_format($payment->amount / 100, 2, '.', '');
 
@@ -180,7 +229,35 @@ class PaymentController extends Controller
                 //find user
                 $user = User::find($payment->notes->udf1);
 
+                $dueDetails = MemberDue::where('member_code', $user->user_code)
+                                    ->first();
 
+                if ($dueDetails) {
+                    DB::table('member_dues')
+                        ->where('member_code', $user->user_code)
+                        ->update(
+                            [
+                                'status' => 'paid',
+                                'paid_amount' => $amount,
+                                'dues_for_this_month' => $dueDetails->outstanding_balance - $amount,
+                                'updated_at' => Carbon::now('Asia/Kolkata'),
+                            ]
+                        );
+                }
+
+                $clubmanPostingFailed = false;
+
+                try {
+                    app(\App\Services\ClubmanPaymentPosting::class)->post(
+                        $user->user_code,
+                        $input['razorpay_payment_id'],
+                        (float) $amount,
+                        $input['razorpay_payment_id']
+                    );
+                } catch (\Throwable $e) {
+                    $clubmanPostingFailed = true;
+                    Log::error('Clubman Payment Posting Failed (Razorpay legacy callback): ' . $e->getMessage());
+                }
 
                 $emailInfo = array(
                     'greeting' => "Dear, {$user->name}",
@@ -193,7 +270,12 @@ class PaymentController extends Controller
                     Auth::guard('members')->logout();
                 }
 
-                $status = ['status' => 'success', 'transactionid' => $input['razorpay_payment_id'], 'amount' => $amount];
+                $status = [
+                    'status' => 'success',
+                    'transactionid' => $input['razorpay_payment_id'],
+                    'amount' => $amount,
+                    'clubman_posting_failed' => $clubmanPostingFailed,
+                ];
 
 
 
@@ -934,6 +1016,21 @@ class PaymentController extends Controller
                     Log::info('HDFC MAIL DEBUG [6] — member_dues updated successfully');
                 }
 
+                $clubmanPostingFailed = false;
+
+                if ($response['order_status'] === "CHARGED") {
+                    try {
+                        app(\App\Services\ClubmanPaymentPosting::class)->post(
+                            $user->user_code,
+                            $response['order_id'],
+                            (float) $amount,
+                            $response['order_id']
+                        );
+                    } catch (\Throwable $e) {
+                        $clubmanPostingFailed = true;
+                        Log::error('Clubman Payment Posting Failed (HDFC): ' . $e->getMessage());
+                    }
+                }
 
                 $emailInfo = array(
                     'greeting' => "Dear, {$user->name}",
@@ -967,7 +1064,8 @@ class PaymentController extends Controller
                             'status' =>  $showstatus,
                             'transactionid' => $response['order_id'],
                             'amount' => $order->amount ?? 0,
-                            'message' => $response['message']
+                            'message' => $response['message'],
+                            'clubman_posting_failed' => $clubmanPostingFailed,
                         ];
 
 

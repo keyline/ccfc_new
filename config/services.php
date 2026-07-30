@@ -34,4 +34,33 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS'),
     ],
 
+    'clubman' => [
+        'token_url' => env('CLUBMAN_TOKEN_URL', 'https://ccfcmemberdata.in/token'),
+        'member_lookup_url' => env(
+            'CLUBMAN_MEMBER_LOOKUP_URL',
+            'https://ccfcmemberdata.in/api/MemberLookup'
+        ),
+        'member_profile_url' => env(
+            'CLUBMAN_MEMBER_PROFILE_URL',
+            'https://ccfcmemberdata.in/Api/MemberProfile'
+        ),
+        'username' => env('CLUBMAN_USERNAME', 'CCFC'),
+        'password' => env('CLUBMAN_PASSWORD'),
+        'token' => env('CLUBMAN_API_TOKEN'),
+        // Clubman's server currently omits the issuer chain required by PHP/cURL.
+        // Keep this configurable so verification can be re-enabled once fixed upstream.
+        'verify_ssl' => env('CLUBMAN_VERIFY_SSL', false),
+        'timeout' => env('CLUBMAN_TIMEOUT', 15),
+        'connect_timeout' => env('CLUBMAN_CONNECT_TIMEOUT', 5),
+        'monthly_balance_url' => env(
+            'CLUBMAN_MONTHLY_BALANCE_URL',
+            'https://ccfcmemberdata.in/api/MemberMonthlyBalance/'
+        ),
+        'monthly_balance_from_date' => env('CLUBMAN_MONTHLY_BALANCE_FROM_DATE', '01-apr-2020'),
+        'payment_posting_url' => env(
+            'CLUBMAN_PAYMENT_POSTING_URL',
+            'https://ccfcmemberdata.in/api/Payment'
+        ),
+    ],
+
 ];

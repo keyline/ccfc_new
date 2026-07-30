@@ -408,7 +408,7 @@ class DuesController extends Controller
             'member_code' => $due->member_code,
             'member_due_id' => $due->id,
             'generated_at' => now(),
-            'expires_at' => now()->addHours(24),
+            'expires_at' => now()->addHours(600),
         ]);
 
         return ['model' => $token, 'plainTextToken' => $plainTextToken];

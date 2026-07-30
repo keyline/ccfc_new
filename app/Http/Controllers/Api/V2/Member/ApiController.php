@@ -840,7 +840,7 @@ class ApiController extends Controller
                         $url            = "https://ccfcmemberdata.in/Api/CardInfo/POST?mcode=" . $checkUser->user_code;;
                         $postData       = ['mcode' => $checkUser->user_code];
                         $response       = $this->makeCurlRequest($url, $postData);
-                        $qrcodes        = json_decode($response, true)['data'];
+                        $qrcodes        = $this->getClubmanResponseData($response);
 
                         // $url = "https://ccfcmemberdata.in/Api/CardInfo/POST?mcode=" . $checkUser->user_code;
                         // $curl = curl_init($url);
@@ -1193,6 +1193,7 @@ class ApiController extends Controller
                                                 'ITEMS'     => $ITEMS
                                             ];
                                         }
+                                        
                                     }
                                     $item_complete_list[]        = [
                                         'GROUPNAME' => (($itemGroup->GROUPNAME != '') ? $itemGroup->GROUPNAME : 'ITEMS'),
@@ -2037,8 +2038,7 @@ class ApiController extends Controller
                         $url = "https://ccfcmemberdata.in/api/MemberMonthlyBalance/?MCODE=" . $checkUser->user_code . "&FromDate=01-apr-2020&ToDate=01-jun-2021";
                         $postData = ['MCODE' => $checkUser->user_code, 'FromDate' => '01-apr-2020', 'ToDate' => '01-jun-2021'];
                         $response = $this->makeCurlRequest($url, $postData);
-                        // echo $response;die;
-                        $transactions = json_decode($response, true)['data'];
+                        $transactions = $this->getClubmanResponseData($response);
 
 
                         // $url = "https://ccfcmemberdata.in/api/MemberMonthlyBalance/?MCODE=" . $checkUser->user_code . "&FromDate=01-apr-2020&ToDate=01-jun-2021";
@@ -2181,16 +2181,7 @@ class ApiController extends Controller
                         $postData   = ['mcode' => $checkUser->user_code, 'month' => $Month];
                         $response   = $this->makeCurlRequest($url, $postData);
 
-                        if($response != ''){
-                            $billdata   = json_decode($response, true);
-                            if (array_key_exists("data",$billdata)) {
-                                $bills      = json_decode($response, true)['data'];
-                            } else {
-                                $bills      = [];
-                            }
-                        } else {
-                            $bills      = [];
-                        }
+                        $bills      = $this->getClubmanResponseData($response);
 
                         // echo '<pre>';print_r($bills);die;
                         // $url = "https://ccfcmemberdata.in/Api/MemberTransactionMonthly/POST?mcode=" . $checkUser->user_code . "&month=" . $Month . "";
@@ -2290,16 +2281,7 @@ class ApiController extends Controller
                         $response       = $this->makeCurlRequest($url, $postData);
                         // $bills          = json_decode($response, true)['data'];
 
-                        if($response != ''){
-                            $billdata   = json_decode($response, true);
-                            if (array_key_exists("data",$billdata)) {
-                                $bills      = json_decode($response, true)['data'];
-                            } else {
-                                $bills      = [];
-                            }
-                        } else {
-                            $bills      = [];
-                        }
+                        $bills      = $this->getClubmanResponseData($response);
 
                         // $url = "https://ccfcmemberdata.in/Api/MemberTransDet/POST?mcode=" . $checkUser->user_code . "&billdetails=" . $billdetails . "";
                         // $curl = curl_init($url);
@@ -2477,6 +2459,8 @@ class ApiController extends Controller
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 100); // Set a timeout
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 
         // If POST data is provided, make a POST request
         if (!empty($postData)) {
@@ -2498,15 +2482,40 @@ class ApiController extends Controller
         // Execute cURL request and get response
         $response = curl_exec($ch);
 
-        // Check for errors
-        if (curl_errno($ch)) {
-            echo 'cURL error: ' . curl_error($ch);
+        if ($response === false) {
+            Log::error('Clubman API cURL error', [
+                'url' => $url,
+                'error_no' => curl_errno($ch),
+                'error' => curl_error($ch),
+            ]);
+
+            curl_close($ch);
+
+            return '';
         }
 
         // Close cURL handle
         curl_close($ch);
 
         return $response;
+    }
+    private function getClubmanResponseData($response)
+    {
+        if (!is_string($response) || trim($response) === '') {
+            return [];
+        }
+
+        $decodedResponse = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decodedResponse) || !array_key_exists('data', $decodedResponse)) {
+            Log::warning('Invalid Clubman API response', [
+                'json_error' => json_last_error_msg(),
+                'response' => substr($response, 0, 500),
+            ]);
+
+            return [];
+        }
+
+        return is_array($decodedResponse['data']) ? $decodedResponse['data'] : [];
     }
     /* billing */
     /* make payment */

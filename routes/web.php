@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\OtherFoodItemController;
 use App\Http\Controllers\Auth\MagicLinkLoginController;
 use App\Http\Controllers\Member\MemberDuesController;
 use App\Http\Controllers\Member\PaymentController;
+use App\Http\Controllers\Member\HdfcGatewayTestingController;
 
 // use App\Http\Controllers\Api\V2\Member\ApiController;
 
@@ -568,7 +569,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
 
     Route::get('contactus', 'ContactController@index')->name('contactus');
     //Ajax Request
-    Route::get('/saveUserJson/{code}', [UsersController::class, 'saveUserJson'])->name('saveUserJson');
+    Route::post('/saveUserJson/{code}', [UsersController::class, 'saveUserJson'])->name('saveUserJson');
 
     Route::get('/auto-memberprofileupdate', function () {
         $query = \App\Models\User::query();
@@ -680,6 +681,9 @@ Route::group([
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/invoice', [HomeController::class, 'invoice'])->name('invoice');
+    Route::get('/invoice/data', [HomeController::class, 'invoiceData'])->name('invoice.data');
+    Route::get('/invoice/financials', [HomeController::class, 'invoiceFinancials'])->name('invoice.financials');
+    Route::get('/profile-image', [HomeController::class, 'profileImage'])->name('profile-image');
 
     Route::get('/token/payment', [HomeController::class, 'tokenPayment'])->name('token.payment');
 
@@ -1009,3 +1013,4 @@ Route::get('archives', function () {
 Route::get('/download/tender/{file}', [TenderDownloadController::class, 'download'])->name('download.tender');
 
 Route::get('/payment/{token}', 'PaymentController@showPaymentPage')->name('payment.page');
+

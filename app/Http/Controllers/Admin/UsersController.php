@@ -8,25 +8,79 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\UserDetail;
+use App\Services\ClubmanMemberProfileSync;
 use Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Log;
 use Carbon\Carbon;
 
 class UsersController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         abort_if(Gate::denies('user_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $users = User::with(['roles'])->get();
+        $search = trim((string) $request->input('search', ''));
+        $verification = $request->input('verification');
+        $perPage = (int) $request->input('per_page', 50);
 
-        return view('admin.users.index', compact('users'));
+        if (!in_array($perPage, [25, 50, 100], true)) {
+            $perPage = 50;
+        }
+
+        $usersQuery = User::query()
+            ->select([
+                'id',
+                'name',
+                'email',
+                'email_verified_at',
+                'two_factor',
+                'user_code',
+                'status',
+                'phone_number_1',
+                'updated_at',
+            ])
+            ->with([
+                'roles' => function ($query) {
+                    $query->select(['roles.id', 'roles.title']);
+                },
+            ])
+            ->withCount('userCodeUserDetails');
+
+        if ($search !== '') {
+            $usersQuery->where(function ($query) use ($search) {
+                if (ctype_digit($search)) {
+                    $query->orWhere('id', (int) $search);
+                }
+
+                $query->orWhere('name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('user_code', 'like', '%' . $search . '%')
+                    ->orWhere('phone_number_1', 'like', '%' . $search . '%')
+                    ->orWhere('status', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($verification === 'verified') {
+            $usersQuery->whereNotNull('email_verified_at');
+        } elseif ($verification === 'pending') {
+            $usersQuery->whereNull('email_verified_at');
+        }
+
+        $users = $usersQuery
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('admin.users.index', compact(
+            'users',
+            'search',
+            'verification',
+            'perPage'
+        ));
     }
 
     public function create()
@@ -178,15 +232,51 @@ class UsersController extends Controller
         }
     }
 
-    public function saveUserJson(Request $request)
+    public function saveUserJson(
+        Request $request,
+        string $code,
+        ClubmanMemberProfileSync $profileSync
+    )
     {
-        //Dispatching the Job here
-        \App\Jobs\MemberProfileUpdate::dispatch($request->code)->onQueue('memberprofile');
+        abort_if(Gate::denies('user_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        //Log::info("Member profile update dispatch for". $request->code);
+        try {
+            $result = $profileSync->syncByMemberCode($code);
+            $user = $result['user'];
+            $message = 'Clubman details for ' . ($user->name ?: $user->user_code) . ' were updated successfully.';
 
-        return redirect()->back()->with('success', 'user data updated successfully');
-        //dd("placed this job");
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                    'has_profile' => true,
+                    'user' => [
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone_number' => $user->phone_number_1,
+                        'status' => $user->status,
+                        'updated_at' => optional($user->updated_at)->format('d M Y'),
+                    ],
+                ]);
+            }
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Throwable $exception) {
+            Log::warning('Manual Clubman member sync failed.', [
+                'member_code' => $code,
+                'admin_user_id' => auth()->id(),
+                'error' => $exception->getMessage(),
+            ]);
+
+            $message = $exception instanceof \RuntimeException
+                ? $exception->getMessage()
+                : 'The Clubman profile could not be updated. Please try again.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return redirect()->back()->with('error', $message);
+        }
     }
 
     public function exportToCSV(Request $request)

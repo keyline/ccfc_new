@@ -42,6 +42,24 @@
             width: auto;
             display: block;
         }
+
+        .clubman-financial-summary {
+            margin-top: 12px;
+            padding: 0;
+        }
+
+        .clubman-financial-summary p {
+            margin: 0 0 6px;
+        }
+
+        .clubman-financial-summary p:last-of-type {
+            margin-bottom: 4px;
+        }
+
+        .clubman-financial-summary small {
+            color: #666;
+            display: block;
+        }
     </style>
 
     <!-- ?php include 'assets/inc/header.php';?> -->
@@ -115,6 +133,23 @@
                                         @php($memberEmail = trim((string) $userData->email) ?: trim((string) optional($memberDetails)->email))
                                         <p><strong>Mail ID:</strong>{{ $memberEmail }}
                                         </p>
+                                        @php($clubmanMinimumDue = $memberFinancials['minimum_due_amount'] ?? null)
+                                        @php($clubmanMinimumPayment = $clubmanMinimumDue === null ? 1 : max(1, (float) $clubmanMinimumDue))
+                                        <div class="clubman-financial-summary" aria-live="polite">
+                                            <p><strong>Outstanding:</strong> INR
+                                                <span id="clubman-outstanding">
+                                                    {{ $memberFinancials ? number_format((float) $memberFinancials['outstanding'], 2) : 'Loading...' }}
+                                                </span>
+                                            </p>
+                                            <p><strong>Minimum Due Amount:</strong> INR
+                                                <span id="clubman-minimum-due">
+                                                    {{ $clubmanMinimumDue !== null ? number_format((float) $clubmanMinimumDue, 2) : 'Loading...' }}
+                                                </span>
+                                            </p>
+                                            <small id="member-financials-status">
+                                                {{ $memberFinancials ? 'Showing the latest available Clubman balance.' : 'Updating balance from Clubman...' }}
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- <div class="col-md-12">
@@ -139,12 +174,12 @@
                                     </div>
                                 @endif
                                 @php($latestTransaction = $userTransactions[0] ?? null)
-                                @if ($latestTransaction)
-                                    <h3>Total current outstanding : INR. {{ $latestTransaction['Balance'] ?? '-' }}</h3>
-                                @elseif ($invoiceError)
-                                    <p class="text-danger">{{ $invoiceError }}</p>
-                                @endif
-                                <p>(As of last usage 24 hours ago as updated from club servers)</p>
+                                <h3>Total current outstanding : INR.
+                                    <span id="invoice-outstanding-balance">
+                                        {{ $latestTransaction['Balance'] ?? 'Loading...' }}
+                                    </span>
+                                </h3>
+                                <p id="invoice-data-status">Updating invoice data from club servers...</p>
 
                                 <div class="invoice_outstading_payment">
                                     <form action="" method="POST" id="payment-form">
@@ -159,8 +194,14 @@
                                         @csrf
                                         <div class="invoice_input_bank">
                                             <div class="invoice_input_feild">
-                                                <input type="text" name="amount"
-                                                    placeholder="Enter amount being paid">
+                                                <input type="number" name="amount" id="payment-amount"
+                                                    value="{{ old('amount', $clubmanMinimumDue !== null ? number_format((float) $clubmanMinimumDue, 2, '.', '') : '') }}"
+                                                    min="{{ number_format($clubmanMinimumPayment, 2, '.', '') }}"
+                                                    step="0.01" inputmode="decimal"
+                                                    data-minimum-payment="{{ number_format($clubmanMinimumPayment, 2, '.', '') }}"
+                                                    data-user-edited="{{ old('amount') !== null ? 'true' : 'false' }}"
+                                                    placeholder="Enter amount being paid"
+                                                    aria-describedby="member-financials-status">
                                             </div>
                                             <div class="invocie_paymentlogo">
                                                 <ul>
@@ -238,8 +279,9 @@
                                                 errorMsg.push("Please check one of payment gateway before making payment");
                                             }
                                             //console.log(checkAmount(amountInput));
-                                            if (!checkAmount(amountInput)) {
-                                                errorMsg.push("Amount not valid!");
+                                            const amountError = paymentAmountValidationMessage(amountInput);
+                                            if (amountError) {
+                                                errorMsg.push(amountError);
                                             }
 
                                             if (Array.isArray(errorMsg) && !errorMsg.length) {
@@ -270,11 +312,33 @@
                                         return null;
                                     }
 
-                                    function checkAmount(amount) {
-
-                                        //const amountRegex = /^(?!0)\d+$/;
+                                    function paymentAmountValidationMessage(amount) {
                                         const amountRegex = /^\d+(\.\d{1,2})?$/;
-                                        return amountRegex.test(amount);
+                                        const amountInput = document.getElementById('payment-amount');
+                                        const minimum = parseFloat(amountInput?.dataset.minimumPayment || '1');
+                                        const numericAmount = parseFloat(amount);
+
+                                        if (!amountRegex.test(amount) || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+                                            return 'Please enter a valid payment amount.';
+                                        }
+
+                                        if (numericAmount + Number.EPSILON < minimum) {
+                                            return 'The minimum payment amount is INR ' + minimum.toFixed(2) + '.';
+                                        }
+
+                                        return '';
+                                    }
+
+                                    function validateEnteredPaymentAmount() {
+                                        const input = document.getElementById('payment-amount');
+                                        const message = paymentAmountValidationMessage(input?.value || '');
+
+                                        if (message) {
+                                            alert(message);
+                                            return false;
+                                        }
+
+                                        return true;
                                     }
                                 </script>
                             </div>
@@ -304,7 +368,7 @@
                                             <!-- <th scope="col">Status</th> -->
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="invoice-transactions-body">
                                         @forelse ($userTransactions as $transaction)
                                             <tr>
                                                 <td>{{ $transaction['Month'] ?? '-' }}</td>
@@ -312,12 +376,9 @@
                                                 <td>{{ $transaction['paidamount'] ?? '-' }}</td>
                                                 <td>{{ $transaction['debitamount'] ?? '-' }}</td>
                                                 <td>{{ $transaction['Balance'] ?? '-' }}</td>
-                                                <!-- summary -->
                                                 <td>
-                                                    @if (!empty($transaction['Month']) &&
-                                                            SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $transaction['Month']))) &&
-                                                            !empty(SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $transaction['Month'])))
-                                                        <a href="{{ SearchInvoicePdf::getSummaryBillLink($userData['user_code'], $transaction['Month']) }}"
+                                                    @if (!empty($transaction['summary_bill_url']))
+                                                        <a href="{{ $transaction['summary_bill_url'] }}"
                                                             target="_blank"><img class="img-fluid"
                                                                 src="{{ asset('img/invoice_pdficon.png') }}"
                                                                 alt="" /></a>
@@ -325,12 +386,9 @@
                                                         <span>&#8211;</span>
                                                     @endif
                                                 </td>
-                                                <!-- Detail -->
                                                 <td>
-                                                    @if (!empty($transaction['Month']) &&
-                                                            SearchInvoicePdf::isBillUploaded(implode('_', explode(' ', $transaction['Month']))) &&
-                                                            !empty(SearchInvoicePdf::getDetailBillLink($userData['user_code'], $transaction['Month'])))
-                                                        <a href="{{ SearchInvoicePdf::getDetailBillLink($userData['user_code'], $transaction['Month']) }}"
+                                                    @if (!empty($transaction['detail_bill_url']))
+                                                        <a href="{{ $transaction['detail_bill_url'] }}"
                                                             target="_blank"><img class="img-fluid"
                                                                 src="{{ asset('img/invoice_pdficon.png') }}"
                                                                 alt="" /></a>
@@ -340,10 +398,8 @@
                                                 </td>
                                             </tr>
                                         @empty
-                                            <tr>
-                                                <td colspan="7" class="text-center">
-                                                    {{ $invoiceError ?: 'No invoice records were returned by Clubman.' }}
-                                                </td>
+                                            <tr id="invoice-loading-row">
+                                                <td colspan="7" class="text-center">Loading invoice data...</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -360,10 +416,200 @@
             </body>
 
 </html>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+    (function() {
+        const invoiceDataUrl = @json(route('member.invoice.data'));
+        const memberFinancialsUrl = @json(route('member.invoice.financials'));
+        const pdfIconUrl = @json(asset('img/invoice_pdficon.png'));
+        const paymentAmountInput = document.getElementById('payment-amount');
+
+        paymentAmountInput?.addEventListener('input', function() {
+            paymentAmountInput.dataset.userEdited = 'true';
+        });
+
+        function textCell(value) {
+            const cell = document.createElement('td');
+            cell.textContent = value === null || value === undefined || value === '' ? '\u2013' : value;
+            return cell;
+        }
+
+        function billCell(url) {
+            const cell = document.createElement('td');
+
+            if (!url) {
+                cell.textContent = '\u2013';
+                return cell;
+            }
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener';
+
+            const icon = document.createElement('img');
+            icon.className = 'img-fluid';
+            icon.src = pdfIconUrl;
+            icon.alt = '';
+
+            link.appendChild(icon);
+            cell.appendChild(link);
+
+            return cell;
+        }
+
+        function renderTransactions(transactions) {
+            const body = document.getElementById('invoice-transactions-body');
+            const balance = document.getElementById('invoice-outstanding-balance');
+
+            if (!body || !balance) return;
+
+            body.textContent = '';
+
+            if (!Array.isArray(transactions) || transactions.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 7;
+                cell.className = 'text-center';
+                cell.textContent = 'Invoice data is temporarily unavailable. Please try again shortly.';
+                row.appendChild(cell);
+                body.appendChild(row);
+                balance.textContent = '\u2013';
+                return;
+            }
+
+            transactions.forEach(function(transaction) {
+                const row = document.createElement('tr');
+                row.appendChild(textCell(transaction.Month));
+                row.appendChild(textCell(transaction.LastBalance));
+                row.appendChild(textCell(transaction.paidamount));
+                row.appendChild(textCell(transaction.debitamount));
+                row.appendChild(textCell(transaction.Balance));
+                row.appendChild(billCell(transaction.summary_bill_url));
+                row.appendChild(billCell(transaction.detail_bill_url));
+                body.appendChild(row);
+            });
+
+            balance.textContent = transactions[0].Balance ?? '\u2013';
+        }
+
+        function money(value) {
+            const amount = Number(value);
+
+            return Number.isFinite(amount) ? amount.toFixed(2) : '\u2013';
+        }
+
+        function renderMemberFinancials(financials) {
+            if (!financials || typeof financials !== 'object') return;
+
+            const outstanding = document.getElementById('clubman-outstanding');
+            const minimumDue = document.getElementById('clubman-minimum-due');
+            const apiMinimum = Math.max(0, Number(financials.minimum_due_amount) || 0);
+            const gatewayMinimum = Math.max(1, apiMinimum);
+
+            if (outstanding) outstanding.textContent = money(financials.outstanding);
+            if (minimumDue) minimumDue.textContent = money(apiMinimum);
+
+            if (paymentAmountInput) {
+                paymentAmountInput.min = gatewayMinimum.toFixed(2);
+                paymentAmountInput.dataset.minimumPayment = gatewayMinimum.toFixed(2);
+
+                if (paymentAmountInput.dataset.userEdited !== 'true') {
+                    paymentAmountInput.value = apiMinimum.toFixed(2);
+                }
+            }
+        }
+
+        async function refreshInvoiceData() {
+            const status = document.getElementById('invoice-data-status');
+
+            try {
+                const response = await fetch(invoiceDataUrl, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+
+                const payload = await response.json();
+                renderTransactions(payload.transactions);
+
+                if (status) {
+                    status.textContent = 'As of last usage 24 hours ago as updated from club servers.';
+                }
+            } catch (error) {
+                if (status) {
+                    status.textContent = 'Showing the last available invoice data. Refresh again shortly.';
+                }
+                console.error('Unable to refresh invoice data.', error);
+            }
+        }
+
+        async function refreshMemberFinancials() {
+            const status = document.getElementById('member-financials-status');
+
+            try {
+                const response = await fetch(memberFinancialsUrl, {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+
+                const payload = await response.json();
+                renderMemberFinancials(payload.financials);
+
+                if (status) {
+                    status.textContent = 'Updated from Clubman.';
+                }
+            } catch (error) {
+                if (status) {
+                    status.textContent = 'Balance is temporarily unavailable. Please refresh shortly.';
+                }
+                console.error('Unable to refresh member balances.', error);
+            }
+        }
+
+        function refreshPageData() {
+            refreshInvoiceData();
+            refreshMemberFinancials();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', refreshPageData);
+        } else {
+            refreshPageData();
+        }
+    })();
+</script>
+<script>
+    let razorpayCheckoutPromise;
+
+    function loadRazorpayCheckout() {
+        if (window.Razorpay) return Promise.resolve();
+        if (razorpayCheckoutPromise) return razorpayCheckoutPromise;
+
+        razorpayCheckoutPromise = new Promise(function(resolve, reject) {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = function() {
+                razorpayCheckoutPromise = null;
+                reject(new Error('Unable to load Razorpay checkout.'));
+            };
+            document.head.appendChild(script);
+        });
+
+        return razorpayCheckoutPromise;
+    }
+
     function razorpaySubmit(el) {
         if (!el.checked) return;
+
+        if (!validateEnteredPaymentAmount()) {
+            el.checked = false;
+            return;
+        }
 
         const payNowButton = document.querySelector('.btn-primary');
         payNowButton.style.display = 'none'; // hide for Razorpay
@@ -372,26 +618,31 @@
         let amountInput = document.querySelector('input[name="amount"]');
         let amountValue = parseFloat(amountInput.value);
 
-        if (!amountValue || amountValue <= 0) {
-            alert("Please enter a valid amount before choosing Razorpay.");
-            el.checked = false;
-            return;
-        }
-
         // Convert to paise (e.g., ₹100 -> 10000)
         let amountInPaise = Math.round(amountValue * 100);
 
-        fetch("{{ route('member.razorpay') }}", {
+        loadRazorpayCheckout().then(function() {
+            return fetch("{{ route('member.razorpay') }}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
                 body: JSON.stringify({
                     amount: amountInPaise
                 })
+            });
+        })
+            .then(async res => {
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.errors?.amount?.[0] || data.message || 'Payment request failed.');
+                }
+
+                return data;
             })
-            .then(res => res.json())
             .then(data => {
                 if (!data.order_id) {
                     alert("Failed to initiate Razorpay order");
@@ -437,8 +688,9 @@
             })
             .catch(err => {
                 el.checked = false;
+                payNowButton.style.display = '';
                 console.error(err);
-                alert("Error connecting to Razorpay.");
+                alert(err.message || "Error connecting to Razorpay.");
             });
     }
 </script>
@@ -446,6 +698,11 @@
 <script>
     function hdfcSmartSubmit(el) {
         if (!el.checked) {
+            return;
+        }
+
+        if (!validateEnteredPaymentAmount()) {
+            el.checked = false;
             return;
         }
 
@@ -478,18 +735,11 @@
         let tokenPayment = document.querySelector('input[name="active_token_id"]');
         let memberCode = document.querySelector('input[name="member_code"]');
 
-        if (!amountValue || amountValue <= 0) {
-            alert("Please enter a valid amount before choosing HDFC Smart gateway.");
-            el.checked = false;
-            loader.style.display = 'none';
-            //payNowButton.disabled =false;
-            return;
-        }
-
         fetch("{{ route('member.hdfcsmartpg') }}", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json;charset=UTF-8",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                 },
                 body: JSON.stringify({
@@ -501,7 +751,7 @@
             .then(response => {
                 if (!response.ok) {
                     return response.json().then(data => {
-                        throw new Error(`HTTP ${response.status}: ${data.message || 'Request failed'}`);
+                        throw new Error(data.errors?.amount?.[0] || data.message || `HTTP ${response.status}: Request failed`);
                     });
                 }
                 
@@ -521,8 +771,9 @@
             .catch(err => {
                 el.checked = false;
                 loader.style.display = 'none';
+                payNowButton.style.display = '';
                 console.error(err);
-                alert("Error connecting to hdfcsmartpay.");
+                alert(err.message || "Error connecting to hdfcsmartpay.");
             });
     }
 </script>

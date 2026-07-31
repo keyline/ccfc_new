@@ -40,6 +40,19 @@ class LoginController extends Controller
 
     protected function authenticated(Request $request, $user)
     {
+        if (! $user->is_admin) {
+            $this->guard()->logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()
+                ->route('login')
+                ->withErrors([
+                    'email' => 'This account does not have administrator access.',
+                ]);
+        }
+
         if ($user->two_factor) {
             $user->generateTwoFactorCode();
             $user->notify(new TwoFactorCodeNotification());
@@ -48,11 +61,6 @@ class LoginController extends Controller
 
     public function redirectPath()
     {
-        if (auth()->user()->is_admin) {
-            return route('admin.home');
-            
-        }
-
-        return route('/');
+        return route('admin.home');
     }
 }

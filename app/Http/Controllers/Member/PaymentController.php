@@ -36,6 +36,12 @@ use function Symfony\Component\VarDumper\Dumper\esc;
 
 class PaymentController extends Controller
 {
+    // changed: temporarily restrict live Clubman payment posting to this member code only, while the integration is verified in production.
+    private function shouldPostToClubman(?string $memberCode): bool
+    {
+        return strtoupper(trim((string) $memberCode)) === 'B47CEO';
+    }
+
     //
     public function payment(Request $request, ClubmanMemberLookup $clubmanMemberLookup)
     {
@@ -82,12 +88,14 @@ class PaymentController extends Controller
             $clubmanPostingFailed = false;
 
             try {
-                app(\App\Services\ClubmanPaymentPosting::class)->post(
-                    $user->user_code,
-                    $status['mihpayid'],
-                    (float) $status['amount'],
-                    $status['mihpayid']
-                );
+                if ($this->shouldPostToClubman($user->user_code)) {
+                    app(\App\Services\ClubmanPaymentPosting::class)->post(
+                        $user->user_code,
+                        $status['mihpayid'],
+                        (float) $status['amount'],
+                        $status['mihpayid']
+                    );
+                }
             } catch (\Throwable $e) {
                 $clubmanPostingFailed = true;
                 Log::error('Clubman Payment Posting Failed (PayU): ' . $e->getMessage());
@@ -162,12 +170,14 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    app(\App\Services\ClubmanPaymentPosting::class)->post(
-                        $user->user_code,
-                        $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
-                        (float) $status['amount'],
-                        $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user']
-                    );
+                    if ($this->shouldPostToClubman($user->user_code)) {
+                        app(\App\Services\ClubmanPaymentPosting::class)->post(
+                            $user->user_code,
+                            $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
+                            (float) $status['amount'],
+                            $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user']
+                        );
+                    }
                 } catch (\Throwable $e) {
                     $clubmanPostingFailed = true;
                     Log::error('Clubman Payment Posting Failed (HDFC statusForHdfc): ' . $e->getMessage());
@@ -248,12 +258,14 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    app(\App\Services\ClubmanPaymentPosting::class)->post(
-                        $user->user_code,
-                        $input['razorpay_payment_id'],
-                        (float) $amount,
-                        $input['razorpay_payment_id']
-                    );
+                    if ($this->shouldPostToClubman($user->user_code)) {
+                        app(\App\Services\ClubmanPaymentPosting::class)->post(
+                            $user->user_code,
+                            $input['razorpay_payment_id'],
+                            (float) $amount,
+                            $input['razorpay_payment_id']
+                        );
+                    }
                 } catch (\Throwable $e) {
                     $clubmanPostingFailed = true;
                     Log::error('Clubman Payment Posting Failed (Razorpay legacy callback): ' . $e->getMessage());
@@ -509,13 +521,15 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->post(
-                        $user->user_code,
-                        $input['razorpay_payment_id'],
-                        (float) $amount,
-                        $input['razorpay_payment_id']
-                    );
-                    // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
+                    if ($this->shouldPostToClubman($user->user_code)) {
+                        $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->post(
+                            $user->user_code,
+                            $input['razorpay_payment_id'],
+                            (float) $amount,
+                            $input['razorpay_payment_id']
+                        );
+                        // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
+                    }
                 } catch (\Throwable $e) {
                     $clubmanPostingFailed = true;
                     Log::error('Clubman Payment Posting Failed: ' . $e->getMessage());
@@ -1018,7 +1032,7 @@ class PaymentController extends Controller
 
                 $clubmanPostingFailed = false;
 
-                if ($response['order_status'] === "CHARGED") {
+                if ($response['order_status'] === "CHARGED" && $this->shouldPostToClubman($user->user_code)) {
                     try {
                         app(\App\Services\ClubmanPaymentPosting::class)->post(
                             $user->user_code,

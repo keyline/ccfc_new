@@ -3740,3 +3740,38 @@ border-radius: 10px;
 	.investor_section_inner ul li a{padding: 12px}
 	.tender_topachive_btn{margin-bottom: 25px; text-align: center;}
 }
+/* Quick Access button (sidebar) */
+.quick-access-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primaryColor);
+    color: #fff;
+    border-radius: 30px;
+    padding: 8px 16px;
+    margin: 10px 0;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    transition: background 0.3s ease;
+}
+
+.quick-access-btn:hover,
+.quick-access-btn:focus {
+    background: var(--secondaryColor);
+    color: #fff;
+    text-decoration: none;
+}
+
+.quick-access-btn .zmdi {
+    font-size: 18px;
+    line-height: 1;
+}
+
+@media (max-width: 767px) {
+    .quick-access-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

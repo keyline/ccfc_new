@@ -12,6 +12,7 @@ use App\Models\ContentBlock;
 use App\Models\Trophy;
 use App\Models\Sportsman;
 use App\Http\Controllers\Member\HomeController;
+use App\Http\Controllers\Member\QuickAccessController;
 use App\Models\Member;
 // use App\Models\Title;
 use App\Models\User;
@@ -666,6 +667,17 @@ Route::group(['namespace' => 'Auth', 'middleware' => ['auth', '2fa']], function 
 Route::post('/member/check', [HomeController::class, 'checkMember'])->name('member.check');
 Route::get('/member/logout', [HomeController::class, 'logout'])->name('member.logout');
 
+Route::group([
+    'prefix' => 'member/quick-access',
+    'as' => 'member.quickaccess.',
+    'middleware' => 'throttle:5,1',
+], function () {
+    Route::get('/', [QuickAccessController::class, 'showMemberNumberForm'])->name('start');
+    Route::post('/send-otp', [QuickAccessController::class, 'sendOtp'])->name('send-otp');
+    Route::get('/verify', [QuickAccessController::class, 'showOtpForm'])->name('verify.show');
+    Route::post('/verify', [QuickAccessController::class, 'verifyOtp'])->name('verify')->middleware('throttle:10,1');
+});
+
 
 Route::group([
     'prefix' => 'member',
@@ -686,6 +698,8 @@ Route::group([
     Route::get('/profile-image', [HomeController::class, 'profileImage'])->name('profile-image');
 
     Route::get('/token/payment', [HomeController::class, 'tokenPayment'])->name('token.payment');
+
+    Route::get('/quick-access/pay', [QuickAccessController::class, 'pay'])->name('quickaccess.pay');
 
 
 

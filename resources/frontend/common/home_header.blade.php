@@ -63,6 +63,13 @@
                                             aria-expanded="false">
                                             Member Login
                                         </button>
+
+                                        <a href="{{ route('member.quickaccess.start') }}" class="quick-access-btn"
+                                            title="Quick Access - Login with Member Number">
+                                            <i class="zmdi zmdi-crop-free"></i>
+                                            <span>Quick Access</span>
+                                        </a>
+
                                         <!-- Logic for logged in or not   -->
                                         @if(session()->has('LoggedMember'))
                                         @include('common.header_afterlogin')

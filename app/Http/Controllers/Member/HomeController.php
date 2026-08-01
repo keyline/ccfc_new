@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\ClubmanInvoiceLookup;
+use App\Services\ClubmanMemberProfileSync;
 use App\Services\ClubmanMemberLookup;
 
 class HomeController extends Controller
@@ -162,6 +163,32 @@ class HomeController extends Controller
 
         $memberDue = null;
 
+        if (trim((string) $user->email) === '') {
+            try {
+                $user = $profileSync->syncEmail($user)->load('userCodeUserDetails');
+                Auth::setUser($user);
+            } catch (\Throwable $exception) {
+                Log::warning('Unable to refresh a missing member email for the invoice page.', [
+                    'member_id' => $user->id,
+                    'member_code' => $user->user_code,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        $invoiceError = null;
+
+        try {
+            $transactions = $clubmanInvoiceLookup->lookup($user);
+        } catch (\Throwable $exception) {
+            Log::warning('Unable to load Clubman invoices.', [
+                'member_id' => $user->id,
+                'member_code' => $user->user_code,
+                'error' => $exception->getMessage(),
+            ]);
+
+            $transactions = [];
+            $invoiceError = 'Invoice data is temporarily unavailable. Please try again shortly.';
         if (session()->has('tokenPayment.active_id')) {
             $memberDue = \App\Models\MemberDue::find(session()->get('tokenPayment.due_id'));
         }
@@ -175,6 +202,7 @@ class HomeController extends Controller
                 ? $memberDue->month_name . ' ' . $memberDue->year
                 : '',
         ]);
+    }
     }
 
     public function invoiceData(ClubmanInvoiceLookup $clubmanInvoiceLookup)

@@ -107,15 +107,17 @@
                                     </div> -->
 
                                     @php($memberDetails = $userData->userCodeUserDetails->first())
-                                    @if (!$memberDetails || !$memberDetails->has_member_image)
+                                    @if (!$memberDetails || empty($memberDetails->member_image))
                                         <div class="member_profileimg">
                                             <img class="img-fluid ifnotpic" src="{{ asset('img/Profile-Icon-01.svg') }}"
                                                 alt="" />
                                         </div>
                                     @else
                                         <div class="member_profileimg">
-                                            <img class="img-fluid" src="{{ route('member.profile-image') }}"
-                                                loading="lazy" decoding="async" alt="" />
+                                            <img class="img-fluid"
+                                                src="data:image/png;base64,                          
+                                        {{ $memberDetails->member_image }} "
+                                                alt="" />
                                         </div>
                                     @endif
 
@@ -128,7 +130,8 @@
 
                                         <p><strong>Ph No:</strong>{{ optional($memberDetails)->mobile_no }}
                                         </p>
-                                        <p><strong>Mail ID:</strong>{{ $userData->email }}
+                                        @php($memberEmail = trim((string) $userData->email) ?: trim((string) optional($memberDetails)->email))
+                                        <p><strong>Mail ID:</strong>{{ $memberEmail }}
                                         </p>
                                         @php($clubmanMinimumDue = $memberFinancials['minimum_due_amount'] ?? null)
                                         @php($clubmanMinimumPayment = $clubmanMinimumDue === null ? 1 : max(1, (float) $clubmanMinimumDue))

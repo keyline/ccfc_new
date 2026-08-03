@@ -36,6 +36,15 @@ use function Symfony\Component\VarDumper\Dumper\esc;
 
 class PaymentController extends Controller
 {
+    private function renderPaymentStatus(Request $request, array $status, string $defaultView = 'member.paymentstatusotherpgs')
+    {
+        if ($request->session()->pull('quickaccess.payment_in_progress')) {
+            return view('member.quick_access.payment_success', compact('status'));
+        }
+
+        return view($defaultView, compact('status'));
+    }
+
     //
     public function payment(Request $request, ClubmanMemberLookup $clubmanMemberLookup)
     {
@@ -70,7 +79,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function status()
+    public function status(Request $request)
     {
         $transaction = Payu::capture();
 
@@ -107,7 +116,7 @@ class PaymentController extends Controller
             }
         }
 
-        return view('member.paymentstatus', compact('status'));
+        return $this->renderPaymentStatus($request, $status, 'member.paymentstatus');
     }
 
     public function PayWithHdfc(
@@ -185,7 +194,7 @@ class PaymentController extends Controller
                     Auth::guard('members')->logout();
                 }
             }
-            return view('member.paymentstatusotherpgs', compact('status'));
+            return $this->renderPaymentStatus($request, $status);
         }
     }
 
@@ -301,7 +310,7 @@ class PaymentController extends Controller
 
         }
 
-        return view('member.paymentstatusotherpgs', compact('status'));
+        return $this->renderPaymentStatus($request, $status);
 
         //Session::put('success', 'Payment successful');
         //dd([$payment, $input]);
@@ -564,7 +573,7 @@ class PaymentController extends Controller
 
         }
 
-        return view('member.paymentstatusotherpgs', compact('status'));
+        return $this->renderPaymentStatus($request, $status);
 
         //Session::put('success', 'Payment successful');
         //dd([$payment, $input]);
@@ -839,7 +848,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function handleJuspayResponse(JuspayService $juspay)
+    public function handleJuspayResponse(JuspayService $juspay, Request $request)
     {
         // changed: callback now uses the same Juspay config/key resolution as initiateJuspayPayment().
         $config = $juspay->config();
@@ -1072,7 +1081,7 @@ class PaymentController extends Controller
                 Session::forget(['hdfcsmartpayTransactionid', 'hdfcsmartpaycustomerid']);
 
 
-                return view('member.paymentstatusotherpgs', ['status' => $status]);
+                return $this->renderPaymentStatus($request, $status);
 
 
 
@@ -1110,7 +1119,7 @@ class PaymentController extends Controller
         Session::forget(['hdfcsmartpayTransactionid', 'hdfcsmartpaycustomerid']);
 
 
-        return view('member.paymentstatusotherpgs', compact('status'));
+        return $this->renderPaymentStatus($request, $status);
 
 
 

@@ -76,11 +76,13 @@ class QuickAccessController extends Controller
         return redirect()->route('member.quickaccess.pay');
     }
 
-    public function pay(ClubmanMemberLookup $clubmanMemberLookup)
+    public function pay(Request $request, ClubmanMemberLookup $clubmanMemberLookup)
     {
         $user = Auth::guard('members')->user();
 
         abort_unless($user instanceof User, 401);
+
+        $request->session()->put('quickaccess.payment_in_progress', true);
 
         $memberFinancials = null;
 

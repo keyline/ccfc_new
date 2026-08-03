@@ -2,13 +2,11 @@
 <html lang="en">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>CCFC :: Quick Access</title>
 
     <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
-
-    <title>CCFC :: Quick Access</title>
 
     <style>
         :root {
@@ -17,136 +15,125 @@
             --trirdColor: #000;
             --textColor: #2f2f2f;
         }
-    </style>
 
-    <link rel="stylesheet" type="text/css" href="{{ asset('css/style.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('css/responsive.css') }}">
+        * {
+            box-sizing: border-box;
+        }
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
-        rel="stylesheet">
+        body {
+            background: #f0f1f3;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            color: var(--textColor);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
 
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
-    <link rel="stylesheet" href="{{ asset('owl/owl3.css') }}">
-    <link href="{{ asset('fancybox/jquery.fancybox.min.css') }}" rel="stylesheet" type="text/css">
-</head>
+        .qa-wrap {
+            width: 100%;
+            max-width: 420px;
+        }
 
-<body>
-    <!-- ********|| BODY PART START ||******** -->
-    <section class="ccfc-body">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="row">
+        .qa-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px 28px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.10);
+        }
 
-                        <!-- ********|| LEFT PART START (no member login panel here) ||******** -->
-                        <div class="col-lg-3 col-md-5 p-0 siteleft_panel" id="sidebar">
-                            <header class="header">
-                                <div class="top-header">
-                                    <div class="brand">
-                                        <div class="brand_logo">
-                                            <a href="{{ asset('/') }}" class="logo">
-                                                <img class="img-fluid" src="{{ asset('img/CCFC-Logo.png') }}" alt=""
-                                                    title="Home">
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </header>
-                        </div>
-                        <!-- ********|| LEFT PART END ||******** -->
+        .qa-logo {
+            display: block;
+            max-height: 56px;
+            margin: 0 auto 16px;
+        }
 
-    <div class="col-lg-9 col-md-7 p-0">
-        <div class="right-body">
-            <section class="banner">
-                <div class="banner-box">
-                    <div id="innerpage-banner" class="owl-carousel owl-theme">
-                        <div class="item">
-                            <div class="about-img">
-                                <img class="img-fluid" src="{{ asset('img/past-president/banner1.jpg') }}" alt="" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+        .qa-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primaryColor);
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
 
-            <section class="inner_belowbanner invoice_section">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-md-12 col-lg-6 mx-auto">
-                            <div class="title-sec pt-5">
-                                <div class="title mb-3">
-                                    Quick Access
-                                </div>
-                                <p>Enter your member number to view and pay your outstanding dues.</p>
-                            </div>
+        .qa-subtitle {
+            text-align: center;
+            font-size: 13.5px;
+            color: #777;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
 
-                            @if ($errors->any())
-                                <div class="alert alert-danger">
-                                    <ul class="mb-0">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
+        .qa-label {
+            font-size: 12.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            margin-bottom: 8px;
+        }
 
-                            <form action="{{ route('member.quickaccess.check') }}" method="POST">
-                                @csrf
-                                <div class="invoice_input_feild mb-3">
-                                    <input type="text" name="member_code" class="form-control"
-                                        placeholder="Enter your member number" value="{{ old('member_code') }}"
-                                        autocomplete="off" autofocus required>
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-block">Login</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div><!-- /.right-body -->
-        </div><!-- /.col-lg-9 -->
-                </div><!-- /.row (43) -->
-            </div><!-- /.col-lg-12 (42) -->
-            </div><!-- /.row (41) -->
-        </div><!-- /.container (40) -->
-    </section>
+        .qa-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid #e2e2e2;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--textColor);
+            transition: border-color 0.15s ease;
+            margin-bottom: 18px;
+        }
 
-        <footer class="all-footer" id="footer">
-            <section class="footer_top">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-md-6 p-0">
-                            <div class="foot_copyright">
-                                <div class="copyright">Copyright &copy; {{ now()->year }} The CC&amp;FC Club at Kolkata All Rights Reserved.
-                                    ||
-                                    <a href="{{ asset('terms') }}" class="social-icon">Terms &amp; Conditions</a>
-                                    ||
-                                    <a href="{{ asset('privacy') }}" class="social-icon">Privacy Policy</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 p-0 foot_webcomp">
-                            <div class="foot_copyright">
-                                <div class="foot_webcompany">
-                                    Designed &amp; Developed by<a href="https://keylines.net/" class="keyline" target="_blank"> KEYLINE</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </footer>
+        .qa-input:focus {
+            outline: none;
+            border-color: var(--primaryColor);
+        }
 
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-        <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
-    </body>
+        .qa-submit-btn {
+            width: 100%;
+            border: none;
+            background: var(--primaryColor);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 6px 16px rgba(190, 31, 36, 0.3);
+            transition: background 0.15s ease;
+        }
 
-    <style>
+        .qa-submit-btn:hover,
+        .qa-submit-btn:focus {
+            background: var(--secondaryColor);
+            color: #fff;
+        }
+
+        .qa-alert {
+            background: #fdecea;
+            color: #c0392b;
+            border: 1px solid #f6cfcb;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13.5px;
+            margin-bottom: 18px;
+        }
+
+        .qa-alert ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .qa-footer-note {
+            text-align: center;
+            font-size: 11.5px;
+            color: #aaa;
+            margin-top: 22px;
+        }
+
+        /* Confirmation / blocked modal */
         .qa-modal .modal-content {
             border: none;
             border-radius: 14px;
@@ -200,7 +187,7 @@
         .qa-member-name {
             font-size: 19px;
             font-weight: 700;
-            color: var(--textColor, #2f2f2f);
+            color: var(--textColor);
             margin-bottom: 4px;
         }
 
@@ -258,6 +245,36 @@
             line-height: 1.5;
         }
     </style>
+</head>
+
+<body>
+    <div class="qa-wrap">
+        <div class="qa-card">
+            <img src="{{ asset('img/CCFC-Logo.png') }}" class="qa-logo" alt="CCFC" />
+            <div class="qa-title">Quick Access</div>
+            <p class="qa-subtitle">Enter your member number to view and pay your outstanding dues.</p>
+
+            @if ($errors->any())
+                <div class="qa-alert">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="{{ route('member.quickaccess.check') }}" method="POST">
+                @csrf
+                <div class="qa-label">Member Number</div>
+                <input type="text" name="member_code" class="qa-input" placeholder="e.g. B47CEO"
+                    value="{{ old('member_code') }}" autocomplete="off" autofocus required>
+                <button type="submit" class="qa-submit-btn">Login</button>
+            </form>
+
+            <p class="qa-footer-note">&copy; {{ now()->year }} The CC&amp;FC Club at Kolkata. All Rights Reserved.</p>
+        </div>
+    </div>
 
     @if (session('quickaccess_confirm'))
         @php($confirmData = session('quickaccess_confirm'))
@@ -287,11 +304,6 @@
                 </div>
             </div>
         </div>
-        <script>
-            $(function () {
-                $('#quickAccessConfirmModal').modal('show');
-            });
-        </script>
     @endif
 
     @if (session('quickaccess_blocked'))
@@ -315,11 +327,27 @@
                 </div>
             </div>
         </div>
+    @endif
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+
+    @if (session('quickaccess_confirm'))
+        <script>
+            $(function () {
+                $('#quickAccessConfirmModal').modal('show');
+            });
+        </script>
+    @endif
+
+    @if (session('quickaccess_blocked'))
         <script>
             $(function () {
                 $('#quickAccessBlockedModal').modal('show');
             });
         </script>
     @endif
+</body>
 
 </html>

@@ -6,9 +6,58 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- header -->
-    @include('common.invoice_header')
-    <!-- ********|| RIGHT PART START ||******** -->
+    <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
+
+    <title>CCFC :: Quick Access</title>
+
+    <style>
+        :root {
+            --primaryColor: #be1f24;
+            --secondaryColor: #c23233;
+            --trirdColor: #000;
+            --textColor: #2f2f2f;
+        }
+    </style>
+
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/responsive.css') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=IBM+Plex+Serif:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/material-design-iconic-font/2.2.0/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="{{ asset('owl/owl3.css') }}">
+    <link href="{{ asset('fancybox/jquery.fancybox.min.css') }}" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <!-- ********|| BODY PART START ||******** -->
+    <section class="ccfc-body">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="row">
+
+                        <!-- ********|| LEFT PART START (no member login panel here) ||******** -->
+                        <div class="col-lg-3 col-md-5 p-0 siteleft_panel" id="sidebar">
+                            <header class="header">
+                                <div class="top-header">
+                                    <div class="brand">
+                                        <div class="brand_logo">
+                                            <a href="{{ asset('/') }}" class="logo">
+                                                <img class="img-fluid" src="{{ asset('img/CCFC-Logo.png') }}" alt=""
+                                                    title="Home">
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </header>
+                        </div>
+                        <!-- ********|| LEFT PART END ||******** -->
 
     <div class="col-lg-9 col-md-7 p-0">
         <div class="right-body">
@@ -58,12 +107,43 @@
                     </div>
                 </div>
             </section>
+        </div><!-- /.right-body -->
+        </div><!-- /.col-lg-9 -->
+                </div><!-- /.row (43) -->
+            </div><!-- /.col-lg-12 (42) -->
+            </div><!-- /.row (41) -->
+        </div><!-- /.container (40) -->
+    </section>
 
-            @include('common.footer')
+        <footer class="all-footer" id="footer">
+            <section class="footer_top">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-6 p-0">
+                            <div class="foot_copyright">
+                                <div class="copyright">Copyright &copy; {{ now()->year }} The CC&amp;FC Club at Kolkata All Rights Reserved.
+                                    ||
+                                    <a href="{{ asset('terms') }}" class="social-icon">Terms &amp; Conditions</a>
+                                    ||
+                                    <a href="{{ asset('privacy') }}" class="social-icon">Privacy Policy</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-0 foot_webcomp">
+                            <div class="foot_copyright">
+                                <div class="foot_webcompany">
+                                    Designed &amp; Developed by<a href="https://keylines.net/" class="keyline" target="_blank"> KEYLINE</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </footer>
 
-        </div>
-    </div>
-
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+        <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     </body>
 
     <style>

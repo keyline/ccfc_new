@@ -45,7 +45,7 @@
                                 </div>
                             @endif
 
-                            <form action="{{ route('member.quickaccess.send-otp') }}" method="POST">
+                            <form action="{{ route('member.quickaccess.check') }}" method="POST">
                                 @csrf
                                 <div class="invoice_input_feild mb-3">
                                     <input type="text" name="member_code" class="form-control"
@@ -65,5 +65,65 @@
     </div>
 
     </body>
+
+    @if (session('quickaccess_confirm'))
+        @php($confirmData = session('quickaccess_confirm'))
+        <div class="modal fade" id="quickAccessConfirmModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Your Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Is this you?</p>
+                        <p><strong>Name:</strong> {{ $confirmData['name'] }}</p>
+                        <p><strong>Member Number:</strong> {{ $confirmData['member_code'] }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <form action="{{ route('member.quickaccess.confirm') }}" method="POST" class="mb-0">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">Continue</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $(function () {
+                $('#quickAccessConfirmModal').modal('show');
+            });
+        </script>
+    @endif
+
+    @if (session('quickaccess_blocked'))
+        @php($blockedData = session('quickaccess_blocked'))
+        <div class="modal fade" id="quickAccessBlockedModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Unable to Continue</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>{{ $blockedData['message'] }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $(function () {
+                $('#quickAccessBlockedModal').modal('show');
+            });
+        </script>
+    @endif
 
 </html>

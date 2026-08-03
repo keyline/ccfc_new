@@ -673,9 +673,8 @@ Route::group([
     'middleware' => 'throttle:5,1',
 ], function () {
     Route::get('/', [QuickAccessController::class, 'showMemberNumberForm'])->name('start');
-    Route::post('/send-otp', [QuickAccessController::class, 'sendOtp'])->name('send-otp');
-    Route::get('/verify', [QuickAccessController::class, 'showOtpForm'])->name('verify.show');
-    Route::post('/verify', [QuickAccessController::class, 'verifyOtp'])->name('verify')->middleware('throttle:10,1');
+    Route::post('/check', [QuickAccessController::class, 'checkMember'])->name('check');
+    Route::post('/confirm', [QuickAccessController::class, 'confirmAndPay'])->name('confirm');
 });
 
 

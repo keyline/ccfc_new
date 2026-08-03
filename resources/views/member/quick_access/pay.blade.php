@@ -55,7 +55,13 @@
             overflow: hidden;
         }
 
-        .quickpay-logo-badge img {
+        .quickpay-logo-badge img.quickpay-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .quickpay-logo-badge img.quickpay-crest {
             max-height: 50px;
             max-width: 50px;
             width: auto;
@@ -288,9 +294,14 @@
 
 <body>
     <div class="quickpay-wrap">
+        @php($memberDetails = $userData->userCodeUserDetails->first())
         <div class="quickpay-topbar">
             <div class="quickpay-logo-badge">
-                <img src="{{ asset('img/logo.png') }}" alt="CCFC" />
+                @if ($memberDetails && $memberDetails->has_member_image)
+                    <img class="quickpay-photo" src="{{ route('member.profile-image') }}" loading="lazy" decoding="async" alt="{{ $userData->name }}" />
+                @else
+                    <img class="quickpay-crest" src="{{ asset('img/logo.png') }}" alt="CCFC" />
+                @endif
             </div>
             <h4>{{ $userData->name }}</h4>
             <span class="member-code-pill">{{ $userData->user_code }}</span>

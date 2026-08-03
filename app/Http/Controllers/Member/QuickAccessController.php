@@ -82,6 +82,15 @@ class QuickAccessController extends Controller
 
         abort_unless($user instanceof User, 401);
 
+        if (!$user->relationLoaded('userCodeUserDetails')) {
+            $details = $user->userCodeUserDetails()
+                ->select(['id', 'user_code_id', 'mobile_no'])
+                ->selectRaw("CASE WHEN member_image IS NULL OR member_image = '' THEN 0 ELSE 1 END AS has_member_image")
+                ->get();
+
+            $user->setRelation('userCodeUserDetails', $details);
+        }
+
         $request->session()->put('quickaccess.payment_in_progress', true);
 
         $memberFinancials = null;

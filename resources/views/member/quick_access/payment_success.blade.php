@@ -23,9 +23,9 @@
             color: var(--textColor);
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 24px 16px;
+            padding: 0 16px 40px;
         }
 
         .receipt-wrap {
@@ -33,45 +33,55 @@
             max-width: 420px;
         }
 
-        .receipt-card {
-            background: #fff;
-            border-radius: 18px;
-            padding: 32px 28px;
-            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12);
+        .receipt-topbar {
+            padding: 32px 20px 46px;
+            text-align: center;
+            color: #fff;
+            border-radius: 0 0 24px 24px;
+            margin: 0 -16px;
         }
 
-        .receipt-icon {
-            width: 64px;
-            height: 64px;
+        .receipt-topbar.success {
+            background: linear-gradient(135deg, #43a047, #2e8b47);
+        }
+
+        .receipt-topbar.failed {
+            background: linear-gradient(135deg, var(--primaryColor), var(--secondaryColor));
+        }
+
+        .receipt-topbar-icon {
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 18px;
-            font-size: 30px;
+            margin: 0 auto 12px;
+            font-size: 28px;
             color: #fff;
+            background: rgba(255, 255, 255, 0.2);
         }
 
-        .receipt-icon.success {
-            background: #4caf50;
-        }
-
-        .receipt-icon.failed {
-            background: var(--primaryColor);
-        }
-
-        .receipt-heading {
-            text-align: center;
-            font-size: 20px;
+        .receipt-topbar-title {
+            font-size: 19px;
             font-weight: 700;
             margin-bottom: 4px;
         }
 
-        .receipt-subheading {
-            text-align: center;
-            font-size: 13.5px;
-            color: #888;
-            margin-bottom: 24px;
+        .receipt-topbar-subtitle {
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .receipt-body {
+            margin-top: -32px;
+        }
+
+        .receipt-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px 24px;
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12);
         }
 
         .receipt-row {
@@ -181,19 +191,21 @@
     @php($clubmanPostingFailed = !empty($status['clubman_posting_failed']))
 
     <div class="receipt-wrap">
-        <div class="receipt-card">
-            <div class="receipt-icon {{ $isSuccess ? 'success' : 'failed' }}">
+        <div class="receipt-topbar {{ $isSuccess ? 'success' : 'failed' }}">
+            <div class="receipt-topbar-icon">
                 {!! $isSuccess ? '&#10003;' : '&#10005;' !!}
             </div>
-
             @if ($isSuccess)
-                <div class="receipt-heading">Thank you!</div>
-                <div class="receipt-subheading">Your transaction was successful</div>
+                <div class="receipt-topbar-title">Thank you!</div>
+                <div class="receipt-topbar-subtitle">Your transaction was successful</div>
             @else
-                <div class="receipt-heading">Payment Failed</div>
-                <div class="receipt-subheading">{{ $status['message'] ?? 'We could not process your payment.' }}</div>
+                <div class="receipt-topbar-title">Payment Failed</div>
+                <div class="receipt-topbar-subtitle">{{ $status['message'] ?? 'We could not process your payment.' }}</div>
             @endif
+        </div>
 
+        <div class="receipt-body">
+        <div class="receipt-card">
             <div class="receipt-row">
                 <span class="label">Date</span>
                 <span class="value">{{ now()->format('d/m/Y') }}</span>
@@ -232,6 +244,7 @@
                     <a href="{{ route('member.quickaccess.start') }}" class="receipt-btn">Try Again</a>
                 </div>
             @endif
+        </div>
         </div>
     </div>
 </body>

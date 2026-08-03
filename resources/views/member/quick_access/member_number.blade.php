@@ -26,9 +26,9 @@
             color: var(--textColor);
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 24px 16px;
+            padding: 0 16px 40px;
         }
 
         .qa-wrap {
@@ -36,26 +36,49 @@
             max-width: 420px;
         }
 
+        .qa-topbar {
+            background: linear-gradient(135deg, var(--primaryColor), var(--secondaryColor));
+            padding: 32px 20px 46px;
+            text-align: center;
+            color: #fff;
+            border-radius: 0 0 24px 24px;
+            margin: 0 -16px;
+        }
+
+        .qa-topbar img {
+            max-height: 46px;
+            margin-bottom: 12px;
+            filter: brightness(0) invert(1);
+        }
+
+        .qa-topbar .qa-title {
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .qa-topbar .qa-topbar-subtitle {
+            font-size: 12.5px;
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0.5px;
+        }
+
+        .qa-body {
+            margin-top: -32px;
+        }
+
         .qa-card {
             background: #fff;
             border-radius: 16px;
-            padding: 32px 28px;
+            padding: 28px 24px;
             box-shadow: 0 8px 28px rgba(0, 0, 0, 0.10);
-        }
-
-        .qa-logo {
-            display: block;
-            max-height: 56px;
-            margin: 0 auto 16px;
         }
 
         .qa-title {
             text-align: center;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             color: var(--primaryColor);
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
         }
 
         .qa-subtitle {
@@ -249,9 +272,14 @@
 
 <body>
     <div class="qa-wrap">
-        <div class="qa-card">
-            <img src="{{ asset('img/CCFC-Logo.png') }}" class="qa-logo" alt="CCFC" />
+        <div class="qa-topbar">
+            <img src="{{ asset('img/CCFC-Logo.png') }}" alt="CCFC" />
             <div class="qa-title">Quick Access</div>
+            <div class="qa-topbar-subtitle">THE CC&amp;FC CLUB AT KOLKATA</div>
+        </div>
+
+        <div class="qa-body">
+        <div class="qa-card">
             <p class="qa-subtitle">Enter your member number to view and pay your outstanding dues.</p>
 
             @if ($errors->any())
@@ -273,6 +301,7 @@
             </form>
 
             <p class="qa-footer-note">&copy; {{ now()->year }} The CC&amp;FC Club at Kolkata. All Rights Reserved.</p>
+        </div>
         </div>
     </div>
 

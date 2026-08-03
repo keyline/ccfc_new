@@ -167,8 +167,14 @@
             margin: 14px 0 0;
             padding: 0;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
+        }
+
+        @media (max-width: 380px) {
+            .gateway-list {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         .gateway-list li {
@@ -361,15 +367,6 @@
                                             onclick="razorpaySubmit(this);">
                                         <label for="exampleRadios4">
                                             <img class="img-fluid" src="{{ asset('img/invoice_razorpay_logo.png') }}" alt="Razorpay" />
-                                        </label>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="gateway-option">
-                                        <input type="radio" name="paymentGatewayOptions" id="exampleRadios3"
-                                            value="{{ route('member.axischeckout') }}" onclick="setPaymentAction('axis')">
-                                        <label for="exampleRadios3">
-                                            <img class="img-fluid" src="{{ asset('img/invoice_axis_logo.jpg') }}" alt="Axis Bank" />
                                         </label>
                                     </div>
                                 </li>

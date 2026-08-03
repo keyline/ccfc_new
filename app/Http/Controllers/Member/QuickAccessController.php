@@ -31,7 +31,7 @@ class QuickAccessController extends Controller
 
         if (!in_array($status, ['active', 'inactive'], true)) {
             return back()->with('quickaccess_blocked', [
-                'message' => 'YOUR MEMBERSHIP NO. ' . $user->user_code . ' STANDS TERMINATED.',
+                'message' => 'YOUR MEMBERSHIP NO. ' . $user->user_code . ' IS ' . strtoupper($status ?: 'NOT ACTIVE') . '.',
             ]);
         }
 
@@ -66,7 +66,7 @@ class QuickAccessController extends Controller
         if (!in_array($status, ['active', 'inactive'], true)) {
             return redirect()->route('member.quickaccess.start')
                 ->with('quickaccess_blocked', [
-                    'message' => 'YOUR MEMBERSHIP NO. ' . $user->user_code . ' STANDS TERMINATED.',
+                    'message' => 'YOUR MEMBERSHIP NO. ' . $user->user_code . ' IS ' . strtoupper($status ?: 'NOT ACTIVE') . '.',
                 ]);
         }
 

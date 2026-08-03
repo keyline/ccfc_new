@@ -18,96 +18,249 @@
             --textColor: #2f2f2f;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background: #f4f4f4;
+            background: #f0f1f3;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            color: var(--textColor);
         }
 
         .quickpay-wrap {
-            max-width: 480px;
+            max-width: 460px;
             margin: 0 auto;
-            padding: 24px 16px 60px;
+            padding: 0 0 40px;
+        }
+
+        .quickpay-topbar {
+            background: linear-gradient(135deg, var(--primaryColor), var(--secondaryColor));
+            padding: 28px 20px 46px;
+            text-align: center;
+            color: #fff;
+            border-radius: 0 0 24px 24px;
+        }
+
+        .quickpay-topbar img {
+            max-height: 46px;
+            margin-bottom: 10px;
+            filter: brightness(0) invert(1);
+        }
+
+        .quickpay-topbar h4 {
+            margin: 4px 0 2px;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .quickpay-topbar .member-code-pill {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .quickpay-body {
+            padding: 0 16px;
+            margin-top: -32px;
         }
 
         .quickpay-card {
             background: #fff;
-            border-radius: 10px;
-            padding: 24px 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+            margin-bottom: 16px;
         }
 
-        .quickpay-header {
+        .balance-card {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .balance-item {
+            flex: 1;
             text-align: center;
-            margin-bottom: 20px;
         }
 
-        .quickpay-header img {
-            max-height: 56px;
+        .balance-item + .balance-item {
+            border-left: 1px solid #eee;
+        }
+
+        .balance-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .balance-value {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--textColor);
+        }
+
+        .balance-value.negative {
+            color: #1a9e56;
+        }
+
+        .balance-value.positive-due {
+            color: var(--primaryColor);
+        }
+
+        .balance-note {
+            display: block;
+            text-align: center;
+            color: #999;
+            font-size: 11.5px;
+            margin-top: 12px;
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--textColor);
             margin-bottom: 10px;
         }
 
-        .quickpay-header h4 {
-            margin: 0;
-            color: var(--primaryColor);
+        .amount-input-group {
+            position: relative;
+            margin-bottom: 4px;
+        }
+
+        .amount-input-group .currency-prefix {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
             font-weight: 700;
+            color: #888;
+            font-size: 16px;
+            pointer-events: none;
         }
 
-        .clubman-financial-summary {
-            margin: 0 0 20px;
+        .amount-input-group input {
+            width: 100%;
+            padding: 14px 14px 14px 40px;
+            border: 1.5px solid #e2e2e2;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--textColor);
+            transition: border-color 0.15s ease;
+        }
+
+        .amount-input-group input:focus {
+            outline: none;
+            border-color: var(--primaryColor);
+        }
+
+        .gateway-list {
+            list-style: none;
+            margin: 14px 0 0;
             padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
-        .clubman-financial-summary p {
-            margin: 0 0 6px;
+        .gateway-list li {
+            margin: 0;
         }
 
-        .clubman-financial-summary small {
-            color: #666;
+        .gateway-option {
+            position: relative;
             display: block;
         }
 
-        .invoicepayment_section .invocie_paymentlogo ul {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 14px 22px;
-            margin: 14px 0 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .invoicepayment_section .invocie_paymentlogo li {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin: 0;
-        }
-
-        .invoicepayment_section .invocie_paymentlogo .form-check-input {
-            margin: 0;
-            position: static;
-            flex-shrink: 0;
-        }
-
-        .invoicepayment_section .invocie_paymentlogo .form-check-label {
-            display: inline-flex;
-            align-items: center;
+        .gateway-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
             margin: 0;
             cursor: pointer;
+            z-index: 2;
         }
 
-        .invoicepayment_section .invocie_paymentlogo img {
-            max-height: 28px;
+        .gateway-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 52px;
+            border: 1.5px solid #e2e2e2;
+            border-radius: 10px;
+            padding: 6px 10px;
+            margin: 0;
+            cursor: pointer;
+            background: #fafafa;
+            transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .gateway-option input[type="radio"]:checked + label {
+            border-color: var(--primaryColor);
+            background: #fff;
+            box-shadow: 0 0 0 1px var(--primaryColor);
+        }
+
+        .gateway-option img {
+            max-height: 24px;
+            max-width: 100%;
             width: auto;
             display: block;
         }
 
-        @media (max-width: 480px) {
-            .quickpay-wrap {
-                padding: 12px 8px 40px;
+        .pay-now-btn {
+            width: 100%;
+            border: none;
+            background: var(--primaryColor);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 18px;
+            box-shadow: 0 6px 16px rgba(190, 31, 36, 0.3);
+            transition: background 0.15s ease;
+        }
+
+        .pay-now-btn:hover,
+        .pay-now-btn:focus {
+            background: var(--secondaryColor);
+            color: #fff;
+        }
+
+        .secure-note {
+            text-align: center;
+            font-size: 11.5px;
+            color: #aaa;
+            margin-top: 14px;
+        }
+
+        #log {
+            font-size: 12px;
+            color: var(--primaryColor);
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 8px 0 0;
+            white-space: pre-wrap;
+        }
+
+        @media (max-width: 380px) {
+            .balance-value {
+                font-size: 16px;
             }
 
-            .quickpay-card {
-                padding: 18px 14px;
+            .quickpay-topbar {
+                padding: 22px 14px 40px;
             }
         }
     </style>
@@ -115,13 +268,13 @@
 
 <body>
     <div class="quickpay-wrap">
-        <div class="quickpay-card">
-            <div class="quickpay-header">
-                <img src="{{ asset('img/logo.png') }}" class="img-fluid" alt="CCFC" />
-                <h4>{{ $userData->name }}</h4>
-                <small>Member Code: {{ $userData->user_code }}</small>
-            </div>
+        <div class="quickpay-topbar">
+            <img src="{{ asset('img/logo.png') }}" alt="CCFC" />
+            <h4>{{ $userData->name }}</h4>
+            <span class="member-code-pill">{{ $userData->user_code }}</span>
+        </div>
 
+        <div class="quickpay-body">
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul class="mb-0">
@@ -134,24 +287,30 @@
 
             @php($clubmanMinimumDue = $memberFinancials['minimum_due_amount'] ?? null)
             @php($clubmanMinimumPayment = $clubmanMinimumDue === null ? 1 : max(1, (float) $clubmanMinimumDue))
+            @php($outstandingValue = $memberFinancials ? (float) $memberFinancials['outstanding'] : null)
 
-            <div class="clubman-financial-summary" aria-live="polite">
-                <p><strong>Outstanding:</strong> INR
-                    <span id="clubman-outstanding">
-                        {{ $memberFinancials ? number_format((float) $memberFinancials['outstanding'], 2) : 'Unavailable' }}
-                    </span>
-                </p>
-                <p><strong>Minimum Due Amount:</strong> INR
-                    <span id="clubman-minimum-due">
-                        {{ $clubmanMinimumDue !== null ? number_format((float) $clubmanMinimumDue, 2) : 'Unavailable' }}
-                    </span>
-                </p>
-                <small>
+            <div class="quickpay-card">
+                <div class="balance-card" aria-live="polite">
+                    <div class="balance-item">
+                        <div class="balance-label">Outstanding</div>
+                        <div class="balance-value {{ $outstandingValue !== null && $outstandingValue < 0 ? 'negative' : ($outstandingValue > 0 ? 'positive-due' : '') }}"
+                            id="clubman-outstanding">
+                            {{ $memberFinancials ? 'INR ' . number_format($outstandingValue, 2) : 'Unavailable' }}
+                        </div>
+                    </div>
+                    <div class="balance-item">
+                        <div class="balance-label">Minimum Due</div>
+                        <div class="balance-value" id="clubman-minimum-due">
+                            {{ $clubmanMinimumDue !== null ? 'INR ' . number_format((float) $clubmanMinimumDue, 2) : 'Unavailable' }}
+                        </div>
+                    </div>
+                </div>
+                <small class="balance-note">
                     {{ $memberFinancials ? 'Showing the latest available Clubman balance.' : 'Clubman balance is temporarily unavailable. You may still make a payment below.' }}
                 </small>
             </div>
 
-            <div class="invoicepayment_section">
+            <div class="quickpay-card invoicepayment_section">
                 <div class="invoice_outstading_payment">
                     <form action="" method="POST" id="payment-form">
                         <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
@@ -162,57 +321,64 @@
                         <input type="hidden" name="member_code" value="{{ $userData->user_code }}">
 
                         @csrf
-                        <div class="invoice_input_bank">
-                            <div class="invoice_input_feild">
-                                <input type="number" name="amount" id="payment-amount"
-                                    value="{{ old('amount', $clubmanMinimumDue !== null ? number_format((float) $clubmanMinimumDue, 2, '.', '') : '') }}"
-                                    min="{{ number_format($clubmanMinimumPayment, 2, '.', '') }}"
-                                    step="0.01" inputmode="decimal"
-                                    data-minimum-payment="{{ number_format($clubmanMinimumPayment, 2, '.', '') }}"
-                                    data-user-edited="{{ old('amount') !== null ? 'true' : 'false' }}"
-                                    placeholder="Enter amount being paid">
-                            </div>
-                            <div class="invocie_paymentlogo">
-                                <ul>
-                                    <li>
-                                        <input class="form-check-input" type="radio" name="paymentGatewayOptions"
-                                            id="exampleRadios5" onclick="hdfcSmartSubmit(this);">
-                                        <label class="form-check-label" for="exampleRadios5">
-                                            <img class="img-fluid" src="{{ asset('img/HdfcLogo.svg') }}" alt="" />
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input class="form-check-input" type="radio" name="paymentGatewayOptions"
-                                            id="exampleRadios1" value="{{ route('member.payment') }}"
-                                            onclick="setPaymentAction('payu')">
-                                        <label class="form-check-label" for="exampleRadios1">
-                                            <img class="img-fluid" src="{{ asset('img/invoice_payu_logo.png') }}"
-                                                alt="" />
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input class="form-check-input" type="radio" name="paymentGatewayOptions"
-                                            id="exampleRadios4" onclick="razorpaySubmit(this);">
-                                        <label class="form-check-label" for="exampleRadios4">
-                                            <img class="img-fluid" src="{{ asset('img/invoice_razorpay_logo.png') }}"
-                                                alt="" />
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input class="form-check-input" type="radio" name="paymentGatewayOptions"
-                                            id="exampleRadios3" value="{{ route('member.axischeckout') }}"
-                                            onclick="setPaymentAction('axis')">
-                                        <label class="form-check-label" for="exampleRadios3">
-                                            <img class="img-fluid" src="{{ asset('img/invoice_axis_logo.jpg') }}"
-                                                alt="" />
-                                        </label>
-                                    </li>
-                                </ul>
-                            </div>
 
-                            <button type="submit" class="btn btn-primary btn-block mt-3">Pay Now</button>
-                            <pre id="log"></pre>
+                        <div class="section-label">Payment Amount</div>
+                        <div class="amount-input-group">
+                            <span class="currency-prefix">&#8377;</span>
+                            <input type="number" name="amount" id="payment-amount"
+                                value="{{ old('amount', $clubmanMinimumDue !== null ? number_format((float) $clubmanMinimumDue, 2, '.', '') : '') }}"
+                                min="{{ number_format($clubmanMinimumPayment, 2, '.', '') }}"
+                                step="0.01" inputmode="decimal"
+                                data-minimum-payment="{{ number_format($clubmanMinimumPayment, 2, '.', '') }}"
+                                data-user-edited="{{ old('amount') !== null ? 'true' : 'false' }}"
+                                placeholder="Enter amount">
                         </div>
+
+                        <div class="section-label mt-3">Select Payment Method</div>
+                        <div class="invocie_paymentlogo">
+                            <ul class="gateway-list">
+                                <li>
+                                    <div class="gateway-option">
+                                        <input type="radio" name="paymentGatewayOptions" id="exampleRadios5"
+                                            onclick="hdfcSmartSubmit(this);">
+                                        <label for="exampleRadios5">
+                                            <img class="img-fluid" src="{{ asset('img/HdfcLogo.svg') }}" alt="HDFC SmartGateway" />
+                                        </label>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="gateway-option">
+                                        <input type="radio" name="paymentGatewayOptions" id="exampleRadios1"
+                                            value="{{ route('member.payment') }}" onclick="setPaymentAction('payu')">
+                                        <label for="exampleRadios1">
+                                            <img class="img-fluid" src="{{ asset('img/invoice_payu_logo.png') }}" alt="PayU" />
+                                        </label>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="gateway-option">
+                                        <input type="radio" name="paymentGatewayOptions" id="exampleRadios4"
+                                            onclick="razorpaySubmit(this);">
+                                        <label for="exampleRadios4">
+                                            <img class="img-fluid" src="{{ asset('img/invoice_razorpay_logo.png') }}" alt="Razorpay" />
+                                        </label>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="gateway-option">
+                                        <input type="radio" name="paymentGatewayOptions" id="exampleRadios3"
+                                            value="{{ route('member.axischeckout') }}" onclick="setPaymentAction('axis')">
+                                        <label for="exampleRadios3">
+                                            <img class="img-fluid" src="{{ asset('img/invoice_axis_logo.jpg') }}" alt="Axis Bank" />
+                                        </label>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button type="submit" class="pay-now-btn">Pay Now</button>
+                        <p class="secure-note">&#128274; Payments are securely processed by your selected gateway.</p>
+                        <pre id="log"></pre>
                     </form>
                 </div>
             </div>
@@ -295,7 +461,7 @@
         function razorpaySubmit(el) {
             if (!el.checked) return;
 
-            const payNowButton = document.querySelector('.btn-primary');
+            const payNowButton = document.querySelector('.pay-now-btn');
             payNowButton.style.display = 'none';
 
             let amountInput = document.querySelector('input[name="amount"]');
@@ -396,7 +562,7 @@
 
             loader.style.display = 'flex';
 
-            const payNowButton = document.querySelector('.btn-primary');
+            const payNowButton = document.querySelector('.pay-now-btn');
             payNowButton.style.display = 'none';
             let amountInput = document.querySelector('input[name="amount"]');
             let amountValue = parseFloat(amountInput.value);

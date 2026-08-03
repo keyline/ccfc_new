@@ -45,10 +45,24 @@
             margin: 0 -16px;
         }
 
-        .qa-topbar img {
-            max-height: 46px;
-            margin-bottom: 12px;
-            filter: brightness(0) invert(1);
+        .qa-logo-badge {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .qa-logo-badge img {
+            max-height: 56px;
+            max-width: 56px;
+            width: auto;
+            object-fit: contain;
         }
 
         .qa-topbar .qa-title {
@@ -273,7 +287,9 @@
 <body>
     <div class="qa-wrap">
         <div class="qa-topbar">
-            <img src="{{ asset('img/CCFC-Logo.png') }}" alt="CCFC" />
+            <div class="qa-logo-badge">
+                <img src="{{ asset('img/CCFC-Logo.png') }}" alt="CCFC" />
+            </div>
             <div class="qa-title">Quick Access</div>
             <div class="qa-topbar-subtitle">THE CC&amp;FC CLUB AT KOLKATA</div>
         </div>

@@ -42,10 +42,24 @@
             border-radius: 0 0 24px 24px;
         }
 
-        .quickpay-topbar img {
-            max-height: 46px;
-            margin-bottom: 10px;
-            filter: brightness(0) invert(1);
+        .quickpay-logo-badge {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .quickpay-logo-badge img {
+            max-height: 50px;
+            max-width: 50px;
+            width: auto;
+            object-fit: contain;
         }
 
         .quickpay-topbar h4 {
@@ -275,7 +289,9 @@
 <body>
     <div class="quickpay-wrap">
         <div class="quickpay-topbar">
-            <img src="{{ asset('img/logo.png') }}" alt="CCFC" />
+            <div class="quickpay-logo-badge">
+                <img src="{{ asset('img/logo.png') }}" alt="CCFC" />
+            </div>
             <h4>{{ $userData->name }}</h4>
             <span class="member-code-pill">{{ $userData->user_code }}</span>
         </div>

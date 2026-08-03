@@ -668,13 +668,21 @@ Route::post('/member/check', [HomeController::class, 'checkMember'])->name('memb
 Route::get('/member/logout', [HomeController::class, 'logout'])->name('member.logout');
 
 Route::group([
-    'prefix' => 'member/quick-access',
+    'prefix' => 'quick-payment',
     'as' => 'member.quickaccess.',
     'middleware' => 'throttle:5,1',
 ], function () {
     Route::get('/', [QuickAccessController::class, 'showMemberNumberForm'])->name('start');
     Route::post('/check', [QuickAccessController::class, 'checkMember'])->name('check');
     Route::post('/confirm', [QuickAccessController::class, 'confirmAndPay'])->name('confirm');
+});
+
+Route::group([
+    'prefix' => 'quick-payment',
+    'as' => 'member.quickaccess.',
+    'middleware' => ['auth.members'],
+], function () {
+    Route::get('/member-dues-details', [QuickAccessController::class, 'pay'])->name('pay');
 });
 
 
@@ -697,8 +705,6 @@ Route::group([
     Route::get('/profile-image', [HomeController::class, 'profileImage'])->name('profile-image');
 
     Route::get('/token/payment', [HomeController::class, 'tokenPayment'])->name('token.payment');
-
-    Route::get('/quick-access/pay', [QuickAccessController::class, 'pay'])->name('quickaccess.pay');
 
 
 

@@ -401,6 +401,50 @@
                 padding: 0 18px 18px;
             }
         }
+
+        #quickpay-redirect-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            background: rgba(20, 20, 20, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #quickpay-redirect-loader.show {
+            display: flex;
+        }
+
+        .quickpay-redirect-spinner {
+            width: 46px;
+            height: 46px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: quickpaySpin 0.8s linear infinite;
+        }
+
+        .quickpay-redirect-text {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            max-width: 280px;
+        }
+
+        @keyframes quickpaySpin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
@@ -572,6 +616,23 @@
             modal.querySelector('.payment-alert-btn').focus();
         }
 
+        function showRedirectLoader(message) {
+            let loader = document.getElementById('quickpay-redirect-loader');
+
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.id = 'quickpay-redirect-loader';
+                loader.innerHTML =
+                    '<div class="quickpay-redirect-spinner"></div>' +
+                    '<div class="quickpay-redirect-text"></div>';
+                document.body.appendChild(loader);
+            }
+
+            loader.querySelector('.quickpay-redirect-text').textContent =
+                message || 'Redirecting you to complete your payment...';
+            loader.classList.add('show');
+        }
+
         function setPaymentAction(gateway) {
             const form = document.getElementById('payment-form');
             const radios = document.getElementsByName('paymentGatewayOptions');
@@ -604,6 +665,7 @@
 
             if (Array.isArray(errorMsg) && !errorMsg.length) {
                 form.action = route;
+                showRedirectLoader('Taking you to the payment gateway...');
                 form.submit();
             }
 
@@ -698,6 +760,7 @@
                             document.getElementById('razorpay_signature').value = response.razorpay_signature;
                             document.getElementById('payment-form').action =
                                 "{{ route('member.razorpaycallback') }}";
+                            showRedirectLoader('Confirming your payment...');
                             document.getElementById('payment-form').submit();
                         },
                         prefill: {
@@ -732,26 +795,8 @@
                 return;
             }
 
-            let loader = document.getElementById('hdfc-smart-loader');
-            if (!loader) {
-                loader = document.createElement('div');
-                loader.id = 'hdfc-smart-loader';
-                loader.innerHTML =
-                    '<div style="display:flex;flex-direction:column;align-items:center;gap:12px;color:#fff;font-family:Arial,sans-serif;">' +
-                    '<div style="width:42px;height:42px;border:4px solid rgba(255,255,255,0.35);border-top-color:#ffffff;border-radius:50%;animation:hdfcSmartSpin 0.8s linear infinite;"></div>' +
-                    '<div style="font-size:16px;font-weight:600;">Please wait, redirecting to payment gateway...</div>' +
-                    '</div>';
-                loader.style.cssText =
-                    'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;padding:20px;';
-                document.body.appendChild(loader);
-
-                const loaderStyle = document.createElement('style');
-                loaderStyle.innerHTML =
-                    '@keyframes hdfcSmartSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
-                document.head.appendChild(loaderStyle);
-            }
-
-            loader.style.display = 'flex';
+            const loader = document.getElementById('quickpay-redirect-loader');
+            showRedirectLoader('Please wait, redirecting to payment gateway...');
 
             const payNowButton = document.querySelector('.pay-now-btn');
             payNowButton.style.display = 'none';
@@ -764,7 +809,7 @@
             if (amountError) {
                 showPaymentPopup(amountError, 'Payment Amount');
                 el.checked = false;
-                loader.style.display = 'none';
+                loader.classList.remove('show');
                 payNowButton.style.display = '';
                 return;
             }
@@ -798,13 +843,13 @@
                         return window.location.href = url;
                     }
                     console.log(data);
-                    loader.style.display = 'none';
+                    loader.classList.remove('show');
                     payNowButton.style.display = '';
                     showPaymentPopup(data.error || `Unexpected status: ${data.status}`, 'Payment Gateway');
                 })
                 .catch(err => {
                     el.checked = false;
-                    loader.style.display = 'none';
+                    loader.classList.remove('show');
                     payNowButton.style.display = '';
                     console.error(err);
                     showPaymentPopup(err.message || "Error connecting to hdfcsmartpay.", 'Payment Gateway');

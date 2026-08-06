@@ -15,7 +15,8 @@ class ClubmanPaymentPosting
         string $voucherNo,
         float $amount,
         string $instrumentNo,
-        string $description = 'Online payment against outstanding'
+        string $description = 'Online payment against outstanding',
+        string $paymentGateway = ''
     ): array {
         $memberCode = trim($memberCode);
 
@@ -35,6 +36,7 @@ class ClubmanPaymentPosting
             'VoucherDate' => Carbon::now('Asia/Kolkata')->format('d M Y'),
             'Amount' => round($amount, 2),
             'InstrumentNo' => $instrumentNo,
+            'paymentgateway' => $paymentGateway,
             'Description' => $description,
         ];
 

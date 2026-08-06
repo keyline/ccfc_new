@@ -95,7 +95,9 @@ class PaymentController extends Controller
                     $user->user_code,
                     $status['mihpayid'],
                     (float) $status['amount'],
-                    $status['mihpayid']
+                    $status['mihpayid'],
+                    'Online payment against outstanding',
+                    'PayU'
                 );
             } catch (\Throwable $e) {
                 $clubmanPostingFailed = true;
@@ -175,7 +177,9 @@ class PaymentController extends Controller
                         $user->user_code,
                         $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
                         (float) $status['amount'],
-                        $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user']
+                        $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
+                        'Online payment against outstanding',
+                        'HDFC VAS'
                     );
                 } catch (\Throwable $e) {
                     $clubmanPostingFailed = true;
@@ -261,7 +265,9 @@ class PaymentController extends Controller
                         $user->user_code,
                         $input['razorpay_payment_id'],
                         (float) $amount,
-                        $input['razorpay_payment_id']
+                        $input['razorpay_payment_id'],
+                        'Online payment against outstanding',
+                        'AXIS Razor Pay'
                     );
                 } catch (\Throwable $e) {
                     $clubmanPostingFailed = true;
@@ -522,7 +528,9 @@ class PaymentController extends Controller
                         $user->user_code,
                         $input['razorpay_payment_id'],
                         (float) $amount,
-                        $input['razorpay_payment_id']
+                        $input['razorpay_payment_id'],
+                        'Online payment against outstanding',
+                        'Razor Pay'
                     );
                     // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
                 } catch (\Throwable $e) {
@@ -1033,7 +1041,9 @@ class PaymentController extends Controller
                             $user->user_code,
                             $response['order_id'],
                             (float) $amount,
-                            $response['order_id']
+                            $response['order_id'],
+                            'Online payment against outstanding',
+                            'HDFC SMART Pay'
                         );
                     } catch (\Throwable $e) {
                         $clubmanPostingFailed = true;

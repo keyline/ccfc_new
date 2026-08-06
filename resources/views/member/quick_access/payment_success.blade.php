@@ -237,6 +237,10 @@
                         The paid amount will reflect in your account within the next 24 working hours.
                     </p>
                 @endif
+
+                <div class="receipt-actions">
+                    <a href="{{ route('member.quickaccess.pay') }}" class="receipt-btn">Make Another Payment</a>
+                </div>
             @else
                 <div class="receipt-badge failed">&#10005; NOT PAID</div>
 

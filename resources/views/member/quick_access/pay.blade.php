@@ -491,8 +491,9 @@
             let amountInput = document.querySelector('input[name="amount"]');
             let amountValue = parseFloat(amountInput.value);
 
-            if (!amountValue || amountValue <= 0) {
-                alert("Please enter a valid amount before choosing Razorpay.");
+            const amountError = paymentAmountValidationMessage(amountInput.value);
+            if (amountError) {
+                alert(amountError);
                 el.checked = false;
                 payNowButton.style.display = '';
                 return;

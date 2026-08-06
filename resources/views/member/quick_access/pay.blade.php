@@ -450,9 +450,9 @@
                         </div>
                     </div>
                 </div>
-                <small class="balance-note">
+                {{-- <small class="balance-note">
                     {{ $memberFinancials ? 'Showing the latest available Clubman balance.' : 'Clubman balance is temporarily unavailable. You may still make a payment below.' }}
-                </small>
+                </small> --}}
             </div>
 
             <div class="quickpay-card invoicepayment_section">

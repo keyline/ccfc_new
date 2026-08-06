@@ -40,6 +40,7 @@ class QuickAccessController extends Controller
         return back()->with('quickaccess_confirm', [
             'name' => $user->name,
             'member_code' => $user->user_code,
+            'photo' => $this->memberPhotoDataUri($user),
         ]);
     }
 
@@ -105,5 +106,39 @@ class QuickAccessController extends Controller
             'userData' => $user,
             'memberFinancials' => $memberFinancials,
         ]);
+    }
+
+    private function memberPhotoDataUri(User $user): ?string
+    {
+        $encodedImage = $user->userCodeUserDetails()
+            ->whereNull('deleted_at')
+            ->value('member_image');
+
+        if (empty($encodedImage)) {
+            return null;
+        }
+
+        if (preg_match('/^data:image\/[a-z0-9.+-]+;base64,/i', $encodedImage)) {
+            return $encodedImage;
+        }
+
+        $normalized = preg_replace('/\s+/', '', $encodedImage);
+        $decoded = base64_decode($normalized, true);
+
+        if ($decoded === false || $decoded === '') {
+            return null;
+        }
+
+        $mimeType = 'image/jpeg';
+
+        if (class_exists(\finfo::class)) {
+            $detectedMimeType = (new \finfo(FILEINFO_MIME_TYPE))->buffer($decoded);
+
+            if (is_string($detectedMimeType) && strpos($detectedMimeType, 'image/') === 0) {
+                $mimeType = $detectedMimeType;
+            }
+        }
+
+        return 'data:' . $mimeType . ';base64,' . $normalized;
     }
 }

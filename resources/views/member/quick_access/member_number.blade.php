@@ -213,6 +213,13 @@
             font-weight: 700;
             margin: 4px auto 16px;
             letter-spacing: 0.5px;
+            overflow: hidden;
+        }
+
+        .qa-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .qa-prompt {
@@ -334,7 +341,13 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <div class="qa-avatar">{{ strtoupper($initials) }}</div>
+                        <div class="qa-avatar">
+                            @if (!empty($confirmData['photo']))
+                                <img src="{{ $confirmData['photo'] }}" alt="{{ $confirmData['name'] }}">
+                            @else
+                                {{ strtoupper($initials) }}
+                            @endif
+                        </div>
                         <p class="qa-prompt">Please confirm this is you</p>
                         <div class="qa-member-name">{{ $confirmData['name'] }}</div>
                         <span class="qa-member-code">{{ $confirmData['member_code'] }}</span>

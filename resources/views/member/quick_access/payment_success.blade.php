@@ -163,7 +163,10 @@
         }
 
         .receipt-btn {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             width: 100%;
             text-align: center;
             border: none;
@@ -174,6 +177,8 @@
             padding: 14px;
             border-radius: 10px;
             text-decoration: none;
+            box-shadow: 0 6px 16px rgba(190, 31, 36, 0.25);
+            transition: background 0.15s ease, box-shadow 0.15s ease;
         }
 
         .receipt-btn:hover,
@@ -181,6 +186,25 @@
             background: var(--secondaryColor);
             color: #fff;
             text-decoration: none;
+        }
+
+        .receipt-btn-secondary {
+            background: #fff;
+            color: var(--primaryColor);
+            border: 1.5px solid #e8d3d4;
+            box-shadow: none;
+        }
+
+        .receipt-btn-secondary:hover,
+        .receipt-btn-secondary:focus {
+            background: #fdf5f5;
+            color: var(--secondaryColor);
+            border-color: var(--secondaryColor);
+        }
+
+        .receipt-btn-icon {
+            font-size: 16px;
+            line-height: 1;
         }
     </style>
 </head>
@@ -239,7 +263,9 @@
                 @endif
 
                 <div class="receipt-actions">
-                    <a href="{{ route('member.quickaccess.pay') }}" class="receipt-btn">Make Another Payment</a>
+                    <a href="{{ route('member.quickaccess.pay') }}" class="receipt-btn receipt-btn-secondary">
+                        <span class="receipt-btn-icon">&#8635;</span> Make Another Payment
+                    </a>
                 </div>
             @else
                 <div class="receipt-badge failed">&#10005; NOT PAID</div>

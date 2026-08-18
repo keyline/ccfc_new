@@ -15,9 +15,11 @@ class ClubmanPaymentPosting
         string $voucherNo,
         float $amount,
         string $instrumentNo,
-        string $description = 'Online payment against outstanding'
+        string $description = 'Online payment against outstanding',
+        string $paymentGateway = 'Online Payment'
     ): array {
         $memberCode = trim($memberCode);
+        $paymentGateway = trim($paymentGateway) ?: 'Online Payment';
 
         if ($memberCode === '') {
             throw new RuntimeException('This member does not have a Clubman membership ID.');
@@ -35,6 +37,7 @@ class ClubmanPaymentPosting
             'VoucherDate' => Carbon::now('Asia/Kolkata')->format('d M Y'),
             'Amount' => round($amount, 2),
             'InstrumentNo' => $instrumentNo,
+            'paymentgateway' => $paymentGateway,
             'Description' => $description,
         ];
 
@@ -47,7 +50,7 @@ class ClubmanPaymentPosting
                 ->withOptions([
                     'connect_timeout' => (int) config('services.clubman.connect_timeout', 5),
                 ])
-                ->post($endpoint . '?json=' . json_encode($payload));
+                ->post($endpoint . '?' . http_build_query(['json' => json_encode($payload)]));
         } catch (Throwable $exception) {
             throw new RuntimeException(
                 'Clubman could not be reached while posting the payment.',

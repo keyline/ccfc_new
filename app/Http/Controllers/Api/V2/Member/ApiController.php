@@ -46,6 +46,7 @@ use App\Models\PaymentBill;
 use App\Models\PaymentDetail;
 use App\Models\Notification;
 use App\Models\UserNotification;
+use App\Services\ClubmanPaymentPosting;
 
 use Tzsk\Payu\Concerns\Attributes;
 use Tzsk\Payu\Concerns\Customer;
@@ -77,6 +78,36 @@ use DateTime;
 date_default_timezone_set("Asia/Kolkata");
 class ApiController extends Controller
 {
+    // Match the current web payment rollout while Clubman posting is verified in production.
+    private function shouldPostToClubman(?string $memberCode): bool
+    {
+        return strtoupper(trim((string) $memberCode)) === 'B47CEO';
+    }
+
+    private function postMobilePaymentToClubman(User $user, string $transactionId, float $amount, string $gateway): bool
+    {
+        try {
+            if (! $this->shouldPostToClubman($user->user_code)) {
+                return false;
+            }
+
+            app(ClubmanPaymentPosting::class)->post(
+                $user->user_code,
+                $transactionId,
+                $amount,
+                $transactionId,
+                $gateway . ' payment against outstanding',
+                $gateway
+            );
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('Clubman Payment Posting Failed (Mobile ' . $gateway . '): ' . $e->getMessage());
+
+            return true;
+        }
+    }
+
     /* signin */
     public function signinWithMobile(Request $request)
     {
@@ -2649,13 +2680,13 @@ class ApiController extends Controller
                 $checkUser                  = User::where('id', '=', $uId)->first();
                 if ($checkUser) {
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
-                        $checkPayuTransaction = DB::table('payu_transactions')->where('transaction_id', '=', '$txn_id')->count();
+                        $checkPayuTransaction = DB::table('payu_transactions')->where('transaction_id', '=', $txn_id)->count();
                         if ($checkPayuTransaction <= 0) {
                             $postData = [
                                 'paid_for_id'           => $uId,
                                 'paid_for_type'         => 'App\Models\User',
                                 'transaction_id'        => $txn_id,
-                                'gateway'               => '',
+                                'gateway'               => 'PayU',
                                 'body'                  => '',
                                 'destination'           => 'https://ccfc1792.com/member/payment/status',
                                 'hash'                  => $hash,
@@ -2671,6 +2702,14 @@ class ApiController extends Controller
                             );
                             $user = User::find($uId);
                             if (!empty($user) && $status != 'failure') {
+                                $clubmanPostingFailed = $this->postMobilePaymentToClubman(
+                                    $user,
+                                    $txn_id,
+                                    (float) $amount,
+                                    'PayU'
+                                );
+                                $apiResponse['clubman_posting_failed'] = $clubmanPostingFailed;
+
                                 $emailInfo = array(
                                     'greeting' => "Dear, {$user->name}",
                                     'body'     => "Thank you for making payment of Rs." . $amount . ". Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
@@ -2861,6 +2900,14 @@ class ApiController extends Controller
                 ];
 
                 DB::table('payu_transactions')->insert($postData);
+
+                $clubmanPostingFailed = $this->postMobilePaymentToClubman(
+                    $checkUser,
+                    $payment_id,
+                    (float) $amount,
+                    'Razorpay'
+                );
+                $apiResponse['clubman_posting_failed'] = $clubmanPostingFailed;
 
                 // ✅ Send Email                
                 $mailData = [

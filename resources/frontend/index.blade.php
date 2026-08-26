@@ -83,11 +83,11 @@
                         @endforeach
                         @endforeach
 
-                        <div class="col-lg-6">
+                        <!-- <div class="col-lg-6">
                             <div class="advise-img">
                                 <img class="img-fluid" src="{{ asset('img/istora-banner.jpeg') }}" alt="" />
                             </div>
-                        </div>
+                        </div> -->
                        <!--  <div class="col-lg-6">
                             <div class="advise-img">
                                 <img class="img-fluid" src="{{ asset('img/advise-2.jpg') }}" alt="" />

@@ -71,13 +71,13 @@
 
                         @foreach($gallery->images as $key => $media)
 
-                        <div class="col-lg-6">
+                        <!-- <div class="col-lg-6">
                             <div class="advise-img">
                                 <a href="{{$media->getUrl('')}}" class="item-inner" data-fancybox="image-2">
                                     <img class="img-fluid" src="{{$media->getUrl('')}}" alt="" />
                                 </a>
                             </div>
-                        </div>
+                        </div> -->
 
 
                         @endforeach

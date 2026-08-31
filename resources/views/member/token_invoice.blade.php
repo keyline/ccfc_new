@@ -387,7 +387,7 @@
                 }
 
                 var options = {
-                    key: "{{ env('RAZORPAY_KEY_NEW') }}",
+                    key: "{{ config('services.razorpay.key') }}",
                     amount: amountInPaise,
                     currency: "INR",
                     name: "CALCUTTA CRICKET & FOOTBALL CLUB",

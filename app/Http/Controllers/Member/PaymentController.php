@@ -438,13 +438,16 @@ class PaymentController extends Controller
             Log::error('Razorpay order creation failed.', [
                 'member_id' => $user->id,
                 'member_code' => $user->user_code,
+                'amount_in_paise' => $amountInPaise,
+                'key_id' => config('services.razorpay.key'),
                 'step' => $step,
                 'exception' => get_class($exception),
                 'error' => $exception->getMessage(),
             ]);
 
             return response()->json([
-                'message' => 'Unable to initiate Razorpay payment. Please try again shortly.',
+                'message' => 'Unable to initiate Razorpay payment. Please try again shortly. Debug step: ' . $step,
+                'debug_step' => $step,
             ], 502);
         }
         // return response()->json(['order_id' => 56789]);

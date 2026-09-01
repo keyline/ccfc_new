@@ -235,7 +235,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('axisTransactionId'))
                     ->update(
                         [
-                            'response' => $payment->toArray(),
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'successful',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -308,7 +308,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('axisTransactionId'))
                     ->update(
                         [
-                            'response' => $payment,
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'failed',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -387,49 +387,59 @@ class PaymentController extends Controller
             $clubmanMemberLookup,
             true
         );
+        $step = 'initialize_razorpay';
+
         try {
             $api = $this->razorpayApi();
 
-        $order = $api->order->create([
-            'receipt' => 'INV_' . rand(10000, 99999),
-            'amount' => (int) $amountInPaise,
-            'currency' => 'INR',
-            'payment_capture' => 1,
-            'notes' => [
-            'udf1' => $user->id, // User Defined Field 1
-            'udf2' => $user->user_code, // User Defined Field 2
-            'name' => $user->name,
-            'email' => $user->email,
-            // 'email'=> 'deblina@keylines.net',
-            'contact' => $user->phone_number_1,
-            // Add more UDFs as needed
-        ]
-        ]);
-        // Store the order ID or other necessary details in your database for future reference
-        DB::table('payu_transactions')->insert([
-        'paid_for_id' => $user->id,
-        'paid_for_type' => 'App\Models\User',
-        'transaction_id' => $order->id,
-        'gateway'		=> 'Razor Pay',
-        'body'			=> serialize($order),
-        'destination'	=> route('member.razorpaycallback'),
-        'hash'			=> '',
-        'response'		=> '',
-        'status'		=> 'pending',
-        'created_at'	=> Carbon::now('Asia/Kolkata'),
-        'updated_at'	=> Carbon::now('Asia/Kolkata'),
+            $step = 'create_razorpay_order';
+            $order = $api->order->create([
+                'receipt' => 'INV_' . rand(10000, 99999),
+                'amount' => (int) $amountInPaise,
+                'currency' => 'INR',
+                'payment_capture' => 1,
+                'notes' => [
+                    'udf1' => $user->id, // User Defined Field 1
+                    'udf2' => $user->user_code, // User Defined Field 2
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    // 'email'=> 'deblina@keylines.net',
+                    'contact' => $user->phone_number_1,
+                    // Add more UDFs as needed
+                ]
+            ]);
+            $orderId = $order['id'] ?? $order->id ?? null;
+            if (!$orderId) {
+                throw new \RuntimeException('Razorpay did not return an order id.');
+            }
 
-        ]);
+            $step = 'store_pending_order';
+            // Store the order ID or other necessary details in your database for future reference
+            DB::table('payu_transactions')->insert([
+                'paid_for_id' => $user->id,
+                'paid_for_type' => 'App\Models\User',
+                'transaction_id' => $orderId,
+                'gateway'		=> 'Razor Pay',
+                'body'			=> json_encode($order->toArray()),
+                'destination'	=> route('member.razorpaycallback'),
+                'hash'			=> '',
+                'response'		=> '',
+                'status'		=> 'pending',
+                'created_at'	=> Carbon::now('Asia/Kolkata'),
+                'updated_at'	=> Carbon::now('Asia/Kolkata'),
+            ]);
 
 
 
-        // ✅ Store order_id in session
-        Session::put('razorpayTransactionid', $order['id']);
-            return response()->json(['order_id' => $order['id']]);
+            // ✅ Store order_id in session
+            Session::put('razorpayTransactionid', $orderId);
+            return response()->json(['order_id' => $orderId]);
         } catch (\Throwable $exception) {
             Log::error('Razorpay order creation failed.', [
                 'member_id' => $user->id,
                 'member_code' => $user->user_code,
+                'step' => $step,
+                'exception' => get_class($exception),
                 'error' => $exception->getMessage(),
             ]);
 
@@ -505,7 +515,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('razorpayTransactionid'))
                     ->update(
                         [
-                            'response' => $payment->toArray(),
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'successful',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -587,7 +597,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('razorpayTransactionid'))
                     ->update(
                         [
-                            'response' => $payment,
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'failed',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 

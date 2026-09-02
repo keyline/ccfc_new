@@ -2858,7 +2858,10 @@ class ApiController extends Controller
                 $signature = $data['razorpay_signature'];
 
                 // ✅ Fetch Razorpay Payment Details
-                $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
+                $api = new Api(
+                    config('services.razorpay.key'),
+                    config('services.razorpay.secret')
+                );
                 $payment = $api->payment->fetch($payment_id);
                 $amount = $payment->amount / 100;
                 $status = $payment->status;

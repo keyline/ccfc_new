@@ -34,6 +34,13 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS'),
     ],
 
+    'razorpay' => [
+        'axis_key' => env('RAZORPAY_KEY'),
+        'axis_secret' => env('RAZORPAY_SECRET'),
+        'key' => env('RAZORPAY_KEY_NEW'),
+        'secret' => env('RAZORPAY_SECRET_NEW'),
+    ],
+
     'clubman' => [
         'token_url' => env('CLUBMAN_TOKEN_URL', 'https://ccfcmemberdata.in/token'),
         'member_lookup_url' => env(

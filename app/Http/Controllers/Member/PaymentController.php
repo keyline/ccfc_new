@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 use Juspay\RequestOptions;
 use Juspay\Model\OrderSession;
 use Juspay\JuspayEnvironment;
@@ -208,7 +209,7 @@ class PaymentController extends Controller
         // dd($request->all());
         $input = $request->all();
 
-        $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+        $api = $this->razorpayApi(false);
 
         // Process the payment callback logic here
         $payment = $api->payment->fetch($input['razorpay_payment_id']);
@@ -234,7 +235,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('axisTransactionId'))
                     ->update(
                         [
-                            'response' => $payment->toArray(),
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'successful',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -307,7 +308,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('axisTransactionId'))
                     ->update(
                         [
-                            'response' => $payment,
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'failed',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -334,7 +335,7 @@ class PaymentController extends Controller
         if ($user) {
             $amount = $this->validatedPaymentAmount($request, $user, $clubmanMemberLookup, false, true);
 
-            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+            $api = $this->razorpayApi(false);
 
             $order = $api->order->create([
                 'receipt' => 'ord_axis_' . Str::random(10), // Replace with your own unique identifier for the order
@@ -386,44 +387,69 @@ class PaymentController extends Controller
             $clubmanMemberLookup,
             true
         );
-        $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
+        $step = 'initialize_razorpay';
 
-        $order = $api->order->create([
-            'receipt' => 'INV_' . rand(10000, 99999),
-            'amount' => (int) $amountInPaise,
-            'currency' => 'INR',
-            'payment_capture' => 1,
-            'notes' => [
-            'udf1' => $user->id, // User Defined Field 1
-            'udf2' => $user->user_code, // User Defined Field 2
-            'name' => $user->name,
-            'email' => $user->email,
-            // 'email'=> 'deblina@keylines.net',
-            'contact' => $user->phone_number_1,
-            // Add more UDFs as needed
-        ]
-        ]);
-        // Store the order ID or other necessary details in your database for future reference
-        DB::table('payu_transactions')->insert([
-        'paid_for_id' => $user->id,
-        'paid_for_type' => 'App\Models\User',
-        'transaction_id' => $order->id,
-        'gateway'		=> 'Razor Pay',
-        'body'			=> serialize($order),
-        'destination'	=> route('member.razorpaycallback'),
-        'hash'			=> '',
-        'response'		=> '',
-        'status'		=> 'pending',
-        'created_at'	=> Carbon::now('Asia/Kolkata'),
-        'updated_at'	=> Carbon::now('Asia/Kolkata'),
+        try {
+            $api = $this->razorpayApi();
 
-        ]);
+            $step = 'create_razorpay_order';
+            $order = $api->order->create([
+                'receipt' => 'INV_' . rand(10000, 99999),
+                'amount' => (int) $amountInPaise,
+                'currency' => 'INR',
+                'payment_capture' => 1,
+                'notes' => [
+                    'udf1' => $user->id, // User Defined Field 1
+                    'udf2' => $user->user_code, // User Defined Field 2
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    // 'email'=> 'deblina@keylines.net',
+                    'contact' => $user->phone_number_1,
+                    // Add more UDFs as needed
+                ]
+            ]);
+            $orderId = $order['id'] ?? $order->id ?? null;
+            if (!$orderId) {
+                throw new \RuntimeException('Razorpay did not return an order id.');
+            }
+
+            $step = 'store_pending_order';
+            // Store the order ID or other necessary details in your database for future reference
+            DB::table('payu_transactions')->insert([
+                'paid_for_id' => $user->id,
+                'paid_for_type' => 'App\Models\User',
+                'transaction_id' => $orderId,
+                'gateway'		=> 'Razor Pay',
+                'body'			=> json_encode($order->toArray()),
+                'destination'	=> route('member.razorpaycallback'),
+                'hash'			=> '',
+                'response'		=> '',
+                'status'		=> 'pending',
+                'created_at'	=> Carbon::now('Asia/Kolkata'),
+                'updated_at'	=> Carbon::now('Asia/Kolkata'),
+            ]);
 
 
 
-        // ✅ Store order_id in session
-        Session::put('razorpayTransactionid', $order['id']);
-        return response()->json(['order_id' => $order['id']]);
+            // ✅ Store order_id in session
+            Session::put('razorpayTransactionid', $orderId);
+            return response()->json(['order_id' => $orderId]);
+        } catch (\Throwable $exception) {
+            Log::error('Razorpay order creation failed.', [
+                'member_id' => $user->id,
+                'member_code' => $user->user_code,
+                'amount_in_paise' => $amountInPaise,
+                'key_id' => config('services.razorpay.key'),
+                'step' => $step,
+                'exception' => get_class($exception),
+                'error' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Unable to initiate Razorpay payment. Please try again shortly. Debug step: ' . $step,
+                'debug_step' => $step,
+            ], 502);
+        }
         // return response()->json(['order_id' => 56789]);
     }
     // public function razorpay(Request $request)
@@ -464,7 +490,7 @@ class PaymentController extends Controller
         // dd($request->all());
         $input = $request->all();
 
-        $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
+        $api = $this->razorpayApi();
 
         // Process the payment callback logic here
         $payment = $api->payment->fetch($input['razorpay_payment_id']);
@@ -492,7 +518,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('razorpayTransactionid'))
                     ->update(
                         [
-                            'response' => $payment->toArray(),
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'successful',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -574,7 +600,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('razorpayTransactionid'))
                     ->update(
                         [
-                            'response' => $payment,
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'failed',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -1149,6 +1175,20 @@ class PaymentController extends Controller
         $userId = is_array($sessionMember) ? ($sessionMember['id'] ?? null) : $sessionMember;
 
         return $userId ? User::find($userId) : null;
+    }
+
+    private function razorpayApi(bool $useMemberCredentials = true): Api
+    {
+        $keyConfig = $useMemberCredentials ? 'services.razorpay.key' : 'services.razorpay.axis_key';
+        $secretConfig = $useMemberCredentials ? 'services.razorpay.secret' : 'services.razorpay.axis_secret';
+        $key = trim((string) config($keyConfig));
+        $secret = trim((string) config($secretConfig));
+
+        if ($key === '' || $secret === '') {
+            throw new \RuntimeException('Razorpay credentials are not configured.');
+        }
+
+        return new Api($key, $secret);
     }
 
     private function validatedPaymentAmount(

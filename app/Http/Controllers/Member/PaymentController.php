@@ -356,7 +356,7 @@ class PaymentController extends Controller
             'paid_for_id' => $user->id,
             'paid_for_type' => 'App\Models\User',
             'transaction_id' => $order->id,
-            'gateway'		=> 'AXIS Razor Pay',
+            'gateway'		=> 'AXIS',
             'body'			=> serialize($order),
             'destination'	=> route('member.axisstatus'),
             'hash'			=> '',

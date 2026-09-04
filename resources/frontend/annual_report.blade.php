@@ -65,7 +65,7 @@
                         <div class="col-lg-12">
                             <div class="title-sec">
                                 <div class="title text-left">
-                                    Annual Report
+                                    23rd AGM Notice
                                 </div>
                             </div>
                         </div>

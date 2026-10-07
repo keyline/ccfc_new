@@ -87,6 +87,11 @@ class ApiController extends Controller
     private function postMobilePaymentToClubman(User $user, string $transactionId, float $amount, string $gateway): bool
     {
         try {
+            if ($gateway === 'PayU') {
+                app(\App\Services\MobilePayuClubmanPosting::class)->post($user->user_code, $transactionId, $amount);
+                return false;
+            }
+
             if (! $this->shouldPostToClubman($user->user_code)) {
                 return false;
             }
@@ -2680,6 +2685,16 @@ class ApiController extends Controller
                 $checkUser                  = User::where('id', '=', $uId)->first();
                 if ($checkUser) {
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
+                        // Retry posting only for a successful, server-stored WebView payment.
+                        $mobilePayment = DB::table('payment_details')
+                            ->where('payu_txnid', $txn_id)
+                            ->where('membership_no', $checkUser->user_code)
+                            ->where('status', 'success')->first();
+                        if ($status === 'success' && $mobilePayment) {
+                            $apiResponse['clubman_posting_failed'] = $this->postMobilePaymentToClubman(
+                                $checkUser, $mobilePayment->payu_txnid, (float) $mobilePayment->amount, 'PayU'
+                            );
+                        }
                         $checkPayuTransaction = DB::table('payu_transactions')->where('transaction_id', '=', $txn_id)->count();
                         if ($checkPayuTransaction <= 0) {
                             $postData = [
@@ -2702,14 +2717,6 @@ class ApiController extends Controller
                             );
                             $user = User::find($uId);
                             if (!empty($user) && $status != 'failure') {
-                                $clubmanPostingFailed = $this->postMobilePaymentToClubman(
-                                    $user,
-                                    $txn_id,
-                                    (float) $amount,
-                                    'PayU'
-                                );
-                                $apiResponse['clubman_posting_failed'] = $clubmanPostingFailed;
-
                                 $emailInfo = array(
                                     'greeting' => "Dear, {$user->name}",
                                     'body'     => "Thank you for making payment of Rs." . $amount . ". Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."

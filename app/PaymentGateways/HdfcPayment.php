@@ -193,6 +193,7 @@ class HdfcPayment implements PaymentGatewayInterface
 
 		
 		DB::table('payu_transactions')->insert([
+        'payment_source' => \App\Services\PaymentSource::fromRequest(request()),
     	'paid_for_id' => $params['udf1'],
     	'paid_for_type' => 'App\Models\User',
     	'transaction_id' => $params['txnId'],

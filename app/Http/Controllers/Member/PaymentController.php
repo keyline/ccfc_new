@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\MemberDue;
 use App\Services\Juspay\JuspayService;
 use App\Services\ClubmanMemberLookup;
+use App\Services\PaymentSource;
 use Illuminate\Validation\ValidationException;
 
 use function Symfony\Component\VarDumper\Dumper\esc;
@@ -73,7 +74,13 @@ class PaymentController extends Controller
                             ->to($customer);
             //dd($transaction);
 
-            return Payu::initiate($transaction)->redirect(route('member.payment.status'));
+            $response = Payu::initiate($transaction)->redirect(route('member.payment.status'));
+            DB::table('payu_transactions')
+                ->where('transaction_id', $transaction->transactionId)
+                ->whereNull('payment_source')
+                ->update(['payment_source' => PaymentSource::fromRequest($request)]);
+
+            return $response;
         } else {
             abort(401);
         }
@@ -349,6 +356,7 @@ class PaymentController extends Controller
             ]);
             // Store the order ID or other necessary details in your database for future reference
             DB::table('payu_transactions')->insert([
+            'payment_source' => PaymentSource::fromRequest($request),
             'paid_for_id' => $user->id,
             'paid_for_type' => 'App\Models\User',
             'transaction_id' => $order->id,
@@ -402,6 +410,7 @@ class PaymentController extends Controller
         ]);
         // Store the order ID or other necessary details in your database for future reference
         DB::table('payu_transactions')->insert([
+        'payment_source' => PaymentSource::fromRequest($request),
         'paid_for_id' => $user->id,
         'paid_for_type' => 'App\Models\User',
         'transaction_id' => $order->id,
@@ -805,6 +814,7 @@ class PaymentController extends Controller
 
             // changed: keep storing the transaction row used later by the callback status-update flow.
             $paymentId = DB::table('payu_transactions')->insertGetId([
+                'payment_source' => PaymentSource::fromRequest($request),
                 'paid_for_id' => $user->id,
                 'paid_for_type' => 'App\Models\User',
                 'transaction_id' => $orderId,

@@ -39,6 +39,7 @@
                             {{ trans('cruds.payment.fields.status') }}
                         </th>
                         <th>Payment Datetime</th>
+                        <th>Source</th>
                         <th class="notexport">Status Update</th>
                         <th class="notexport">
                             &nbsp;
@@ -89,6 +90,7 @@
                                 {{ ( $gateway == 'status') ? $payment->response('status') : $payment->status }}
                             </td>
                             <td>{{ $payment->updated_at ?? '' }}</td>
+                            <td>{{ \App\Services\PaymentSource::label($payment->payment_source) }}</td>
                             <td>
                                 <span style="display:none">{{ $payment->response('status') ?? '' }}</span>
                                 <input type="checkbox" disabled="disabled" {{ $payment->status ? 'checked' : '' }}>

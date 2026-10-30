@@ -510,6 +510,7 @@
                         <input type="hidden" name="member_code" value="{{ $userData->user_code }}">
 
                         @csrf
+                        <input type="hidden" name="payment_source" value="quick_access">
 
                         <div class="section-label">Payment Amount</div>
                         <div class="amount-input-group">
@@ -736,7 +737,8 @@
                         "X-CSRF-TOKEN": "{{ csrf_token() }}"
                     },
                     body: JSON.stringify({
-                        amount: amountInPaise
+                        amount: amountInPaise,
+                        payment_source: 'quick_access'
                     })
                 })
                 .then(res => res.json())
@@ -823,6 +825,7 @@
                     },
                     body: JSON.stringify({
                         amount: amountValue,
+                        payment_source: 'quick_access',
                         token_id: tokenPayment?.value || null,
                         member_code: memberCode?.value || null
                     })

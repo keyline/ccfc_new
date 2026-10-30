@@ -77,8 +77,8 @@ class EmailCampaignJob implements ShouldQueue
             //Mail::to($this->user->email, $this->user->name)->send(new SendInBlueNotification($this->campaignid, $this->user));
             //Mail::to("subhomoy@keylines.net", "Subhomoy Samanta")->send(new SendInBlueNotification($this->campaignid, $this->user));
         } catch (\Exception $ex) {
-            //throw $th;
-            //dd($ex);
+            // Let the worker retry and record failed deliveries.
+            throw $ex;
         }
         //Mail::to("shuvadeep@keylines.net", $this->user->name)->send(new SendInBlueNotification($this->campaignid, $this->user));
     }

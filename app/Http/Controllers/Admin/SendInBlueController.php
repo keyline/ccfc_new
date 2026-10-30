@@ -152,54 +152,27 @@ class SendInBlueController extends Controller
      */
     public function startCampaign(Request $request)
     {
-        //check request has campaign id
-        if (!empty($request->campaign) && is_numeric($request->campaign)) {
-            //Dispatching the Job here
-            //fetch user list with email not empty
-            $campaign = \App\Models\EmailCampaign::findOrFail($request->campaign);
-            $ec_member_type = (($campaign)?json_decode($campaign->ec_member_type):[]);
-            //$member_type = "'" . implode("','", $ec_member_type) . "'";
+        $campaign = EmailCampaign::findOrFail($request->campaign);
 
-            // $query= \App\Models\User::query();
-            // $query->where('email', '!=', '');
-            // $query->where('email', '!=', 'admin@admin.com');
-            // $query->where('status', 'LIKE', '%ACTIVE%');
+        // Atomically claim the campaign so repeated clicks cannot queue it twice.
+        $claimed = EmailCampaign::where('ec_id', $campaign->ec_id)
+            ->where('ec_is_despatched', '1')
+            ->update(['ec_is_despatched' => '0', 'updated_at' => now()]);
 
-            //$query->orWhere('status', '=', 'INACTIVE');
-            //$query->where('id', '=', 6178);            
-            
-            //DB::enableQueryLog();            
-            if(count($ec_member_type)>0){
-                $userData = DB::table('users')
-                ->join('user_details', 'users.id', '=', 'user_details.user_code_id')
-                ->where('users.email', '!=', '')
-                ->where('users.email', '!=', 'admin@admin.com')
-                ->where('users.status', 'LIKE', '%ACTIVE%')
-                ->whereIn('user_details.member_type',$ec_member_type)
-                ->select('users.*', 'user_details.member_type')
-                ->get();
-            } else {
-                $userData = DB::table('users')
-                ->join('user_details', 'users.id', '=', 'user_details.user_code_id')
-                ->where('users.email', '!=', '')
-                ->where('users.email', '!=', 'admin@admin.com')
-                ->where('users.status', 'LIKE', '%ACTIVE%')
-                ->select('users.*', 'user_details.member_type')
-                ->get();
-            }            
-            //$lastquery = DB::getQueryLog();
-            //echo '<pre>';print_r($lastquery);
-            //$users= $query->get();
-            //echo '<pre>';print_r($userData);die;
-            
-            foreach ($userData as $user) {
-                \App\Jobs\EmailCampaignJob::dispatch($request->campaign, $user)->onQueue('sendinblueemail');
-            }            
-            $campaign->update(['ec_is_despatched' => '0']);            
-            return redirect()->back()->with('success', 'Campaign started successfully');
+        if (!$claimed) {
+            return redirect()->back()->with('error', 'Campaign has already been queued.');
         }
-    }
 
+        try {
+            \App\Jobs\PrepareEmailCampaignJob::dispatch($campaign->ec_id)
+                ->onQueue('sendinblueemail');
+        } catch (\Throwable $exception) {
+            $campaign->update(['ec_is_despatched' => '1']);
+            throw $exception;
+        }
+
+        return redirect()->back()->with('success', 'Campaign queued. Emails will be sent in the background.');
+    }
     public function rmAttachment(Request $request)
     {
         $input = $request->all();

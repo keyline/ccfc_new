@@ -98,7 +98,8 @@ class PaymentController extends Controller
             $clubmanPostingFailed = false;
 
             try {
-                app(\App\Services\ClubmanPaymentPosting::class)->post(
+                app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                    $transaction->transaction_id,
                     $user->user_code,
                     $status['mihpayid'],
                     (float) $status['amount'],
@@ -180,7 +181,8 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    app(\App\Services\ClubmanPaymentPosting::class)->post(
+                    app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                        (string) Session::get('hdfcTransactionId'),
                         $user->user_code,
                         $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
                         (float) $status['amount'],
@@ -268,7 +270,8 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    app(\App\Services\ClubmanPaymentPosting::class)->post(
+                    app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                        (string) Session::get('axisTransactionId'),
                         $user->user_code,
                         $input['razorpay_payment_id'],
                         (float) $amount,
@@ -533,7 +536,8 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->post(
+                    $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                        (string) Session::get('razorpayTransactionid'),
                         $user->user_code,
                         $input['razorpay_payment_id'],
                         (float) $amount,
@@ -1047,7 +1051,8 @@ class PaymentController extends Controller
 
                 if ($response['order_status'] === "CHARGED") {
                     try {
-                        app(\App\Services\ClubmanPaymentPosting::class)->post(
+                        app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                            $order->orderId,
                             $user->user_code,
                             $response['order_id'],
                             (float) $amount,

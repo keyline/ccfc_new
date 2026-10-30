@@ -5,11 +5,41 @@ namespace App\Services;
 use App\Models\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Throwable;
 
 class ClubmanPaymentPosting
 {
+    public function postAndRecord(
+        string $transactionId,
+        string $memberCode,
+        string $voucherNo,
+        float $amount,
+        string $instrumentNo,
+        string $description = 'Online payment against outstanding',
+        string $paymentGateway = ''
+    ): array {
+        try {
+            $result = $this->post($memberCode, $voucherNo, $amount, $instrumentNo, $description, $paymentGateway);
+        } catch (Throwable $exception) {
+            $this->recordResult($transactionId, 'failure');
+            throw $exception;
+        }
+
+        $this->recordResult($transactionId, 'success');
+
+        return $result;
+    }
+
+    private function recordResult(string $transactionId, string $status): void
+    {
+        DB::table('payu_transactions')->where('transaction_id', $transactionId)->update([
+            'clubman_status' => $status,
+            'clubman_checked_at' => Carbon::now('Asia/Kolkata'),
+        ]);
+    }
+
     public function post(
         string $memberCode,
         string $voucherNo,

@@ -35,8 +35,8 @@ class PaymentSourceTest extends TestCase
 
     public function test_historical_or_unrecognized_sources_are_unknown(): void
     {
-        $this->assertSame('Unknown', PaymentSource::label(null));
-        $this->assertSame('Unknown', PaymentSource::label('legacy'));
+        $this->assertSame('-', PaymentSource::label(null));
+        $this->assertSame('-', PaymentSource::label('legacy'));
         $this->assertSame('Quick Access', PaymentSource::label('quick_access'));
     }
 

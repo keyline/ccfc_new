@@ -10,6 +10,43 @@ use RuntimeException;
 
 class ClubmanPaymentStatusTest extends TestCase
 {
+    public function test_retry_uses_original_razorpay_reference_and_converts_paise(): void
+    {
+        $payment = new \Tzsk\Payu\Models\PayuTransaction();
+        $payment->forceFill([
+            'transaction_id' => 'order_1', 'status' => 'successful',
+            'clubman_status' => 'failure', 'destination' => 'https://example.test/payment/razorpaycallback',
+            'response' => ['id' => 'pay_original', 'amount' => 12345],
+        ]);
+        $service = new class extends ClubmanPaymentPosting {
+            public $arguments;
+            public function post(string $memberCode, string $voucherNo, float $amount, string $instrumentNo, string $description = 'Online payment against outstanding', string $paymentGateway = ''): array
+            {
+                $this->arguments = [$memberCode, $voucherNo, $amount, $instrumentNo, $paymentGateway];
+                return ['Status' => 'success'];
+            }
+        };
+        $service->retry($payment, 'M1');
+        $this->assertSame(['M1', 'pay_original', 123.45, 'pay_original', 'Razor Pay'], $service->arguments);
+        $this->assertSame('success', DB::table('payu_transactions')->where('transaction_id', 'order_1')->value('clubman_status'));
+    }
+
+    public function test_retry_rejects_a_posting_that_already_succeeded(): void
+    {
+        $payment = new \Tzsk\Payu\Models\PayuTransaction();
+        $payment->forceFill(['status' => 'successful', 'clubman_status' => 'success']);
+        $this->expectException(RuntimeException::class);
+        $this->service(false)->retry($payment, 'M1');
+    }
+
+    public function test_retry_rejects_an_unsuccessful_gateway_payment(): void
+    {
+        $payment = new \Tzsk\Payu\Models\PayuTransaction();
+        $payment->forceFill(['status' => 'failed', 'clubman_status' => 'failure']);
+        $this->expectException(RuntimeException::class);
+        $this->service(false)->retry($payment, 'M1');
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

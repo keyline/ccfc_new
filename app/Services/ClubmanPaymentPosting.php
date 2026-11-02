@@ -11,6 +11,48 @@ use Throwable;
 
 class ClubmanPaymentPosting
 {
+    public function retry(\Tzsk\Payu\Models\PayuTransaction $payment, string $memberCode): array
+    {
+        if ($payment->clubman_status !== 'failure' || ! $payment->successful()) {
+            throw new RuntimeException('Only successful payments with a failed Clubman posting can be retried.');
+        }
+
+        $gateway = basename(parse_url($payment->destination, PHP_URL_PATH));
+        $amount = $payment->response('amount');
+        switch ($gateway) {
+            case 'status':
+                $reference = $payment->response('mihpayid');
+                $gatewayName = 'PayU';
+                break;
+            case 'axisstatus':
+            case 'razorpaycallback':
+                $reference = $payment->response('id');
+                $amount = is_numeric($amount) ? $amount / 100 : null;
+                $gatewayName = $gateway === 'axisstatus' ? 'AXIS Razor Pay' : 'Razor Pay';
+                break;
+            case 'hdfcstatus':
+                $reference = $payment->response('transactionid') ?: $payment->response('mihpayid');
+                $gatewayName = 'HDFC VAS';
+                break;
+            case 'hdfcsmartpaycallback':
+                $reference = $payment->response('orderId');
+                $gatewayName = 'HDFC SMART Pay';
+                break;
+            default:
+                throw new RuntimeException('This payment gateway does not support Clubman retry.');
+        }
+
+        if (! is_numeric($amount) || $amount <= 0 || ! is_scalar($reference) || trim((string) $reference) === '') {
+            throw new RuntimeException('The stored payment amount or reference is missing. Clubman retry was not sent.');
+        }
+
+        return $this->postAndRecord(
+            $payment->transaction_id, $memberCode, (string) $reference,
+            (float) $amount, (string) $reference,
+            'Online payment against outstanding', $gatewayName
+        );
+    }
+
     public function postAndRecord(
         string $transactionId,
         string $memberCode,

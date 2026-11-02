@@ -497,6 +497,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('members', 'MembersController');
 
     // Payments
+    Route::post('payments/{transaction}/retry-clubman', 'PaymentsController@retryClubman')->name('payments.retryClubman');
     Route::delete('payments/destroy', 'PaymentsController@massDestroy')->name('payments.massDestroy');
     Route::resource('payments', 'PaymentsController');
 

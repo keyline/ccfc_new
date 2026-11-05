@@ -96,6 +96,10 @@ class ClubmanPaymentPosting
             throw new RuntimeException('This member does not have a Clubman membership ID.');
         }
 
+        if ($amount <= 0 || trim($voucherNo) === '' || trim($instrumentNo) === '') {
+            throw new RuntimeException('The payment amount or reference is missing. Clubman posting was not sent.');
+        }
+
         $endpoint = trim((string) config('services.clubman.payment_posting_url'));
 
         if ($endpoint === '') {

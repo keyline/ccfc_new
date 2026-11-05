@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Member;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\ClubmanMemberLookup;
+use App\Services\QuickAccessEligibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,6 +18,8 @@ class QuickAccessController extends Controller
 
     public function checkMember(Request $request)
     {
+        $request->session()->forget('quickaccess.pending_user_id');
+
         $request->validate([
             'member_code' => 'required|string',
         ]);
@@ -27,11 +30,9 @@ class QuickAccessController extends Controller
             return back()->withErrors(['member_code' => 'Member number not found! please contact admin']);
         }
 
-        $status = strtolower(trim((string) $user->status));
-
-        if (!in_array($status, ['active', 'inactive'], true)) {
+        if (!app(QuickAccessEligibility::class)->allows($user)) {
             return back()->with('quickaccess_blocked', [
-                'message' => 'YOUR MEMBERSHIP NO. ' . $user->user_code . ' IS ' . strtoupper($status ?: 'NOT ACTIVE') . '.',
+                'message' => 'Quick Access is currently available only to selected active members.',
             ]);
         }
 
@@ -62,12 +63,10 @@ class QuickAccessController extends Controller
                 ->withErrors(['member_code' => 'Member number not found! please contact admin']);
         }
 
-        $status = strtolower(trim((string) $user->status));
-
-        if (!in_array($status, ['active', 'inactive'], true)) {
+        if (!app(QuickAccessEligibility::class)->allows($user)) {
             return redirect()->route('member.quickaccess.start')
                 ->with('quickaccess_blocked', [
-                    'message' => 'YOUR MEMBERSHIP NO. ' . $user->user_code . ' IS ' . strtoupper($status ?: 'NOT ACTIVE') . '.',
+                    'message' => 'Quick Access is currently available only to selected active members.',
                 ]);
         }
 
@@ -82,6 +81,15 @@ class QuickAccessController extends Controller
         $user = Auth::guard('members')->user();
 
         abort_unless($user instanceof User, 401);
+
+        if (!app(QuickAccessEligibility::class)->allows($user)) {
+            $request->session()->forget('quickaccess');
+
+            return redirect()->route('member.quickaccess.start')
+                ->with('quickaccess_blocked', [
+                    'message' => 'Quick Access is currently available only to selected active members.',
+                ]);
+        }
 
         if (!$user->relationLoaded('userCodeUserDetails')) {
             $details = $user->userCodeUserDetails()

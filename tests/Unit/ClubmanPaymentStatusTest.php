@@ -10,6 +10,40 @@ use RuntimeException;
 
 class ClubmanPaymentStatusTest extends TestCase
 {
+    public function test_mobile_payu_failure_can_be_retried_with_the_gateway_reference(): void
+    {
+        $payment = new \Tzsk\Payu\Models\PayuTransaction();
+        $payment->forceFill([
+            'transaction_id' => 'order_1', 'status' => 'successful',
+            'clubman_status' => 'failure', 'destination' => 'https://ccfc1792.com/member/payment/status',
+            'response' => ['mihpayid' => 'payu_mobile_1', 'amount' => '123.45'],
+        ]);
+        $service = new class extends ClubmanPaymentPosting {
+            public $arguments;
+            public function post(string $memberCode, string $voucherNo, float $amount, string $instrumentNo, string $description = 'Online payment against outstanding', string $paymentGateway = ''): array
+            {
+                $this->arguments = [$memberCode, $voucherNo, $amount, $instrumentNo, $paymentGateway];
+                return ['Status' => 'success'];
+            }
+        };
+        $service->retry($payment, 'M1');
+        $this->assertSame(['M1', 'payu_mobile_1', 123.45, 'payu_mobile_1', 'PayU'], $service->arguments);
+        $this->assertSame('success', DB::table('payu_transactions')->where('transaction_id', 'order_1')->value('clubman_status'));
+    }
+
+    public function test_missing_mobile_payu_reference_records_failure_for_admin_retry(): void
+    {
+        try {
+            (new ClubmanPaymentPosting())->postAndRecord('order_1', 'M1', '', 123.45, '', 'Online payment against outstanding', 'PayU');
+            $this->fail('Expected missing reference to be rejected.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringContainsString('reference is missing', $exception->getMessage());
+        }
+        $row = DB::table('payu_transactions')->where('transaction_id', 'order_1')->first();
+        $this->assertSame('failure', $row->clubman_status);
+        $this->assertSame('successful', $row->status);
+    }
+
     public function test_retry_uses_original_razorpay_reference_and_converts_paise(): void
     {
         $payment = new \Tzsk\Payu\Models\PayuTransaction();

@@ -2642,6 +2642,8 @@ class ApiController extends Controller
             $txn_id                     = $requestData['id'];
             $status                     = $requestData['status'];
             $payuResponse               = $requestData['payuResponse'];
+            $payuResponse               = is_array($payuResponse) ? $payuResponse : json_decode((string) $payuResponse, true);
+            $paymentSucceeded           = in_array(strtolower((string) $status), ['success', 'successful'], true);
 
             if ($getTokenValue['status']) {
                 $uId                        = $getTokenValue['data'][1];
@@ -2649,7 +2651,7 @@ class ApiController extends Controller
                 $checkUser                  = User::where('id', '=', $uId)->first();
                 if ($checkUser) {
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
-                        $checkPayuTransaction = DB::table('payu_transactions')->where('transaction_id', '=', '$txn_id')->count();
+                        $checkPayuTransaction = DB::table('payu_transactions')->where('transaction_id', '=', $txn_id)->count();
                         if ($checkPayuTransaction <= 0) {
                             $postData = [
                                 'paid_for_id'           => $uId,
@@ -2660,7 +2662,7 @@ class ApiController extends Controller
                                 'destination'           => 'https://ccfc1792.com/member/payment/status',
                                 'hash'                  => $hash,
                                 'response'              => json_encode($payuResponse),
-                                'status'                => (($status == 'failure') ? 'failed' : 'successful'),
+                                'status'                => ($paymentSucceeded ? 'successful' : 'failed'),
                                 'created_at'            => date('Y-m-d H:i:s'),
                                 'updated_at'            => date('Y-m-d H:i:s'),
                             ];
@@ -2670,7 +2672,25 @@ class ApiController extends Controller
                                 $postData
                             );
                             $user = User::find($uId);
-                            if (!empty($user) && $status != 'failure') {
+                            if (!empty($user) && $paymentSucceeded) {
+                                // Mobile payments do not pass through the website's PayU status callback.
+                                try {
+                                    app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                                        (string) $txn_id,
+                                        (string) $user->user_code,
+                                        (string) ($payuResponse['mihpayid'] ?? ''),
+                                        (float) $amount,
+                                        (string) ($payuResponse['mihpayid'] ?? ''),
+                                        'Online payment against outstanding',
+                                        'PayU'
+                                    );
+                                } catch (\Throwable $exception) {
+                                    Log::error('Clubman Payment Posting Failed (Mobile PayU)', [
+                                        'transaction_id' => $txn_id,
+                                        'error' => $exception->getMessage(),
+                                    ]);
+                                }
+
                                 $emailInfo = array(
                                     'greeting' => "Dear, {$user->name}",
                                     'body'     => "Thank you for making payment of Rs." . $amount . ". Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
@@ -2725,7 +2745,7 @@ class ApiController extends Controller
 
                         $apiStatus          = TRUE;
                         http_response_code(200);
-                        if ($status == 'failure') {
+                        if (!$paymentSucceeded) {
                             $apiMessage         = 'Payment Failed !!!';
                         } else {
                             $apiMessage         = 'Payment Successfull !!!';

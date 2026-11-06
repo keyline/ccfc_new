@@ -734,6 +734,7 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
+                        "Accept": "application/json",
                         "X-CSRF-TOKEN": "{{ csrf_token() }}"
                     },
                     body: JSON.stringify({
@@ -741,11 +742,24 @@
                         payment_source: 'quick_access'
                     })
                 })
-                .then(res => res.json())
+                .then(async res => {
+                    if (res.redirected) {
+                        throw new Error('Your session requires attention. Reload this page and try again.');
+                    }
+                    const isJson = (res.headers.get('content-type') || '').includes('application/json');
+                    const data = isJson ? await res.json() : null;
+                    if (!res.ok) {
+                        const errors = data && data.errors ? Object.values(data.errors).flat() : [];
+                        throw new Error(errors[0] || (res.status === 419
+                            ? 'Your session has expired. Reload this page and try again.'
+                            : 'Unable to start payment. Please try again or contact the club.'));
+                    }
+                    if (!data) throw new Error('Unexpected payment response. Please reload and try again.');
+                    return data;
+                })
                 .then(data => {
                     if (!data.order_id) {
-                        showPaymentPopup("Failed to initiate Razorpay order", 'Payment Gateway');
-                        return;
+                        throw new Error(data.message || 'Failed to initiate Razorpay order.');
                     }
 
                     var options = {
@@ -780,13 +794,17 @@
                         }
                     };
 
+                    if (typeof Razorpay === 'undefined') {
+                        throw new Error('Razorpay checkout could not load. Check your connection and reload the page.');
+                    }
                     let rzp = new Razorpay(options);
                     rzp.open();
                 })
                 .catch(err => {
                     el.checked = false;
                     console.error(err);
-                    showPaymentPopup("Error connecting to Razorpay.", 'Payment Gateway');
+                    payNowButton.style.display = '';
+                    showPaymentPopup(err.message || 'Unable to connect. Please try again.', 'Payment Gateway');
                 });
         }
     </script>

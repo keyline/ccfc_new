@@ -394,7 +394,7 @@ class PaymentController extends Controller
             $clubmanMemberLookup,
             true
         );
-        $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
+        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
         $order = $api->order->create([
             'receipt' => 'INV_' . rand(10000, 99999),
@@ -444,7 +444,7 @@ class PaymentController extends Controller
     //             return response()->json(['error' => 'Invalid amount.'], 400);
     //         }
 
-    //         $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
+    //         $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
     //         $orderData = [
     //             'receipt'         => 'INV_' . rand(10000, 99999),
@@ -473,7 +473,7 @@ class PaymentController extends Controller
         // dd($request->all());
         $input = $request->all();
 
-        $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
+        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
         // Process the payment callback logic here
         $payment = $api->payment->fetch($input['razorpay_payment_id']);

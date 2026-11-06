@@ -32,7 +32,7 @@ class QuickAccessController extends Controller
 
         if (!app(QuickAccessEligibility::class)->allows($user)) {
             return back()->with('quickaccess_blocked', [
-                'message' => 'Quick Access is currently available only to selected active members.',
+                'message' => 'Quick Access is available only to active and inactive members.',
             ]);
         }
 
@@ -66,7 +66,7 @@ class QuickAccessController extends Controller
         if (!app(QuickAccessEligibility::class)->allows($user)) {
             return redirect()->route('member.quickaccess.start')
                 ->with('quickaccess_blocked', [
-                    'message' => 'Quick Access is currently available only to selected active members.',
+                    'message' => 'Quick Access is available only to active and inactive members.',
                 ]);
         }
 
@@ -87,7 +87,7 @@ class QuickAccessController extends Controller
 
             return redirect()->route('member.quickaccess.start')
                 ->with('quickaccess_blocked', [
-                    'message' => 'Quick Access is currently available only to selected active members.',
+                    'message' => 'Quick Access is available only to active and inactive members.',
                 ]);
         }
 

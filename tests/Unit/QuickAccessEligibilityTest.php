@@ -4,29 +4,24 @@ namespace Tests\Unit;
 
 use App\Models\User;
 use App\Services\QuickAccessEligibility;
-use Illuminate\Config\Repository;
-use Illuminate\Container\Container;
 use PHPUnit\Framework\TestCase;
 
 class QuickAccessEligibilityTest extends TestCase
 {
-    public function test_pilot_allows_only_the_selected_active_member(): void
+    public function test_all_active_and_inactive_members_are_allowed(): void
     {
-        $this->withConfig(false, function () {
-            $this->assertTrue($this->allows('B47CEO', 'ACTIVE'));
-            $this->assertFalse($this->allows('B48CEO', 'ACTIVE'));
-            $this->assertFalse($this->allows('B47CEO', 'INACTIVE'));
-            $this->assertFalse($this->allows('B47CEO', 'SUSPENDED'));
-        });
+        foreach (['B47CEO', 'B48CEO'] as $code) {
+            foreach (['ACTIVE', 'INACTIVE', 'active', 'inactive', ' Active ', ' Inactive '] as $status) {
+                $this->assertTrue($this->allows($code, $status));
+            }
+        }
     }
 
-    public function test_future_rollout_allows_all_active_members_only(): void
+    public function test_other_member_statuses_are_blocked(): void
     {
-        $this->withConfig(true, function () {
-            $this->assertTrue($this->allows('B48CEO', 'ACTIVE'));
-            $this->assertFalse($this->allows('B48CEO', 'INACTIVE'));
-            $this->assertFalse($this->allows('B47CEO', 'SUSPENDED'));
-        });
+        foreach (['SUSPENDED', 'DELETED', '', 'pending'] as $status) {
+            $this->assertFalse($this->allows('B47CEO', $status));
+        }
     }
 
     private function allows(string $code, string $status): bool
@@ -35,24 +30,5 @@ class QuickAccessEligibilityTest extends TestCase
         $user->forceFill(['user_code' => $code, 'status' => $status]);
 
         return (new QuickAccessEligibility())->allows($user);
-    }
-
-    private function withConfig(bool $allowAll, callable $assertions): void
-    {
-        $previous = Container::getInstance();
-        $container = new Container();
-        $container->instance('config', new Repository([
-            'quick_access' => [
-                'allow_all_active_members' => $allowAll,
-                'allowed_member_codes' => ['B47CEO'],
-            ],
-        ]));
-        Container::setInstance($container);
-
-        try {
-            $assertions();
-        } finally {
-            Container::setInstance($previous);
-        }
     }
 }

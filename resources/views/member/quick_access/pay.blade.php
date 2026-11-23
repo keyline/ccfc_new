@@ -750,7 +750,7 @@
                     const data = isJson ? await res.json() : null;
                     if (!res.ok) {
                         const errors = data && data.errors ? Object.values(data.errors).flat() : [];
-                        throw new Error(errors[0] || (res.status === 419
+                        throw new Error(errors[0] || (data && data.message) || (res.status === 419
                             ? 'Your session has expired. Reload this page and try again.'
                             : 'Unable to start payment. Please try again or contact the club.'));
                     }

@@ -394,9 +394,14 @@ class PaymentController extends Controller
             $clubmanMemberLookup,
             true
         );
-        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
-
-        $order = $api->order->create([
+        $stage = 'configuration';
+        try {
+            if (!config('services.razorpay.key') || !config('services.razorpay.secret')) {
+                throw new \RuntimeException('Razorpay credentials are missing.');
+            }
+            $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+            $stage = 'gateway_order';
+            $order = $api->order->create([
             'receipt' => 'INV_' . rand(10000, 99999),
             'amount' => (int) $amountInPaise,
             'currency' => 'INR',
@@ -411,6 +416,7 @@ class PaymentController extends Controller
             // Add more UDFs as needed
         ]
         ]);
+        $stage = 'save_transaction';
         // Store the order ID or other necessary details in your database for future reference
         DB::table('payu_transactions')->insert([
         'payment_source' => PaymentSource::fromRequest($request),
@@ -433,6 +439,34 @@ class PaymentController extends Controller
         // ✅ Store order_id in session
         Session::put('razorpayTransactionid', $order['id']);
         return response()->json(['order_id' => $order['id']]);
+        } catch (\Throwable $e) {
+            $reference = (string) Str::uuid();
+            $context = [
+                'reference' => $reference,
+                'stage' => $stage,
+                'exception_class' => get_class($e),
+                'error_code' => $e->getCode(),
+                'key_mode' => Str::startsWith((string) config('services.razorpay.key'), 'rzp_test_') ? 'test' : 'live_or_unknown',
+            ];
+            if ($e instanceof \Illuminate\Database\QueryException) {
+                // Include the database reason without SQL bindings or member details.
+                $context['sqlstate'] = $e->errorInfo[0] ?? null;
+                $context['driver_code'] = $e->errorInfo[1] ?? null;
+                $context['missing_payment_source'] = strpos($e->getMessage(), "Unknown column 'payment_source'") !== false;
+            }
+            Log::error('Razorpay payment initiation failed', $context);
+
+            $message = 'Unable to start payment. Please contact the club.';
+            if ($stage === 'configuration') {
+                $message = 'Payment gateway configuration is incomplete. Please contact the club.';
+            } elseif ($e instanceof \Razorpay\Api\Errors\Error && $e->getHttpStatusCode() === 401) {
+                $message = 'Payment gateway credentials were rejected. Please contact the club.';
+            } elseif ($stage === 'save_transaction') {
+                $message = 'Unable to save the payment transaction. Please contact the club.';
+            }
+
+            return response()->json(['message' => $message . ' Reference: ' . $reference], 503);
+        }
         // return response()->json(['order_id' => 56789]);
     }
     // public function razorpay(Request $request)

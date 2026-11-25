@@ -137,6 +137,10 @@
             paging: false,
             info: false,
             select: false,
+            columnDefs: [
+                { orderable: false, targets: 0 },
+                { orderable: false, searchable: false, targets: -1 }
+            ],
             dom: 'frt',
             buttons: []
         });

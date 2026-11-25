@@ -12,6 +12,7 @@ use App\Models\ContentBlock;
 use App\Models\Trophy;
 use App\Models\Sportsman;
 use App\Http\Controllers\Member\HomeController;
+use App\Http\Controllers\Member\QuickAccessController;
 use App\Models\Member;
 // use App\Models\Title;
 use App\Models\User;
@@ -496,6 +497,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('members', 'MembersController');
 
     // Payments
+    Route::post('payments/{transaction}/retry-clubman', 'PaymentsController@retryClubman')->name('payments.retryClubman');
     Route::delete('payments/destroy', 'PaymentsController@massDestroy')->name('payments.massDestroy');
     Route::resource('payments', 'PaymentsController');
 
@@ -665,6 +667,24 @@ Route::group(['namespace' => 'Auth', 'middleware' => ['auth', '2fa']], function 
 
 Route::post('/member/check', [HomeController::class, 'checkMember'])->name('member.check');
 Route::get('/member/logout', [HomeController::class, 'logout'])->name('member.logout');
+
+Route::group([
+    'prefix' => 'quick-payment',
+    'as' => 'member.quickaccess.',
+    'middleware' => 'throttle:5,1',
+], function () {
+    Route::get('/', [QuickAccessController::class, 'showMemberNumberForm'])->name('start');
+    Route::post('/check', [QuickAccessController::class, 'checkMember'])->name('check');
+    Route::post('/confirm', [QuickAccessController::class, 'confirmAndPay'])->name('confirm');
+});
+
+Route::group([
+    'prefix' => 'quick-payment',
+    'as' => 'member.quickaccess.',
+    'middleware' => ['auth.members'],
+], function () {
+    Route::get('/member-dues-details', [QuickAccessController::class, 'pay'])->name('pay');
+});
 
 
 Route::group([

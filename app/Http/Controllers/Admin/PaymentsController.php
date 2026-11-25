@@ -12,9 +12,33 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Services\ClubmanPaymentPosting;
+use Tzsk\Payu\Models\PayuTransaction;
 
 class PaymentsController extends Controller
 {
+    public function retryClubman($transaction, ClubmanPaymentPosting $posting)
+    {
+        abort_if(Gate::denies('payment_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        try {
+            // Serialize retries for this row and recheck its latest status.
+            DB::transaction(function () use ($transaction, $posting) {
+                $payment = PayuTransaction::whereKey($transaction)->lockForUpdate()->firstOrFail();
+                if ($payment->clubman_status !== 'failure') {
+                    throw new \RuntimeException('Only failed Clubman postings can be retried.');
+                }
+
+                $user = User::findOrFail($payment->paid_for_id);
+                $posting->retry($payment, (string) $user->user_code);
+            });
+        } catch (\RuntimeException $exception) {
+            return redirect()->route('admin.payments.index')->with('clubman_retry_error', $exception->getMessage());
+        }
+
+        return redirect()->route('admin.payments.index')->with('message', 'Payment posted to Clubman successfully.');
+    }
+
     public function index()
     {
         abort_if(Gate::denies('payment_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');

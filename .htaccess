@@ -1,4 +1,9 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteRule ^(.*)$ public/$1 [L]
+  # Serve public assets while keeping the front controller at the app base URL.
+  RewriteCond $1 !\.php$ [NC]
+  RewriteCond %{DOCUMENT_ROOT}/ccfc_new/public/$1 -f
+  RewriteRule ^(.+)$ public/$1 [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ index.php [L]
 </IfModule>

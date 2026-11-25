@@ -60,6 +60,120 @@
             color: #666;
             display: block;
         }
+
+        .payment-alert-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 22px;
+        }
+
+        .payment-alert-modal.show {
+            display: flex;
+        }
+
+        .payment-alert-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(18, 20, 24, 0.58);
+            backdrop-filter: blur(4px);
+        }
+
+        .payment-alert-dialog {
+            position: relative;
+            width: min(100%, 390px);
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 24px 70px rgba(18, 20, 24, 0.28);
+            overflow: hidden;
+            transform: translateY(10px) scale(0.98);
+            opacity: 0;
+            transition: transform 0.16s ease, opacity 0.16s ease;
+        }
+
+        .payment-alert-modal.show .payment-alert-dialog {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .payment-alert-top {
+            height: 5px;
+            background: linear-gradient(90deg, #be1f24, #ef8b35);
+        }
+
+        .payment-alert-content {
+            padding: 24px 22px 20px;
+            text-align: center;
+        }
+
+        .payment-alert-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            background: #fff3f3;
+            color: #be1f24;
+            border: 1px solid rgba(190, 31, 36, 0.18);
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .payment-alert-title {
+            margin: 0 0 8px;
+            font-size: 19px;
+            line-height: 1.25;
+            font-weight: 800;
+            color: #20242a;
+        }
+
+        .payment-alert-message {
+            margin: 0;
+            color: #5d626b;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .payment-alert-actions {
+            display: flex;
+            gap: 10px;
+            padding: 0 22px 22px;
+        }
+
+        .payment-alert-btn {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 16px;
+            background: #be1f24;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(190, 31, 36, 0.24);
+        }
+
+        .payment-alert-btn:focus,
+        .payment-alert-btn:hover {
+            outline: none;
+            background: #c23233;
+        }
+
+        @media (max-width: 380px) {
+            .payment-alert-content {
+                padding: 22px 18px 18px;
+            }
+
+            .payment-alert-actions {
+                padding: 0 18px 18px;
+            }
+        }
     </style>
 
     <!-- ?php include 'assets/inc/header.php';?> -->
@@ -261,6 +375,56 @@
                                 </div>
 
                                 <script type="text/javascript">
+                                    function closePaymentPopup() {
+                                        const modal = document.getElementById('payment-alert-modal');
+                                        if (!modal) return;
+
+                                        modal.classList.remove('show');
+                                        document.body.style.overflow = '';
+                                        document.removeEventListener('keydown', closePaymentPopupOnEsc);
+                                    }
+
+                                    function closePaymentPopupOnEsc(event) {
+                                        if (event.key === 'Escape') {
+                                            closePaymentPopup();
+                                        }
+                                    }
+
+                                    function showPaymentPopup(message, title = 'Payment Notice') {
+                                        let modal = document.getElementById('payment-alert-modal');
+
+                                        if (!modal) {
+                                            modal = document.createElement('div');
+                                            modal.id = 'payment-alert-modal';
+                                            modal.className = 'payment-alert-modal';
+                                            modal.innerHTML =
+                                                '<div class="payment-alert-backdrop" data-payment-popup-close></div>' +
+                                                '<div class="payment-alert-dialog" role="dialog" aria-modal="true" aria-labelledby="payment-alert-title">' +
+                                                '<div class="payment-alert-top"></div>' +
+                                                '<div class="payment-alert-content">' +
+                                                '<div class="payment-alert-icon" aria-hidden="true">!</div>' +
+                                                '<h2 class="payment-alert-title" id="payment-alert-title"></h2>' +
+                                                '<p class="payment-alert-message" id="payment-alert-message"></p>' +
+                                                '</div>' +
+                                                '<div class="payment-alert-actions">' +
+                                                '<button type="button" class="payment-alert-btn" data-payment-popup-close>Review Amount</button>' +
+                                                '</div>' +
+                                                '</div>';
+                                            document.body.appendChild(modal);
+
+                                            modal.querySelectorAll('[data-payment-popup-close]').forEach(function(button) {
+                                                button.addEventListener('click', closePaymentPopup);
+                                            });
+                                        }
+
+                                        modal.querySelector('#payment-alert-title').textContent = title;
+                                        modal.querySelector('#payment-alert-message').textContent = message;
+                                        modal.classList.add('show');
+                                        document.body.style.overflow = 'hidden';
+                                        document.addEventListener('keydown', closePaymentPopupOnEsc);
+                                        modal.querySelector('.payment-alert-btn').focus();
+                                    }
+
                                     const form = document.getElementById("payment-form");
                                     const log = document.querySelector("#log");
 
@@ -287,6 +451,10 @@
                                             if (Array.isArray(errorMsg) && !errorMsg.length) {
                                                 form.action = route;
                                                 form.submit();
+                                            }
+
+                                            if (errorMsg.length) {
+                                                showPaymentPopup(errorMsg[0], 'Payment Attention');
                                             }
 
                                             errorMsg.forEach(function(message) {
@@ -334,7 +502,7 @@
                                         const message = paymentAmountValidationMessage(input?.value || '');
 
                                         if (message) {
-                                            alert(message);
+                                            showPaymentPopup(message, 'Payment Amount');
                                             return false;
                                         }
 
@@ -645,7 +813,7 @@
             })
             .then(data => {
                 if (!data.order_id) {
-                    alert("Failed to initiate Razorpay order");
+                    showPaymentPopup("Failed to initiate Razorpay order", 'Payment Gateway');
                     return;
                 }
 
@@ -690,7 +858,7 @@
                 el.checked = false;
                 payNowButton.style.display = '';
                 console.error(err);
-                alert(err.message || "Error connecting to Razorpay.");
+                showPaymentPopup(err.message || "Error connecting to Razorpay.", 'Payment Gateway');
             });
     }
 </script>
@@ -766,14 +934,14 @@
                 }
                 console.log(data);
                 loader.style.display = 'none';
-                alert(`Unexpected status: ${data.status}`);
+                showPaymentPopup(`Unexpected status: ${data.status}`, 'Payment Gateway');
             })
             .catch(err => {
                 el.checked = false;
                 loader.style.display = 'none';
                 payNowButton.style.display = '';
                 console.error(err);
-                alert(err.message || "Error connecting to hdfcsmartpay.");
+                showPaymentPopup(err.message || "Error connecting to hdfcsmartpay.", 'Payment Gateway');
             });
     }
 </script>

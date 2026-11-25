@@ -1,5 +1,8 @@
 @extends('layouts.admin')
 @section('content')
+@if(session('clubman_retry_error'))
+    <div class="alert alert-danger">{{ session('clubman_retry_error') }}</div>
+@endif
 @can('payment_create')
     <div style="margin-bottom: 10px;" class="row">
         <div class="col-lg-12">
@@ -39,6 +42,8 @@
                             {{ trans('cruds.payment.fields.status') }}
                         </th>
                         <th>Payment Datetime</th>
+                        <th>Source</th>
+                        <th>Clubman Status</th>
                         <th class="notexport">Status Update</th>
                         <th class="notexport">
                             &nbsp;
@@ -89,6 +94,18 @@
                                 {{ ( $gateway == 'status') ? $payment->response('status') : $payment->status }}
                             </td>
                             <td>{{ $payment->updated_at ?? '' }}</td>
+                            <td>{{ \App\Services\PaymentSource::label($payment->payment_source) }}</td>
+                            <td>
+                                {{ ['success' => 'Success', 'failure' => 'Failure'][$payment->clubman_status] ?? '-' }}
+                                @can('payment_edit')
+                                    @if($payment->clubman_status === 'failure')
+                                        <form method="POST" action="{{ route('admin.payments.retryClubman', $payment->id) }}" class="d-inline" onsubmit="event.stopPropagation(); this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Retrying...';">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-warning" onclick="event.stopPropagation()">Retry</button>
+                                        </form>
+                                    @endif
+                                @endcan
+                            </td>
                             <td>
                                 <span style="display:none">{{ $payment->response('status') ?? '' }}</span>
                                 <input type="checkbox" disabled="disabled" {{ $payment->status ? 'checked' : '' }}>

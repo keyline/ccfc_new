@@ -5,24 +5,100 @@ namespace App\Services;
 use App\Models\GeneralSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Throwable;
 
 class ClubmanPaymentPosting
 {
+    public function retry(\Tzsk\Payu\Models\PayuTransaction $payment, string $memberCode): array
+    {
+        if ($payment->clubman_status !== 'failure' || ! $payment->successful()) {
+            throw new RuntimeException('Only successful payments with a failed Clubman posting can be retried.');
+        }
+
+        $gateway = basename(parse_url($payment->destination, PHP_URL_PATH));
+        $amount = $payment->response('amount');
+        switch ($gateway) {
+            case 'status':
+                $reference = $payment->response('mihpayid');
+                $gatewayName = 'PayU';
+                break;
+            case 'axisstatus':
+            case 'razorpaycallback':
+                $reference = $payment->response('id');
+                $amount = is_numeric($amount) ? $amount / 100 : null;
+                $gatewayName = $gateway === 'axisstatus' ? 'AXIS Razor Pay' : 'Razor Pay';
+                break;
+            case 'hdfcstatus':
+                $reference = $payment->response('transactionid') ?: $payment->response('mihpayid');
+                $gatewayName = 'HDFC VAS';
+                break;
+            case 'hdfcsmartpaycallback':
+                $reference = $payment->response('orderId');
+                $gatewayName = 'HDFC SMART Pay';
+                break;
+            default:
+                throw new RuntimeException('This payment gateway does not support Clubman retry.');
+        }
+
+        if (! is_numeric($amount) || $amount <= 0 || ! is_scalar($reference) || trim((string) $reference) === '') {
+            throw new RuntimeException('The stored payment amount or reference is missing. Clubman retry was not sent.');
+        }
+
+        return $this->postAndRecord(
+            $payment->transaction_id, $memberCode, (string) $reference,
+            (float) $amount, (string) $reference,
+            'Online payment against outstanding', $gatewayName
+        );
+    }
+
+    public function postAndRecord(
+        string $transactionId,
+        string $memberCode,
+        string $voucherNo,
+        float $amount,
+        string $instrumentNo,
+        string $description = 'Online payment against outstanding',
+        string $paymentGateway = ''
+    ): array {
+        try {
+            $result = $this->post($memberCode, $voucherNo, $amount, $instrumentNo, $description, $paymentGateway);
+        } catch (Throwable $exception) {
+            $this->recordResult($transactionId, 'failure');
+            throw $exception;
+        }
+
+        $this->recordResult($transactionId, 'success');
+
+        return $result;
+    }
+
+    private function recordResult(string $transactionId, string $status): void
+    {
+        DB::table('payu_transactions')->where('transaction_id', $transactionId)->update([
+            'clubman_status' => $status,
+            'clubman_checked_at' => Carbon::now('Asia/Kolkata'),
+        ]);
+    }
+
     public function post(
         string $memberCode,
         string $voucherNo,
         float $amount,
         string $instrumentNo,
         string $description = 'Online payment against outstanding',
-        string $paymentGateway = 'Online Payment'
+        string $paymentGateway = ''
     ): array {
         $memberCode = trim($memberCode);
         $paymentGateway = trim($paymentGateway) ?: 'Online Payment';
 
         if ($memberCode === '') {
             throw new RuntimeException('This member does not have a Clubman membership ID.');
+        }
+
+        if ($amount <= 0 || trim($voucherNo) === '' || trim($instrumentNo) === '') {
+            throw new RuntimeException('The payment amount or reference is missing. Clubman posting was not sent.');
         }
 
         $endpoint = trim((string) config('services.clubman.payment_posting_url'));

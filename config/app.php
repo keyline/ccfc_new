@@ -166,7 +166,7 @@ return [
         /*
          * Package Service Providers...
          */
-        Maatwebsite\Excel\ExcelServiceProvider::class,
+        // Laravel Excel registers through package discovery when installed.
 
         /*
          * Application Service Providers...

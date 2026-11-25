@@ -71,7 +71,11 @@ class MemberAuthMiddleware
         // ---------------------------------------------------------
         // 3) Force first-time update (if required by your logic)
         // ---------------------------------------------------------
-        if ($member->first_update_required ?? false) {
+        $quickAccessPayment = $request->session()->get('quickaccess.payment_in_progress')
+            && app(\App\Services\QuickAccessEligibility::class)->allows($member)
+            && $request->routeIs('member.quickaccess.pay', 'member.razorpay', 'member.razorpaycallback');
+
+        if (($member->first_update_required ?? false) && !$quickAccessPayment) {
 
             // allow access to update form
             if ($request->is('member/updateme')) {

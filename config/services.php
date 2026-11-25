@@ -2,6 +2,11 @@
 
 return [
 
+    'razorpay' => [
+        'key' => env('RAZORPAY_KEY_NEW'),
+        'secret' => env('RAZORPAY_SECRET_NEW'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

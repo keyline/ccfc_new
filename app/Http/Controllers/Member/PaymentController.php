@@ -31,16 +31,20 @@ use Illuminate\Support\Facades\Log;
 use App\Models\MemberDue;
 use App\Services\Juspay\JuspayService;
 use App\Services\ClubmanMemberLookup;
+use App\Services\PaymentSource;
 use Illuminate\Validation\ValidationException;
 
 use function Symfony\Component\VarDumper\Dumper\esc;
 
 class PaymentController extends Controller
 {
-    // changed: temporarily restrict live Clubman payment posting to this member code only, while the integration is verified in production.
-    private function shouldPostToClubman(?string $memberCode): bool
+    private function renderPaymentStatus(Request $request, array $status, string $defaultView = 'member.paymentstatusotherpgs')
     {
-        return strtoupper(trim((string) $memberCode)) === 'B47CEO';
+        if ($request->session()->pull('quickaccess.payment_in_progress')) {
+            return view('member.quick_access.payment_success', compact('status'));
+        }
+
+        return view($defaultView, compact('status'));
     }
 
     //
@@ -71,13 +75,19 @@ class PaymentController extends Controller
                             ->to($customer);
             //dd($transaction);
 
-            return Payu::initiate($transaction)->redirect(route('member.payment.status'));
+            $response = Payu::initiate($transaction)->redirect(route('member.payment.status'));
+            DB::table('payu_transactions')
+                ->where('transaction_id', $transaction->transactionId)
+                ->whereNull('payment_source')
+                ->update(['payment_source' => PaymentSource::fromRequest($request)]);
+
+            return $response;
         } else {
             abort(401);
         }
     }
 
-    public function status()
+    public function status(Request $request)
     {
         $transaction = Payu::capture();
 
@@ -118,7 +128,7 @@ class PaymentController extends Controller
             }
         }
 
-        return view('member.paymentstatus', compact('status'));
+        return $this->renderPaymentStatus($request, $status, 'member.paymentstatus');
     }
 
     public function PayWithHdfc(
@@ -200,7 +210,7 @@ class PaymentController extends Controller
                     Auth::guard('members')->logout();
                 }
             }
-            return view('member.paymentstatusotherpgs', compact('status'));
+            return $this->renderPaymentStatus($request, $status);
         }
     }
 
@@ -320,7 +330,7 @@ class PaymentController extends Controller
 
         }
 
-        return view('member.paymentstatusotherpgs', compact('status'));
+        return $this->renderPaymentStatus($request, $status);
 
         //Session::put('success', 'Payment successful');
         //dd([$payment, $input]);
@@ -353,6 +363,7 @@ class PaymentController extends Controller
             ]);
             // Store the order ID or other necessary details in your database for future reference
             DB::table('payu_transactions')->insert([
+            'payment_source' => PaymentSource::fromRequest($request),
             'paid_for_id' => $user->id,
             'paid_for_type' => 'App\Models\User',
             'transaction_id' => $order->id,
@@ -387,10 +398,43 @@ class PaymentController extends Controller
             $clubmanMemberLookup,
             true
         );
-        $step = 'initialize_razorpay';
-
+        $stage = 'configuration';
         try {
-            $api = $this->razorpayApi();
+            if (!config('services.razorpay.key') || !config('services.razorpay.secret')) {
+                throw new \RuntimeException('Razorpay credentials are missing.');
+            }
+            $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+            $stage = 'gateway_order';
+            $order = $api->order->create([
+            'receipt' => 'INV_' . rand(10000, 99999),
+            'amount' => (int) $amountInPaise,
+            'currency' => 'INR',
+            'payment_capture' => 1,
+            'notes' => [
+            'udf1' => $user->id, // User Defined Field 1
+            'udf2' => $user->user_code, // User Defined Field 2
+            'name' => $user->name,
+            'email' => $user->email,
+            // 'email'=> 'deblina@keylines.net',
+            'contact' => $user->phone_number_1,
+            // Add more UDFs as needed
+        ]
+        ]);
+        $stage = 'save_transaction';
+        // Store the order ID or other necessary details in your database for future reference
+        DB::table('payu_transactions')->insert([
+        'payment_source' => PaymentSource::fromRequest($request),
+        'paid_for_id' => $user->id,
+        'paid_for_type' => 'App\Models\User',
+        'transaction_id' => $order->id,
+        'gateway'		=> 'Razor Pay',
+        'body'			=> serialize($order),
+        'destination'	=> route('member.razorpaycallback'),
+        'hash'			=> '',
+        'response'		=> '',
+        'status'		=> 'pending',
+        'created_at'	=> Carbon::now('Asia/Kolkata'),
+        'updated_at'	=> Carbon::now('Asia/Kolkata'),
 
             $step = 'create_razorpay_order';
             $order = $api->order->create([
@@ -431,24 +475,36 @@ class PaymentController extends Controller
 
 
 
-            // ✅ Store order_id in session
-            Session::put('razorpayTransactionid', $orderId);
-            return response()->json(['order_id' => $orderId]);
-        } catch (\Throwable $exception) {
-            Log::error('Razorpay order creation failed.', [
-                'member_id' => $user->id,
-                'member_code' => $user->user_code,
-                'amount_in_paise' => $amountInPaise,
-                'key_id' => config('services.razorpay.key'),
-                'step' => $step,
-                'exception' => get_class($exception),
-                'error' => $exception->getMessage(),
-            ]);
+        // ✅ Store order_id in session
+        Session::put('razorpayTransactionid', $order['id']);
+        return response()->json(['order_id' => $order['id']]);
+        } catch (\Throwable $e) {
+            $reference = (string) Str::uuid();
+            $context = [
+                'reference' => $reference,
+                'stage' => $stage,
+                'exception_class' => get_class($e),
+                'error_code' => $e->getCode(),
+                'key_mode' => Str::startsWith((string) config('services.razorpay.key'), 'rzp_test_') ? 'test' : 'live_or_unknown',
+            ];
+            if ($e instanceof \Illuminate\Database\QueryException) {
+                // Include the database reason without SQL bindings or member details.
+                $context['sqlstate'] = $e->errorInfo[0] ?? null;
+                $context['driver_code'] = $e->errorInfo[1] ?? null;
+                $context['missing_payment_source'] = strpos($e->getMessage(), "Unknown column 'payment_source'") !== false;
+            }
+            Log::error('Razorpay payment initiation failed', $context);
 
-            return response()->json([
-                'message' => 'Unable to initiate Razorpay payment. Please try again shortly. Debug step: ' . $step,
-                'debug_step' => $step,
-            ], 502);
+            $message = 'Unable to start payment. Please contact the club.';
+            if ($stage === 'configuration') {
+                $message = 'Payment gateway configuration is incomplete. Please contact the club.';
+            } elseif ($e instanceof \Razorpay\Api\Errors\Error && $e->getHttpStatusCode() === 401) {
+                $message = 'Payment gateway credentials were rejected. Please contact the club.';
+            } elseif ($stage === 'save_transaction') {
+                $message = 'Unable to save the payment transaction. Please contact the club.';
+            }
+
+            return response()->json(['message' => $message . ' Reference: ' . $reference], 503);
         }
         // return response()->json(['order_id' => 56789]);
     }
@@ -461,7 +517,7 @@ class PaymentController extends Controller
     //             return response()->json(['error' => 'Invalid amount.'], 400);
     //         }
 
-    //         $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
+    //         $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
     //         $orderData = [
     //             'receipt'         => 'INV_' . rand(10000, 99999),
@@ -490,7 +546,7 @@ class PaymentController extends Controller
         // dd($request->all());
         $input = $request->all();
 
-        $api = $this->razorpayApi();
+        $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
 
         // Process the payment callback logic here
         $payment = $api->payment->fetch($input['razorpay_payment_id']);
@@ -553,17 +609,16 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    if ($this->shouldPostToClubman($user->user_code)) {
-                        $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->post(
-                            $user->user_code,
-                            $input['razorpay_payment_id'],
-                            (float) $amount,
-                            $input['razorpay_payment_id'],
-                            'Razorpay payment against outstanding',
-                            'Razorpay'
-                        );
-                        // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
-                    }
+                    $clubmanResponse = app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                        (string) Session::get('razorpayTransactionid'),
+                        $user->user_code,
+                        $input['razorpay_payment_id'],
+                        (float) $amount,
+                        $input['razorpay_payment_id'],
+                        'Online payment against outstanding',
+                        'Razor Pay'
+                    );
+                    // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
                 } catch (\Throwable $e) {
                     $clubmanPostingFailed = true;
                     Log::error('Clubman Payment Posting Failed: ' . $e->getMessage());
@@ -612,7 +667,7 @@ class PaymentController extends Controller
 
         }
 
-        return view('member.paymentstatusotherpgs', compact('status'));
+        return $this->renderPaymentStatus($request, $status);
 
         //Session::put('success', 'Payment successful');
         //dd([$payment, $input]);
@@ -836,6 +891,7 @@ class PaymentController extends Controller
 
             // changed: keep storing the transaction row used later by the callback status-update flow.
             $paymentId = DB::table('payu_transactions')->insertGetId([
+                'payment_source' => PaymentSource::fromRequest($request),
                 'paid_for_id' => $user->id,
                 'paid_for_type' => 'App\Models\User',
                 'transaction_id' => $orderId,
@@ -887,7 +943,7 @@ class PaymentController extends Controller
         }
     }
 
-    public function handleJuspayResponse(JuspayService $juspay)
+    public function handleJuspayResponse(JuspayService $juspay, Request $request)
     {
         // changed: callback now uses the same Juspay config/key resolution as initiateJuspayPayment().
         $config = $juspay->config();
@@ -1068,7 +1124,8 @@ class PaymentController extends Controller
 
                 if ($response['order_status'] === "CHARGED" && $this->shouldPostToClubman($user->user_code)) {
                     try {
-                        app(\App\Services\ClubmanPaymentPosting::class)->post(
+                        app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                            $order->orderId,
                             $user->user_code,
                             $response['order_id'],
                             (float) $amount,
@@ -1122,7 +1179,7 @@ class PaymentController extends Controller
                 Session::forget(['hdfcsmartpayTransactionid', 'hdfcsmartpaycustomerid']);
 
 
-                return view('member.paymentstatusotherpgs', ['status' => $status]);
+                return $this->renderPaymentStatus($request, $status);
 
 
 
@@ -1160,7 +1217,7 @@ class PaymentController extends Controller
         Session::forget(['hdfcsmartpayTransactionid', 'hdfcsmartpaycustomerid']);
 
 
-        return view('member.paymentstatusotherpgs', compact('status'));
+        return $this->renderPaymentStatus($request, $status);
 
 
 

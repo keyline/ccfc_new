@@ -43,20 +43,14 @@ class PaymentsController extends Controller
     {
         abort_if(Gate::denies('payment_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        //$payments = User::with(['member'])->transactions()->get();
-        //$payments= USER::find(1952)->transactions()->get()->first();
-        $users = DB::table('payu_transactions')
-                        ->join('users', 'users.id', '=', 'payu_transactions.paid_for_id')
-                        ->distinct()
-                        ->get(['users.id']);
-        
-        $payments=  $users->map(function ($item) {
-            return USER::find($item->id)->transactions()->get();
-        });
-        // dd($payments);
+        $payments = PayuTransaction::join('users', 'users.id', '=', 'payu_transactions.paid_for_id')
+            ->where('payu_transactions.paid_for_type', (new User())->getMorphClass())
+            ->whereNull('users.deleted_at')
+            ->select('payu_transactions.*', 'users.name as member_name', 'users.user_code as member_code')
+            ->orderByDesc('payu_transactions.id')
+            ->paginate(25);
 
-        
-        return view('admin.payments.index', compact('payments', 'users'));
+        return view('admin.payments.index', compact('payments'));
     }
 
     public function create()

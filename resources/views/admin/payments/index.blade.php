@@ -51,10 +51,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($payments as $key => $user)
-                    @foreach($user as $payment)                         
+                    @foreach($payments as $payment)
                     @php $gateway= basename(parse_url($payment->destination, PHP_URL_PATH)); @endphp                                                            
-                    @php $userDetails= \App\Models\User::select('*')->where('id', '=', $payment->paid_for_id)->first();@endphp
                     
                         <tr data-entry-id="{{ $payment->paid_for_id }}">
                             
@@ -63,7 +61,7 @@
                             </td>
                             
                             <td>
-                                {{ $userDetails->name ?? ''}} {{ $userDetails->user_code ?? '' }}
+                                {{ $payment->member_name ?? '' }} {{ $payment->member_code ?? '' }}
                             </td>
                             <td>
                                 @php
@@ -114,11 +112,15 @@
 
                         </tr>
                     @endforeach
-                    @endforeach
                     
                 </tbody>
             </table>
         </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap mt-3">
+            <span>Showing {{ $payments->firstItem() ?? 0 }}–{{ $payments->lastItem() ?? 0 }} of {{ $payments->total() }} payments</span>
+            {{ $payments->onEachSide(1)->links() }}
+        </div>
+        <small class="text-muted">Search and Excel export apply to this page only.</small>
     </div>
 </div>
 
@@ -164,9 +166,10 @@
 
   $.extend(true, $.fn.dataTable.defaults, {
     orderCellsTop: true,
-    order: [[ 1, 'desc' ]],
-    pageLength: 100,
-    dom: 'Bfrtip',
+    order: [],
+    paging: false,
+    info: false,
+    dom: 'Bfrt',
         buttons: [
              {
       extend: 'excel',

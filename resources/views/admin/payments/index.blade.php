@@ -120,7 +120,7 @@
             <span>Showing {{ $payments->firstItem() ?? 0 }}–{{ $payments->lastItem() ?? 0 }} of {{ $payments->total() }} payments</span>
             {{ $payments->onEachSide(1)->links() }}
         </div>
-        <small class="text-muted">Search and Excel export apply to this page only.</small>
+        <small class="text-muted">Search applies to this page only.</small>
     </div>
 </div>
 
@@ -131,62 +131,18 @@
 @parent
 <script>
     $(function () {
-        let today = new Date()
-        today = today.toISOString().split('T')[0];
-  let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
-@can('payment_delete')
-  let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
-  let deleteButton = {
-    text: deleteButtonTrans,
-    url: "{{ route('admin.payments.massDestroy') }}",
-    className: 'btn-danger',
-    action: function (e, dt, node, config) {
-      var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {
-          return $(entry).data('entry-id')
-      });
-
-      if (ids.length === 0) {
-        alert('{{ trans('global.datatables.zero_selected') }}')
-
-        return
-      }
-
-      if (confirm('{{ trans('global.areYouSure') }}')) {
-        $.ajax({
-          headers: {'x-csrf-token': _token},
-          method: 'POST',
-          url: config.url,
-          data: { ids: ids, _method: 'DELETE' }})
-          .done(function () { location.reload() })
-      }
-    }
-  }
-  dtButtons.push(deleteButton)
-@endcan
-
-  $.extend(true, $.fn.dataTable.defaults, {
-    orderCellsTop: true,
-    order: [],
-    paging: false,
-    info: false,
-    dom: 'Bfrt',
-        buttons: [
-             {
-      extend: 'excel',
-      title: 'PayU Reports',
-      exportOptions: {
-            columns: ':visible:not(.notexport)'
-        }
-    },
-        ]
-  });
-  let table = $('.datatable-Payment:not(.ajaxTable)').DataTable();
-  $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
-      $($.fn.dataTable.tables(true)).DataTable()
-          .columns.adjust();
-  });
-  
-})
-
+        $('.datatable-Payment:not(.ajaxTable)').DataTable({
+            orderCellsTop: true,
+            order: [],
+            paging: false,
+            info: false,
+            select: false,
+            dom: 'frt',
+            buttons: []
+        });
+        $('a[data-toggle="tab"]').on('shown.bs.tab click', function () {
+            $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+        });
+    });
 </script>
 @endsection

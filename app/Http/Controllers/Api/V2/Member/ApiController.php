@@ -78,25 +78,11 @@ use DateTime;
 date_default_timezone_set("Asia/Kolkata");
 class ApiController extends Controller
 {
-    // Match the current web payment rollout while Clubman posting is verified in production.
-    private function shouldPostToClubman(?string $memberCode): bool
-    {
-        return strtoupper(trim((string) $memberCode)) === 'B47CEO';
-    }
-
     private function postMobilePaymentToClubman(User $user, string $transactionId, float $amount, string $gateway): bool
     {
         try {
-            if ($gateway === 'PayU') {
-                app(\App\Services\MobilePayuClubmanPosting::class)->post($user->user_code, $transactionId, $amount);
-                return false;
-            }
-
-            if (! $this->shouldPostToClubman($user->user_code)) {
-                return false;
-            }
-
-            app(ClubmanPaymentPosting::class)->post(
+            app(ClubmanPaymentPosting::class)->postAndRecord(
+                $transactionId,
                 $user->user_code,
                 $transactionId,
                 $amount,
@@ -2921,7 +2907,7 @@ class ApiController extends Controller
 
                 DB::table('payu_transactions')->insert($postData);
 
-                $clubmanPostingFailed = $this->postMobilePaymentToClubman(
+                $clubmanPostingFailed = $status === 'captured' && $this->postMobilePaymentToClubman(
                     $checkUser,
                     $payment_id,
                     (float) $amount,

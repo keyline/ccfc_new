@@ -10,6 +10,25 @@ use RuntimeException;
 
 class ClubmanPaymentStatusTest extends TestCase
 {
+    public function test_hdfc_vas_retry_uses_the_stored_txn_id(): void
+    {
+        $payment = new \Tzsk\Payu\Models\PayuTransaction();
+        $payment->forceFill([
+            'transaction_id' => 'order_1', 'status' => 'successful',
+            'clubman_status' => 'failure', 'destination' => 'https://example.test/member/payment/hdfcstatus',
+            'response' => ['txn_id' => 'hdfc_1', 'amount' => '123.45'],
+        ]);
+        $service = \Mockery::mock(ClubmanPaymentPosting::class)->makePartial();
+        $service->shouldReceive('post')->once()->with(
+            'M1', 'hdfc_1', 123.45, 'hdfc_1', 'Online payment against outstanding', 'HDFC VAS'
+        )->andReturn(['Status' => 'success']);
+
+        $service->retry($payment, 'M1');
+
+        $this->assertSame('success', DB::table('payu_transactions')->where('transaction_id', 'order_1')->value('clubman_status'));
+        \Mockery::close();
+    }
+
     public function test_mobile_payu_failure_can_be_retried_with_the_gateway_reference(): void
     {
         $payment = new \Tzsk\Payu\Models\PayuTransaction();

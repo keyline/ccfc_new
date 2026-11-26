@@ -99,12 +99,13 @@ class PaymentController extends Controller
             $clubmanPostingFailed = false;
 
             try {
-                if ($this->shouldPostToClubman($user->user_code)) {
-                    app(\App\Services\ClubmanPaymentPosting::class)->post(
+                if ($transaction->clubman_status !== 'success') {
+                    app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                        $transaction->transaction_id,
                         $user->user_code,
-                        $status['mihpayid'],
+                        (string) ($status['mihpayid'] ?? ''),
                         (float) $status['amount'],
-                        $status['mihpayid'],
+                        (string) ($status['mihpayid'] ?? ''),
                         'PayU payment against outstanding',
                         'PayU'
                     );
@@ -183,14 +184,15 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    if ($this->shouldPostToClubman($user->user_code)) {
-                        app(\App\Services\ClubmanPaymentPosting::class)->post(
+                    if ($status['status'] === 'success') {
+                        app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                            $status['transactionid'],
                             $user->user_code,
-                            $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
+                            $status['transactionid'],
                             (float) $status['amount'],
-                            $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
+                            $status['transactionid'],
                             'HDFC payment against outstanding',
-                            'HDFC'
+                            'HDFC VAS'
                         );
                     }
                 } catch (\Throwable $e) {
@@ -273,8 +275,9 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    if ($this->shouldPostToClubman($user->user_code)) {
-                        app(\App\Services\ClubmanPaymentPosting::class)->post(
+                    if ($payment->status === 'captured') {
+                        app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                            $payment->order_id,
                             $user->user_code,
                             $input['razorpay_payment_id'],
                             (float) $amount,
@@ -1091,7 +1094,7 @@ class PaymentController extends Controller
 
                 $clubmanPostingFailed = false;
 
-                if ($response['order_status'] === "CHARGED" && $this->shouldPostToClubman($user->user_code)) {
+                if ($response['order_status'] === "CHARGED") {
                     try {
                         app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
                             $order->orderId,

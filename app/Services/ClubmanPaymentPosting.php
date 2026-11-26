@@ -31,7 +31,7 @@ class ClubmanPaymentPosting
                 $gatewayName = $gateway === 'axisstatus' ? 'AXIS Razor Pay' : 'Razor Pay';
                 break;
             case 'hdfcstatus':
-                $reference = $payment->response('transactionid') ?: $payment->response('mihpayid');
+                $reference = $payment->response('txn_id') ?: $payment->response('transactionid') ?: $payment->response('mihpayid');
                 $gatewayName = 'HDFC VAS';
                 break;
             case 'hdfcsmartpaycallback':

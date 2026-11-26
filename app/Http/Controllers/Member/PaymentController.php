@@ -191,7 +191,7 @@ class PaymentController extends Controller
                             $status['transactionid'],
                             (float) $status['amount'],
                             $status['transactionid'],
-                            'HDFC payment against outstanding',
+                            'HDFC VAS payment against outstanding',
                             'HDFC VAS'
                         );
                     }
@@ -587,7 +587,7 @@ class PaymentController extends Controller
                         $input['razorpay_payment_id'],
                         (float) $amount,
                         $input['razorpay_payment_id'],
-                        'Online payment against outstanding',
+                        'Razorpay payment against outstanding',
                         'Razor Pay'
                     );
                     // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
@@ -1102,7 +1102,7 @@ class PaymentController extends Controller
                             $response['order_id'],
                             (float) $amount,
                             $response['order_id'],
-                            'HDFC payment against outstanding',
+                            'HDFC SMART Pay payment against outstanding',
                             'HDFC'
                         );
                     } catch (\Throwable $e) {

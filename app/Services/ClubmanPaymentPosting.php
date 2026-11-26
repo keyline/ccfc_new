@@ -49,7 +49,7 @@ class ClubmanPaymentPosting
         return $this->postAndRecord(
             $payment->transaction_id, $memberCode, (string) $reference,
             (float) $amount, (string) $reference,
-            'Online payment against outstanding', $gatewayName
+            'Retry payment against outstanding', $gatewayName
         );
     }
 

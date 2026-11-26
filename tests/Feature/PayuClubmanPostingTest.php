@@ -35,7 +35,7 @@ class PayuClubmanPostingTest extends TestCase
             'status' => 'success', 'user' => 1, 'transactionid' => 'hdfc_1', 'amount' => '123.45',
         ]);
         $this->mock(ClubmanPaymentPosting::class)->shouldReceive('postAndRecord')->once()->with(
-            'hdfc_1', 'M1', 'hdfc_1', 123.45, 'hdfc_1', 'HDFC payment against outstanding', 'HDFC VAS'
+            'hdfc_1', 'M1', 'hdfc_1', 123.45, 'hdfc_1', 'HDFC VAS payment against outstanding', 'HDFC VAS'
         )->andReturn(['Status' => 'success']);
         $request = Request::create('/member/payment/hdfcstatus', 'POST', ['respData' => 'encrypted']);
         $request->setLaravelSession(app('session.store'));

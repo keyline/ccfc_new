@@ -2703,7 +2703,7 @@ class ApiController extends Controller
                                         (string) ($payuResponse['mihpayid'] ?? ''),
                                         (float) $amount,
                                         (string) ($payuResponse['mihpayid'] ?? ''),
-                                        'Online payment against outstanding',
+                                        'PayU payment against outstanding',
                                         'PayU'
                                     );
                                 } catch (\Throwable $exception) {

@@ -20,7 +20,7 @@ class ClubmanPaymentStatusTest extends TestCase
         ]);
         $service = \Mockery::mock(ClubmanPaymentPosting::class)->makePartial();
         $service->shouldReceive('post')->once()->with(
-            'M1', 'hdfc_1', 123.45, 'hdfc_1', 'Online payment against outstanding', 'HDFC VAS'
+            'M1', 'hdfc_1', 123.45, 'hdfc_1', 'Retry payment against outstanding', 'HDFC VAS'
         )->andReturn(['Status' => 'success']);
 
         $service->retry($payment, 'M1');

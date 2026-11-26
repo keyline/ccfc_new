@@ -1,4 +1,19 @@
 @extends('layouts.admin')
+@section('styles')
+@parent
+<style>
+    .datatable-Payment .clubman-retry-form { display: inline-block; margin-left: 10px; vertical-align: middle; }
+    .datatable-Payment .clubman-retry {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 6px;
+        background: #fff; color: #334155; font-size: 12px; font-weight: 600;
+        line-height: 1.5; white-space: nowrap; cursor: pointer;
+    }
+    .datatable-Payment .clubman-retry:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .datatable-Payment .clubman-retry:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+    .datatable-Payment .clubman-retry:disabled { opacity: .65; cursor: wait; }
+</style>
+@endsection
 @section('content')
 @if(session('clubman_retry_error'))
     <div class="alert alert-danger">{{ session('clubman_retry_error') }}</div>
@@ -97,9 +112,9 @@
                                 {{ ['success' => 'Success', 'failure' => 'Failure'][$payment->clubman_status] ?? '-' }}
                                 @can('payment_edit')
                                     @if($payment->clubman_status === 'failure')
-                                        <form method="POST" action="{{ route('admin.payments.retryClubman', $payment->id) }}" class="d-inline" onsubmit="event.stopPropagation(); this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Retrying...';">
+                                        <form method="POST" action="{{ route('admin.payments.retryClubman', $payment->id) }}" class="clubman-retry-form" onsubmit="event.stopPropagation(); this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Retrying...';">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-warning" onclick="event.stopPropagation()">Retry</button>
+                                            <button type="submit" class="clubman-retry" aria-label="Retry Clubman posting for payment {{ $payment->id }}" onclick="event.stopPropagation()"><i class="fas fa-redo-alt" aria-hidden="true"></i> Retry</button>
                                         </form>
                                     @endif
                                 @endcan

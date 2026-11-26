@@ -2679,6 +2679,7 @@ class ApiController extends Controller
                                 'paid_for_id'           => $uId,
                                 'paid_for_type'         => 'App\Models\User',
                                 'transaction_id'        => $txn_id,
+                                'payment_source'        => 'mobile_app',
                                 'gateway'               => 'PayU',
                                 'body'                  => '',
                                 'destination'           => 'https://ccfc1792.com/member/payment/status',
@@ -2895,6 +2896,7 @@ class ApiController extends Controller
                     'paid_for_id'       => $uId,
                     'paid_for_type'     => 'App\Models\User',
                     'transaction_id'    => $payment_id,
+                    'payment_source'    => 'mobile_app',
                     'gateway'           => 'Razorpay',
                     'body'              => '',
                     'destination'       => 'https://ccfc1792.com/member/payment/razorpaycallback',
@@ -2942,6 +2944,7 @@ class ApiController extends Controller
                     'paid_for_id'       => $uId,
                     'paid_for_type'     => 'App\Models\User',
                     'transaction_id'    => $uId . '-failed-' . time(), // Unique transaction ID
+                    'payment_source'    => 'mobile_app',
                     'gateway'           => 'Razorpay',
                     'body'              => '',
                     'destination'       => 'https://ccfc1792.com/member/payment/razorpaycallback',

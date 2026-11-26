@@ -29,6 +29,7 @@ class PaymentSource
             'quick_access' => 'Quick Access',
             'member_login' => 'Member Login',
             'payment_link' => 'Payment Link',
+            'mobile_app' => 'Mobile App',
         ][$source] ?? '-';
     }
 }

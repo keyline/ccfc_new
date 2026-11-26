@@ -2701,9 +2701,9 @@ class ApiController extends Controller
                                     app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
                                         (string) $txn_id,
                                         (string) $user->user_code,
-                                        (string) ($payuResponse['mihpayid'] ?? ''),
+                                        (string) (($payuResponse['mihpayid'] ?? '') ?: ($payuResponse['id'] ?? '')),
                                         (float) $amount,
-                                        (string) ($payuResponse['mihpayid'] ?? ''),
+                                        (string) (($payuResponse['mihpayid'] ?? '') ?: ($payuResponse['id'] ?? '')),
                                         'PayU payment against outstanding',
                                         'PayU'
                                     );

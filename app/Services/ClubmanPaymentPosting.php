@@ -21,7 +21,7 @@ class ClubmanPaymentPosting
         $amount = $payment->response('amount');
         switch ($gateway) {
             case 'status':
-                $reference = $payment->response('mihpayid');
+                $reference = $payment->response('mihpayid') ?: $payment->response('id');
                 $gatewayName = 'PayU';
                 break;
             case 'axisstatus':
@@ -31,6 +31,7 @@ class ClubmanPaymentPosting
                 $gatewayName = $gateway === 'axisstatus' ? 'AXIS Razor Pay' : 'Razor Pay';
                 break;
             case 'hdfcstatus':
+                $amount = $payment->response('txn_amount') ?? $amount;
                 $reference = $payment->response('txn_id') ?: $payment->response('transactionid') ?: $payment->response('mihpayid');
                 $gatewayName = 'HDFC VAS';
                 break;

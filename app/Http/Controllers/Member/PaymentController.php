@@ -103,9 +103,9 @@ class PaymentController extends Controller
                     app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
                         $transaction->transaction_id,
                         $user->user_code,
-                        (string) ($status['mihpayid'] ?? ''),
+                        (string) (($status['mihpayid'] ?? '') ?: ($status['id'] ?? '')),
                         (float) $status['amount'],
-                        (string) ($status['mihpayid'] ?? ''),
+                        (string) (($status['mihpayid'] ?? '') ?: ($status['id'] ?? '')),
                         'PayU payment against outstanding',
                         'PayU'
                     );

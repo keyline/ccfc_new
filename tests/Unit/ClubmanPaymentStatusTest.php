@@ -10,13 +10,33 @@ use RuntimeException;
 
 class ClubmanPaymentStatusTest extends TestCase
 {
-    public function test_hdfc_vas_retry_uses_the_stored_txn_id(): void
+    public function test_mobile_payu_retry_accepts_numeric_id_when_mihpayid_is_absent(): void
+    {
+        $payment = new \Tzsk\Payu\Models\PayuTransaction();
+        $payment->forceFill([
+            'transaction_id' => 'order_1', 'status' => 'successful',
+            'clubman_status' => 'failure', 'destination' => 'https://example.test/member/payment/status',
+            'response' => ['id' => 12345678901, 'amount' => '1600.00', 'status' => 'success'],
+        ]);
+        $service = \Mockery::mock(ClubmanPaymentPosting::class)->makePartial();
+        $service->shouldReceive('post')->once()->with(
+            'M1', '12345678901', 1600.0, '12345678901', 'Retry payment against outstanding', 'PayU'
+        )->andReturn(['Status' => 'success']);
+
+        $service->retry($payment, 'M1');
+
+        $this->assertSame('success', DB::table('payu_transactions')->where('transaction_id', 'order_1')->value('clubman_status'));
+        \Mockery::close();
+    }
+
+    /** @dataProvider hdfcVasResponses */
+    public function test_hdfc_vas_retry_uses_the_stored_txn_id(array $response): void
     {
         $payment = new \Tzsk\Payu\Models\PayuTransaction();
         $payment->forceFill([
             'transaction_id' => 'order_1', 'status' => 'successful',
             'clubman_status' => 'failure', 'destination' => 'https://example.test/member/payment/hdfcstatus',
-            'response' => ['txn_id' => 'hdfc_1', 'amount' => '123.45'],
+            'response' => $response,
         ]);
         $service = \Mockery::mock(ClubmanPaymentPosting::class)->makePartial();
         $service->shouldReceive('post')->once()->with(
@@ -27,6 +47,15 @@ class ClubmanPaymentStatusTest extends TestCase
 
         $this->assertSame('success', DB::table('payu_transactions')->where('transaction_id', 'order_1')->value('clubman_status'));
         \Mockery::close();
+    }
+
+    public function hdfcVasResponses(): array
+    {
+        return [
+            'gateway response' => [['txn_id' => 'hdfc_1', 'txn_amount' => '123.45']],
+            'older amount field' => [['txn_id' => 'hdfc_1', 'amount' => '123.45']],
+            'gateway amount takes precedence' => [['txn_id' => 'hdfc_1', 'txn_amount' => '123.45', 'amount' => '999.00']],
+        ];
     }
 
     public function test_mobile_payu_failure_can_be_retried_with_the_gateway_reference(): void

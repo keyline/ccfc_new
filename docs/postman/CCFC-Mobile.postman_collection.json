@@ -1,0 +1,1711 @@
+{
+    "info": {
+        "name": "CCFC Mobile API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": "All active member routes in routes/api.php. Import and select the companion environment. Set base_url, member credentials and device type. Login saves app_access_token automatically. Authorization uses the raw token. OTP requests send messages. Send requests individually: running the entire collection against production can change passwords, request account deletion, submit profile changes and record payments. Examples reflect local source; live behavior has not been verified."
+    },
+    "item": [
+        {
+            "name": "Legacy V1",
+            "item": [
+                {
+                    "name": "index",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/member/list",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "member",
+                                "list"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, AuthController::index. Legacy paginated member list; response contains member data. No authentication check in this controller."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "signinWithMobile",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/signinwithmobile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "signinwithmobile"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::signinWithMobile.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\",\n    \"device_token\": \"{{device_token}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "validateOtp",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/validateotp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "validateotp"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::validateOtp.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"phone\": \"{{phone}}\",\n    \"otp\": \"{{otp}}\",\n    \"device_token\": \"{{device_token}}\",\n    \"fcm_token\": \"{{fcm_token}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const result = pm.response.json();",
+                                    "function findToken(v) { if (!v || typeof v !== \"object\") return; if (typeof v.app_access_token === \"string\" && v.app_access_token) return v.app_access_token; for (const child of Object.values(v)) { const token = findToken(child); if (token) return token; } }",
+                                    "const token = findToken(result);",
+                                    "if (token) pm.environment.set(\"app_access_token\", token);",
+                                    "pm.test(\"Login returned an app access token\", () => pm.expect(token).to.be.a(\"string\").and.not.empty);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "signInWithPassword",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/signinwithpassword",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "signinwithpassword"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::signInWithPassword.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"device_token\": \"{{device_token}}\",\n    \"fcm_token\": \"{{fcm_token}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const result = pm.response.json();",
+                                    "function findToken(v) { if (!v || typeof v !== \"object\") return; if (typeof v.app_access_token === \"string\" && v.app_access_token) return v.app_access_token; for (const child of Object.values(v)) { const token = findToken(child); if (token) return token; } }",
+                                    "const token = findToken(result);",
+                                    "if (token) pm.environment.set(\"app_access_token\", token);",
+                                    "pm.test(\"Login returned an app access token\", () => pm.expect(token).to.be.a(\"string\").and.not.empty);"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "forgotPassword",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/forgotpassword",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "forgotpassword"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::forgotPassword. Save the returned reset id as reset_id for verifyotp/resendotp/resetpassword.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"{{email}}\",\n    \"member_code\": \"{{member_code}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "verifyOtp",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/verifyotp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "verifyotp"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::verifyOtp.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"{{reset_id}}\",\n    \"otp\": \"{{otp}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "resendOtp",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/resendotp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "resendotp"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::resendOtp.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"{{reset_id}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "resetPassword",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/resetpassword",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "resetpassword"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::resetPassword.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id\": \"{{reset_id}}\",\n    \"password\": \"{{password}}\",\n    \"confirm_password\": \"{{confirm_password}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Account changes and submissions",
+            "item": [
+                {
+                    "name": "logOut",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "logout"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::logOut. Changes account/session or submits data. Send individually with intended values."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "submitContactUs",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/submitcontactus",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "submitcontactus"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::submitContactUs. Changes account/session or submits data. Send individually with intended values.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"department\": \"{{department}}\",\n    \"name\": \"{{name}}\",\n    \"email\": \"{{email}}\",\n    \"phone\": \"{{phone}}\",\n    \"message\": \"{{message}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "changePassword",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/changepassword",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "changepassword"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::changePassword. Changes account/session or submits data. Send individually with intended values.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"old_password\": \"{{old_password}}\",\n    \"new_password\": \"{{new_password}}\",\n    \"confirm_password\": \"{{confirm_password}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "deleteAccount",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/deleteaccount",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "deleteaccount"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::deleteAccount. Changes account/session or submits data. Send individually with intended values."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "billingReport",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/billingreport",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "billingreport"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::billingReport. Changes account/session or submits data. Send individually with intended values. Copy billdetails from billinglist; reports need real item and bill values.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"billdetails\": \"{{billdetails}}\",\n    \"itemdesc\": \"{{itemdesc}}\",\n    \"qty\": \"{{qty}}\",\n    \"comments\": \"{{comments}}\",\n    \"bill_date\": \"{{bill_date}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "profileUpdateRequest",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/profileupdaterequest",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "profileupdaterequest"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::profileUpdateRequest. Changes account/session or submits data. Send individually with intended values. STRUCTURE ONLY: fill all nested values using getprofile first. Empty values may overwrite profile data. Proof object when required: {\"type\":\"application/pdf\",\"base64\":\"<encoded file>\"}.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"member\": {\n        \"date_of_birth\": \"\",\n        \"address\": \"\",\n        \"city\": \"\",\n        \"state\": \"\",\n        \"pin\": \"\",\n        \"dob_proof\": {},\n        \"address_proof\": {},\n        \"is_dob_change\": 0,\n        \"is_address_change\": 0,\n        \"name\": \"\",\n        \"email\": \"\",\n        \"phone_1\": \"\",\n        \"phone_2\": \"\",\n        \"phone_3\": \"\",\n        \"member_since\": \"\",\n        \"sex\": \"\"\n    },\n    \"spouse\": {\n        \"dob\": \"\",\n        \"dob_proof\": {},\n        \"is_dob_change\": 0,\n        \"name\": \"\",\n        \"email\": \"\",\n        \"phone_1\": \"\",\n        \"phone_2\": \"\",\n        \"phone_3\": \"\",\n        \"sex\": \"\",\n        \"profession\": \"\"\n    },\n    \"children1\": {\n        \"name\": \"\",\n        \"phone_1\": \"\",\n        \"dob\": \"\",\n        \"sex\": \"\"\n    },\n    \"children2\": {\n        \"name\": \"\",\n        \"phone_1\": \"\",\n        \"dob\": \"\",\n        \"sex\": \"\"\n    },\n    \"children3\": {\n        \"name\": \"\",\n        \"phone_1\": \"\",\n        \"dob\": \"\",\n        \"sex\": \"\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Member and content",
+            "item": [
+                {
+                    "name": "dashboard",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/dashboard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "dashboard"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::dashboard."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "getProfile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/getprofile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "getprofile"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::getProfile."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "myCard",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/mycard",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "mycard"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::myCard."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "getContactUs",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/getcontactus",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "getcontactus"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::getContactUs."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "whatsCooking",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/whatscooking",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "whatscooking"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::whatsCooking. for_cat: CLUB KITCHEN, RESTAURANT, BEVERAGE, OTHER FOOD.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"for_cat\": \"{{for_cat}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "daySpecial",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/dayspecial",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "dayspecial"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::daySpecial.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"menu_date\": \"{{menu_date}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "staticPages",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/staticpages",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "staticpages"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::staticPages.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"page_slug\": \"{{page_slug}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "spaBooking",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/spabooking",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "spabooking"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::spaBooking."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "facility",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/facility",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "facility"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::facility. facility_type: SPA, GYM, SWIMMING, TENNIS.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"facility_type\": \"{{facility_type}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "spaBookingTracking",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/spabooking-tracking",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "spabooking-tracking"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::spaBookingTracking."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "clubUpdates",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/clubupdates",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "clubupdates"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::clubUpdates."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "mustRead",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/mustread",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "mustread"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::mustRead."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "notification",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/notification",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "notification"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::notification."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "getUnreadNotificationCount",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/getunreadnotificationcount",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "getunreadnotificationcount"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::getUnreadNotificationCount."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Billing",
+            "item": [
+                {
+                    "name": "billing",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/billing",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "billing"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::billing."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "billingList",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/billinglist",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "billinglist"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::billingList. Set billing_month_year to a Month value from billing.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"billing_month_year\": \"{{billing_month_year}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "billingDetail",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/billingdetail",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "billingdetail"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::billingDetail. Copy billdetails from billinglist; reports need real item and bill values.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"billdetails\": \"{{billdetails}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Payments",
+            "item": [
+                {
+                    "name": "payuResponse",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/payuresponse",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "payuresponse"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::payuResponse. PAYMENT: can save records, post to Clubman and send email. Use real payment details for the same member. amount is numeric rupees. Current Razorpay code does not verify signature/order and can mark uncaptured payments successful. No Razorpay order-creation mobile route exists here. PayU initiation is restricted to B47CEO.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"amount\": 123.45,\n    \"hash\": \"{{payu_hash}}\",\n    \"id\": \"{{payu_txnid}}\",\n    \"status\": \"success\",\n    \"payuResponse\": {\n        \"txnid\": \"{{payu_txnid}}\",\n        \"amount\": \"123.45\",\n        \"status\": \"success\",\n        \"mihpayid\": \"REPLACE_WITH_REAL_PAYU_REFERENCE\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "razorpayResponse",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/razorpayResponse",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "razorpayResponse"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::razorpayResponse. PAYMENT: can save records, post to Clubman and send email. Use real payment details for the same member. amount is numeric rupees. Current Razorpay code does not verify signature/order and can mark uncaptured payments successful. No Razorpay order-creation mobile route exists here. PayU initiation is restricted to B47CEO.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"amount\": 123.45,\n    \"status\": \"success\",\n    \"data\": {\n        \"razorpay_payment_id\": \"{{razorpay_payment_id}}\",\n        \"razorpay_order_id\": \"{{razorpay_order_id}}\",\n        \"razorpay_signature\": \"{{razorpay_signature}}\"\n    }\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "makePayment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/makepayment",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "makepayment"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::makePayment. PAYMENT: can save records, post to Clubman and send email. Use real payment details for the same member. amount is numeric rupees. Current Razorpay code does not verify signature/order and can mark uncaptured payments successful. No Razorpay order-creation mobile route exists here. PayU initiation is restricted to B47CEO.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"amount\": 123.45\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Diagnostics",
+            "item": [
+                {
+                    "name": "testPush",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/testpush",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "testpush"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::testPush.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"{{title}}\",\n    \"body\": \"{{body}}\",\n    \"type\": \"{{type}}\",\n    \"image_link\": \"{{image_link}}\",\n    \"fcm_token\": \"{{fcm_token}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "testClubmanApi",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "key",
+                                "value": "{{project_key}}"
+                            },
+                            {
+                                "key": "source",
+                                "value": "{{source}}"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "{{app_access_token}}",
+                                "description": "Raw token; no Bearer prefix."
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v2/member/testclubmanapi",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v2",
+                                "member",
+                                "testclubmanapi"
+                            ]
+                        },
+                        "description": "Source: routes/api.php, ApiController::testClubmanApi."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

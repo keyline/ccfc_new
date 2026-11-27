@@ -161,6 +161,17 @@ class PayuTransactionSyncTest extends TestCase
         $this->assertSame(0, DB::table('payu_transactions')->count());
     }
 
+    public function test_missing_mobile_configuration_reports_a_clear_error(): void
+    {
+        config()->offsetUnset('payu_mobile');
+        Http::fake();
+        $this->artisan('payu:sync order_1')
+            ->expectsOutput('PayU merchant key and salt are not configured.')
+            ->assertExitCode(1);
+        Http::assertNothingSent();
+        $this->assertSame(0, DB::table('payu_transactions')->count());
+    }
+
     public function test_amount_mismatch_does_not_overwrite_the_attempt(): void
     {
         app(PayuTransactionSync::class)->pending('order_1', 1, 200);
@@ -201,5 +212,87 @@ class PayuTransactionSyncTest extends TestCase
         ]])]);
         app(PayuTransactionSync::class)->reconcile('website_1');
         $this->assertSame('successful', DB::table('payu_transactions')->sole()->status);
+    }
+
+    public function test_date_import_fetches_all_pages_and_updates_without_duplicates(): void
+    {
+        app(PayuTransactionSync::class)->pending('order_1', 1, 123.45);
+        $originalId = DB::table('payu_transactions')->value('id');
+        $this->mock(MobilePayuClubmanPosting::class)->shouldReceive('post')->once()->with('M1', 'order_1', 123.45)->andReturnNull();
+        Http::fake(function ($request) {
+            if ($request['command'] === 'get_Transaction_Details') {
+                $rows = [1 => [['txnid' => 'order_1']], 2 => [['txnid' => 'order_2']]];
+                return Http::response(['status' => 1, 'Transaction_details' => $rows[$request['var3']] ?? []]);
+            }
+            $id = $request['var1'];
+            return Http::response(['status' => 1, 'transaction_details' => [$id => [
+                'txnid' => $id, 'status' => $id === 'order_1' ? 'success' : 'failure',
+                'amt' => '123.45', 'udf1' => 'M1', 'mihpayid' => 'payu_'.$id,
+            ]]]);
+        });
+        $this->artisan('payu:sync --date=2026-11-26 --gateway=mobile')->assertExitCode(0);
+        $this->artisan('payu:sync --date=2026-11-26 --gateway=mobile')->assertExitCode(0);
+        $this->assertSame(2, DB::table('payu_transactions')->count());
+        $this->assertSame($originalId, DB::table('payu_transactions')->where('transaction_id', 'order_1')->value('id'));
+        $this->assertSame('failed', DB::table('payu_transactions')->where('transaction_id', 'order_2')->value('status'));
+        Http::assertSent(fn ($request) => $request['command'] === 'get_Transaction_Details'
+            && $request['var1'] === '2026-11-26' && $request['var2'] === '2026-11-26' && $request['var3'] === 2
+            && $request['hash'] === hash('sha512', 'test-mobile|get_Transaction_Details|2026-11-26|test-salt'));
+    }
+
+    public function test_yesterday_uses_india_date_and_website_credentials_by_default(): void
+    {
+        config(['payu.default' => 'money', 'payu.gateways.money' => new \Tzsk\Payu\Gateway\PayuBiz([
+            'key' => 'website-key', 'salt' => 'website-salt', 'mode' => 'test',
+        ])]);
+        $this->mock(\App\Services\ClubmanPaymentPosting::class)->shouldReceive('postAndRecord')->once()->andReturn(['Status' => 'success']);
+        Http::fake(function ($request) {
+            if ($request['command'] === 'get_Transaction_Details') {
+                return Http::response(['status' => 1, 'Transaction_details' => $request['var3'] === 1 ? [['txnid' => 'website_1']] : []]);
+            }
+            return Http::response(['status' => 1, 'transaction_details' => [
+                'website_1' => ['status' => 'success', 'amt' => '123.45', 'productinfo' => 'M1', 'mihpayid' => 'payu_1'],
+            ]]);
+        });
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-11-27 00:30:00', 'Asia/Kolkata'));
+        try {
+            $this->artisan('payu:sync --date=yesterday')->assertExitCode(0);
+            Http::assertSent(fn ($request) => $request['command'] === 'get_Transaction_Details'
+                && $request['key'] === 'website-key' && $request['var1'] === '2026-11-26');
+            $this->assertSame('member_login', DB::table('payu_transactions')->sole()->payment_source);
+        } finally {
+            \Carbon\Carbon::setTestNow();
+        }
+    }
+
+    public function test_date_import_reports_clubman_failure_after_saving_payment(): void
+    {
+        $this->mock(MobilePayuClubmanPosting::class)->shouldReceive('post')->once()->andThrow(new \RuntimeException('Clubman unavailable'));
+        Http::fake(function ($request) {
+            if ($request['command'] === 'get_Transaction_Details') {
+                return Http::response(['status' => 1, 'Transaction_details' => $request['var3'] === 1 ? [['txnid' => 'order_1']] : []]);
+            }
+            return Http::response(['status' => 1, 'transaction_details' => ['order_1' => [
+                'status' => 'success', 'amt' => '123.45', 'udf1' => 'M1', 'mihpayid' => 'payu_1',
+            ]]]);
+        });
+        $this->artisan('payu:sync --date=2026-11-26 --gateway=mobile')
+            ->expectsOutput('order_1: payment saved; Clubman posting needs retry.')->assertExitCode(1);
+        $this->assertSame('successful', DB::table('payu_transactions')->sole()->status);
+    }
+
+    public function test_invalid_date_does_not_contact_payu(): void
+    {
+        Http::fake();
+        $this->artisan('payu:sync --date=2026-02-30 --gateway=mobile')->assertExitCode(1);
+        Http::assertNothingSent();
+    }
+
+    public function test_repeated_report_page_is_reported_instead_of_looping(): void
+    {
+        Http::fake(['*' => Http::response(['status' => 1, 'Transaction_details' => [['txnid' => 'order_1']]])]);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('PayU repeated a report page.');
+        iterator_to_array(app(PayuTransactionSync::class)->transactionsForDate('2026-11-26', 'mobile'));
     }
 }

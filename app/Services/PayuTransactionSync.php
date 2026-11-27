@@ -9,11 +9,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Tzsk\Payu\Checksum;
 use Tzsk\Payu\Gateway\PayuBiz;
+use Tzsk\Payu\Gateway\Gateway;
 use Tzsk\Payu\Models\PayuTransaction;
 
 class PayuTransactionSync
 {
-    public function pending(string $id, int $userId, $amount): void
+    public function pending(string $id, int $userId, $amount, ?Gateway $gateway = null): void
     {
         if ($id === '' || strlen($id) > 255 || !is_numeric($amount) || $amount <= 0) {
             throw ValidationException::withMessages(['payment' => 'Invalid PayU transaction or amount.']);
@@ -21,7 +22,7 @@ class PayuTransactionSync
 
         DB::table('payu_transactions')->upsert([[
             'transaction_id' => $id, 'paid_for_id' => $userId, 'paid_for_type' => (new User())->getMorphClass(),
-            'payment_source' => 'mobile_app', 'gateway' => 'PayU', 'body' => '', 'hash' => '',
+            'payment_source' => $gateway ? 'member_login' : 'mobile_app', 'gateway' => $gateway ? serialize($gateway) : 'PayU', 'body' => '', 'hash' => '',
             'destination' => url('/member/payment/status'), 'status' => 'pending',
             'response' => json_encode(['amount' => (string) $amount, 'status' => 'pending']),
             'created_at' => now(), 'updated_at' => now(),
@@ -36,7 +37,7 @@ class PayuTransactionSync
             'status' => 'required|in:success,failure,failed,pending',
         ])->validate();
 
-        $gateway = collect(config('payu.gateways'))->push(new PayuBiz(config('payu_mobile')))->first(function ($gateway) use ($data) {
+        $gateway = collect(config('payu.gateways'))->push(new PayuBiz(config('payu_mobile') ?? []))->first(function ($gateway) use ($data) {
             return $gateway->key === $data['key'];
         });
         abort_unless($gateway, 403, 'Unknown PayU merchant.');
@@ -71,13 +72,60 @@ class PayuTransactionSync
         }
     }
 
-    public function reconcile(string $id): void
+    public function transactionsForDate(string $date, string $gatewayName): iterable
+    {
+        validator(['date' => $date], ['date' => 'required|date_format:Y-m-d'])->validate();
+        $gateway = $this->gateway($gatewayName);
+        $host = $gateway->mode === 'test' ? 'test' : 'info';
+        $seen = [];
+        for ($page = 1; ; $page++) {
+            $data = Http::asForm()->timeout(30)->post("https://{$host}.payu.in/merchant/postservice.php?form=2", [
+                'key' => $gateway->key, 'command' => 'get_Transaction_Details',
+                'var1' => $date, 'var2' => $date, 'var3' => $page,
+                'hash' => hash('sha512', $gateway->key.'|get_Transaction_Details|'.$date.'|'.$gateway->salt()),
+            ])->throw()->json();
+            $rows = $data['Transaction_details'] ?? null;
+            if (($data['status'] ?? 0) != 1 || !is_array($rows)) {
+                throw new \RuntimeException('PayU date lookup failed: '.($data['msg'] ?? 'Invalid response.'));
+            }
+            if (!$rows) {
+                return;
+            }
+            $new = 0;
+            foreach ($rows as $row) {
+                $id = $row['txnid'] ?? null;
+                if (!is_string($id) || $id === '') {
+                    throw new \RuntimeException('PayU returned a transaction without a merchant transaction ID.');
+                }
+                if (!isset($seen[$id])) {
+                    $seen[$id] = true;
+                    $new++;
+                    yield $id;
+                }
+            }
+            if (!$new) {
+                throw new \RuntimeException('PayU repeated a report page. Pagination could not be completed.');
+            }
+        }
+    }
+
+    private function gateway(string $name): Gateway
+    {
+        $gateway = $name === 'mobile' ? new PayuBiz(config('payu_mobile') ?? []) : config('payu.gateways.'.$name);
+        if (!$gateway instanceof Gateway || !$gateway->key || !$gateway->salt()) {
+            throw new \RuntimeException('PayU merchant key and salt are not configured.');
+        }
+        return $gateway;
+    }
+
+    public function reconcile(string $id, ?string $gatewayName = null): void
     {
         validator(['transaction' => $id], ['transaction' => 'required|string|max:255'])->validate();
         $payment = PayuTransaction::withTrashed()->where('transaction_id', $id)->first();
         abort_if($payment && basename(parse_url($payment->destination, PHP_URL_PATH)) !== 'status', 422, 'Not a PayU payment.');
-        $gateway = !$payment || $payment->payment_source === 'mobile_app' || $payment->getRawOriginal('gateway') === 'PayU'
-            ? new PayuBiz(config('payu_mobile')) : $payment->gateway;
+        $gateway = $gatewayName !== null ? $this->gateway($gatewayName) : (
+            !$payment || $payment->payment_source === 'mobile_app' || $payment->getRawOriginal('gateway') === 'PayU'
+            ? $this->gateway('mobile') : $payment->gateway);
         if (!$gateway->key || !$gateway->salt()) {
             throw new \RuntimeException('PayU merchant key and salt are not configured.');
         }
@@ -102,7 +150,7 @@ class PayuTransactionSync
                 throw new \RuntimeException('PayU verified the transaction, but its member code is missing, unknown or ambiguous. No payment was imported.');
             }
             $userId = $users->first()->id;
-            $this->pending($id, $userId, $response['amount']);
+            $this->pending($id, $userId, $response['amount'], $gatewayName !== null && $gatewayName !== 'mobile' ? $gateway : null);
         }
         $this->save($id, $response, $userId);
     }

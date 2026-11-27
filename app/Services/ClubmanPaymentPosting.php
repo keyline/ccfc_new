@@ -21,6 +21,16 @@ class ClubmanPaymentPosting
         $amount = $payment->response('amount');
         switch ($gateway) {
             case 'status':
+                if ($payment->payment_source === 'mobile_app') {
+                    try {
+                        app(MobilePayuClubmanPosting::class)->post($memberCode, $payment->transaction_id, (float) $amount);
+                    } catch (Throwable $exception) {
+                        $this->recordResult($payment->transaction_id, 'failure');
+                        throw $exception;
+                    }
+                    $this->recordResult($payment->transaction_id, 'success');
+                    return ['Status' => 'success'];
+                }
                 $reference = $payment->response('mihpayid') ?: $payment->response('id');
                 $gatewayName = 'PayU';
                 break;
@@ -64,6 +74,17 @@ class ClubmanPaymentPosting
         string $paymentGateway = ''
     ): array {
         try {
+            if ($paymentGateway === 'PayU') {
+                return DB::transaction(function () use ($transactionId, $memberCode, $voucherNo, $amount, $instrumentNo, $description, $paymentGateway) {
+                    $payment = DB::table('payu_transactions')->where('transaction_id', $transactionId)->lockForUpdate()->first();
+                    if ($payment && $payment->clubman_status === 'success') {
+                        return ['Status' => 'success'];
+                    }
+                    $result = $this->post($memberCode, $voucherNo, $amount, $instrumentNo, $description, $paymentGateway);
+                    $this->recordResult($transactionId, 'success');
+                    return $result;
+                });
+            }
             $result = $this->post($memberCode, $voucherNo, $amount, $instrumentNo, $description, $paymentGateway);
         } catch (Throwable $exception) {
             $this->recordResult($transactionId, 'failure');
@@ -77,7 +98,12 @@ class ClubmanPaymentPosting
 
     private function recordResult(string $transactionId, string $status): void
     {
-        DB::table('payu_transactions')->where('transaction_id', $transactionId)->update([
+        DB::table('payu_transactions')->where('transaction_id', $transactionId)
+            ->when($status === 'failure', function ($query) {
+                $query->where(function ($query) {
+                    $query->whereNull('clubman_status')->orWhere('clubman_status', '<>', 'success');
+                });
+            })->update([
             'clubman_status' => $status,
             'clubman_checked_at' => Carbon::now('Asia/Kolkata'),
         ]);

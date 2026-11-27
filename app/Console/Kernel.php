@@ -30,6 +30,7 @@ class Kernel extends ConsoleKernel
         // Define the scheduled command to run at 4 am IST (10:30 pm UTC)
         $schedule->command('update:users')->dailyAt('22:30');
         $schedule->command('payment-tokens:cleanup')->daily();
+        $schedule->command('payu:sync')->everyFiveMinutes()->withoutOverlapping();
         //$schedule->command('update:users')->dailyAt('7:00');
 
 

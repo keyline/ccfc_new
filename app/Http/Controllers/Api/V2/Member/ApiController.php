@@ -2543,6 +2543,7 @@ class ApiController extends Controller
     /* make payment */
     public function makePayment(Request $request)
     {
+        $request->validate(['amount' => 'required|numeric|gt:0']);
         $project_key        = 'facb6e0a6fcbe200dca2fb60dec75be7';
         $apiStatus          = TRUE;
         $apiMessage         = '';
@@ -2597,6 +2598,7 @@ class ApiController extends Controller
                         $m_send_data['booked_by']               = 'member';
 
                         $i_inserted_payment_id = PaymentDetail::insertGetId($m_send_data);
+                        app(\App\Services\PayuTransactionSync::class)->pending($m_send_data['payu_txnid'], $uId, $amount);
                         /******************* Insert into payment master with payment bill id table  ********************/
 
                         $apiResponse = [
@@ -2640,162 +2642,32 @@ class ApiController extends Controller
     /* payu reponse */
     public function payuResponse(Request $request)
     {
-        $project_key        = 'facb6e0a6fcbe200dca2fb60dec75be7';
-        $apiStatus          = TRUE;
-        $apiMessage         = '';
-        $apiResponse        = [];
-        $apiExtraField      = '';
-        $apiExtraData       = '';
-        $this->isJSON(file_get_contents('php://input'));
-        $requestData        = $this->extract_json(file_get_contents('php://input'));
-        $requiredFields     = ['amount', 'hash', 'id', 'status', 'payuResponse'];
-        $headerData         = $request->header();
-        if (!$this->validateArray($requiredFields, $requestData)) {
-            $apiStatus          = FALSE;
-            $apiMessage         = 'All Data Are Not Present !!!';
-        }
-
-        if ($headerData['key'][0] == $project_key) {
-            $app_access_token           = $headerData['authorization'][0];
-            $getTokenValue              = $this->tokenAuth($app_access_token);
-
-            $amount                     = $requestData['amount'];
-            $hash                       = $requestData['hash'];
-            $txn_id                     = $requestData['id'];
-            $status                     = $requestData['status'];
-            $payuResponse               = $requestData['payuResponse'];
-            $payuResponse               = is_array($payuResponse) ? $payuResponse : json_decode((string) $payuResponse, true);
-            $paymentSucceeded           = in_array(strtolower((string) $status), ['success', 'successful'], true);
-
-            if ($getTokenValue['status']) {
-                $uId                        = $getTokenValue['data'][1];
-                $expiry                     = date('d/m/Y H:i:s', $getTokenValue['data'][4]);
-                $checkUser                  = User::where('id', '=', $uId)->first();
-                if ($checkUser) {
-                    if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
-                        $checkPayuTransaction = DB::table('payu_transactions')->where('transaction_id', '=', $txn_id)->count();
-                        if ($checkPayuTransaction <= 0) {
-                            $postData = [
-                                'paid_for_id'           => $uId,
-                                'paid_for_type'         => 'App\Models\User',
-                                'transaction_id'        => $txn_id,
-                                'payment_source'        => 'mobile_app',
-                                'gateway'               => 'PayU',
-                                'body'                  => '',
-                                'destination'           => 'https://ccfc1792.com/member/payment/status',
-                                'hash'                  => $hash,
-                                'response'              => json_encode($payuResponse),
-                                'status'                => ($paymentSucceeded ? 'successful' : 'failed'),
-                                'created_at'            => date('Y-m-d H:i:s'),
-                                'updated_at'            => date('Y-m-d H:i:s'),
-                            ];
-                            // Helper::pr($postData);
-                            // PayuTransaction::insert($postData);
-                            DB::table('payu_transactions')->insert(
-                                $postData
-                            );
-                            $user = User::find($uId);
-                            if (!empty($user) && $paymentSucceeded) {
-                                // Mobile payments do not pass through the website's PayU status callback.
-                                try {
-                                    app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
-                                        (string) $txn_id,
-                                        (string) $user->user_code,
-                                        (string) (($payuResponse['mihpayid'] ?? '') ?: ($payuResponse['id'] ?? '')),
-                                        (float) $amount,
-                                        (string) (($payuResponse['mihpayid'] ?? '') ?: ($payuResponse['id'] ?? '')),
-                                        'PayU payment against outstanding',
-                                        'PayU'
-                                    );
-                                } catch (\Throwable $exception) {
-                                    Log::error('Clubman Payment Posting Failed (Mobile PayU)', [
-                                        'transaction_id' => $txn_id,
-                                        'error' => $exception->getMessage(),
-                                    ]);
-                                }
-
-                                $emailInfo = array(
-                                    'greeting' => "Dear, {$user->name}",
-                                    'body'     => "Thank you for making payment of Rs." . $amount . ". Please note that payment is subject to realization and will reflect in your account in the next 24 working hours."
-                                );
-                                // Notification::send($user, new PayUEmailNotification($emailInfo));
-
-                                $mailData                   = [
-                                    'name'                  => $user->name,
-                                    'transaction_id'        => $txn_id,
-                                    'amount'                => $amount
-                                ];
-                                /* send email */
-                                $generalSettings    = GeneralSetting::find(1);
-                                $subject            = $generalSettings->site_name . ' :: Payment Success';
-                                $message            = view('email-templates.payment-success', $mailData);
-                                $this->sendMail($checkUser->email, $subject, $message);
-                                /* send email */
-                                /* insert notification */
-                                // $fields = [
-                                //     'type'          => 'payment',
-                                //     'title'         => $generalSettings->site_name.' :: Payment Success',
-                                //     'description'   => $generalSettings->site_name.' :: Payment Success Of Rs. ' . $amount,
-                                // ];
-                                // $notification_id = Notification::insertGetId($fields);
-                                // $users = User::where('id', '=', $uId)->select('id')->orderBy('id', 'ASC')->get();
-                                // if($users){
-                                //     foreach($users as $user){
-                                //         $fields2 = [
-                                //             'user_id'                   => $user->id,
-                                //             'notification_id'           => $notification_id
-                                //         ];
-                                //         UserNotification::insert($fields2);
-                                //     }
-                                // }
-                                /* insert notification */
-                                /* push notification */
-                                // $title              = 'Payment has been completed successfully';
-                                // $body               = "Thank you for making payment of Rs.".$amount.". Please note that payment is subject to realization and will reflect in your account in the next 24 working hours.";
-                                // $type               = 'payment';
-                                // $getUserFCMTokens   = UserDevice::select('fcm_token')->where('user_id', '=', $uId)->get();
-                                // $tokens             = [];
-                                // if($getUserFCMTokens){
-                                //     foreach($getUserFCMTokens as $getUserFCMToken){
-                                //         $response           = $this->sendCommonPushNotification($getUserFCMToken->fcm_token, $title, $body, $type);
-                                //     }
-                                // }
-                                /* push notification */
-                            }
-                        }
-
-
-
-                        $apiStatus          = TRUE;
-                        http_response_code(200);
-                        if (!$paymentSucceeded) {
-                            $apiMessage         = 'Payment Failed !!!';
-                        } else {
-                            $apiMessage         = 'Payment Successfull !!!';
-                        }
-
-                        $apiExtraField      = 'response_code';
-                        $apiExtraData       = http_response_code();
-                    } else {
-                        $apiStatus                              = FALSE;
-                        $apiMessage                             = 'You Account Is Not Active Yet !!!';
-                    }
-                } else {
-                    $apiStatus                              = FALSE;
-                    $apiMessage                             = 'We Don\'t Recognize You !!!';
-                }
-            } else {
-                http_response_code($getTokenValue['data'][2]);
-                $apiStatus                      = FALSE;
-                $apiMessage                     = $this->getResponseCode(http_response_code());
-                $apiExtraField                  = 'response_code';
-                $apiExtraData                   = http_response_code();
+        $input = $request->validate([
+            'amount' => 'required|numeric|gt:0', 'hash' => 'required|string',
+            'id' => 'required', 'status' => 'required|string',
+            'payuResponse' => 'required',
+        ]);
+        abort_unless($request->header('key') === 'facb6e0a6fcbe200dca2fb60dec75be7', 401);
+        $token = $this->tokenAuth($request->header('authorization', ''));
+        abort_unless($token['status'], 401);
+        $user = User::findOrFail($token['data'][1]);
+        abort_unless(in_array($user->status, ['ACTIVE', 'INACTIVE'], true), 403);
+        $response = is_array($input['payuResponse']) ? $input['payuResponse'] : json_decode($input['payuResponse'], true);
+        abort_unless(is_array($response), 422, 'Invalid PayU response.');
+        abort_unless(is_scalar($input['id']) && in_array((string) $input['id'], array_map('strval', [$response['txnid'] ?? '', $response['mihpayid'] ?? '', $response['id'] ?? '']), true), 422, 'PayU transaction ID mismatch.');
+        $wasSuccessful = DB::table('payu_transactions')->where('transaction_id', $response['txnid'] ?? '')->value('status') === 'successful';
+        app(\App\Services\PayuTransactionSync::class)->receive($response, $user->id);
+        $succeeded = ($response['status'] ?? '') === 'success';
+        if ($succeeded && !$wasSuccessful) {
+            try {
+                $settings = GeneralSetting::findOrFail(1);
+                $message = view('email-templates.payment-success', ['name' => $user->name, 'transaction_id' => $response['txnid'], 'amount' => $response['amount']]);
+                $this->sendMail($user->email, $settings->site_name.' :: Payment Success', $message);
+            } catch (\Throwable $exception) {
+                Log::error('PayU payment email failed', ['transaction_id' => $response['txnid'], 'error' => $exception->getMessage()]);
             }
-        } else {
-            $apiStatus          = FALSE;
-            $apiMessage         = 'Unauthenticate Request !!!';
         }
-        $this->response_to_json($apiStatus, $apiMessage, $apiResponse);
+        return $this->response_to_json(true, $succeeded ? 'Payment Successfull !!!' : 'Payment Failed !!!', []);
     }
     /* payu reponse */
     /* razorpay response */

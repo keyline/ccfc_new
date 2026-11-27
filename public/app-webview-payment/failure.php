@@ -1,5 +1,6 @@
 <?php
 session_start();
+require __DIR__.'/sync.php';
 include "conn.php";
 date_default_timezone_set("Asia/Kolkata");
 /*Note : After completing transaction process it is recommended to make an enquiry call with PayU to validate the response received and then save the response to DB or display it on UI*/
@@ -625,4 +626,3 @@ body {
 </div>
 </body>
 </html>
-	

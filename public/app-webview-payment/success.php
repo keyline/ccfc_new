@@ -1,5 +1,6 @@
 <?php
 session_start();
+require __DIR__.'/sync.php';
 include "conn.php";
 date_default_timezone_set("Asia/Kolkata");
 /*Note : After completing transaction process it is recommended to make an enquiry call with PayU to validate the response received and then save the response to DB or display it on UI*/
@@ -74,16 +75,7 @@ if (isset($postdata ['key'])) {
 					$sql2= "UPDATE payment_bills SET amount = '$amount', status = '$status' WHERE id = $udf5";
 					mysqli_query($conn, $sql2);
 
-                    // This callback also runs when the app does not call the Laravel response API.
-                    try {
-                        require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
-                        $application = require dirname(__DIR__, 2) . '/bootstrap/app.php';
-                        $application->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-                        $application->make(\App\Services\MobilePayuClubmanPosting::class)->post(
-                            $payment['membership_no'], $txnid, (float) $amount
-                        );
-                    } catch (\Throwable $exception) {
-                        error_log('Clubman Payment Posting Failed (Mobile PayU WebView): ' . $exception->getMessage());
+                    if (!$payuSynced) {
                         $message = 'Payment was successful, but the Clubman update is pending. Please contact admin with your transaction ID.';
                     }
 					

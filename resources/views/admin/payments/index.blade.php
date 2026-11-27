@@ -106,7 +106,7 @@
                             <td>
                                 {{ ( $gateway == 'status') ? $payment->response('status') : $payment->status }}
                             </td>
-                            <td>{{ $payment->updated_at ?? '' }}</td>
+                            <td data-order="{{ $payment->updated_at ?? '' }}">{{ $payment->updated_at ? $payment->updated_at->format('Y-m-d h:i:s A') : '' }}</td>
                             <td>{{ \App\Services\PaymentSource::label($payment->payment_source) }}</td>
                             <td>
                                 {{ ['success' => 'Success', 'failure' => 'Failure'][$payment->clubman_status] ?? '-' }}

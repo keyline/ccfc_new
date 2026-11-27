@@ -21,7 +21,7 @@ class ClubmanPaymentPosting
         $amount = $payment->response('amount');
         switch ($gateway) {
             case 'status':
-                $reference = $payment->response('mihpayid');
+                $reference = $payment->response('mihpayid') ?: $payment->response('id');
                 $gatewayName = 'PayU';
                 break;
             case 'axisstatus':
@@ -31,7 +31,8 @@ class ClubmanPaymentPosting
                 $gatewayName = $gateway === 'axisstatus' ? 'AXIS Razor Pay' : 'Razor Pay';
                 break;
             case 'hdfcstatus':
-                $reference = $payment->response('transactionid') ?: $payment->response('mihpayid');
+                $amount = $payment->response('txn_amount') ?? $amount;
+                $reference = $payment->response('txn_id') ?: $payment->response('transactionid') ?: $payment->response('mihpayid');
                 $gatewayName = 'HDFC VAS';
                 break;
             case 'hdfcsmartpaycallback':
@@ -49,7 +50,7 @@ class ClubmanPaymentPosting
         return $this->postAndRecord(
             $payment->transaction_id, $memberCode, (string) $reference,
             (float) $amount, (string) $reference,
-            'Online payment against outstanding', $gatewayName
+            'Retry payment against outstanding', $gatewayName
         );
     }
 
@@ -91,6 +92,7 @@ class ClubmanPaymentPosting
         string $paymentGateway = ''
     ): array {
         $memberCode = trim($memberCode);
+        $paymentGateway = trim($paymentGateway) ?: 'Online Payment';
 
         if ($memberCode === '') {
             throw new RuntimeException('This member does not have a Clubman membership ID.');
@@ -125,7 +127,7 @@ class ClubmanPaymentPosting
                 ->withOptions([
                     'connect_timeout' => (int) config('services.clubman.connect_timeout', 5),
                 ])
-                ->post($endpoint . '?json=' . json_encode($payload));
+                ->post($endpoint . '?' . http_build_query(['json' => json_encode($payload)]));
         } catch (Throwable $exception) {
             throw new RuntimeException(
                 'Clubman could not be reached while posting the payment.',

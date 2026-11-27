@@ -15,6 +15,9 @@
 .zoomable__img {
   transform-origin: var(--zoom-pos-x, 0%) var(--zoom-pos-y, 0%);
   transition: transform 0.15s linear;
+      max-width: 50%;
+    margin: 0 auto;
+    display: block;
 }
 .zoomable--zoomed .zoomable__img {
   cursor: zoom-in;

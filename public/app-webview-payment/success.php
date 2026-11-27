@@ -58,7 +58,7 @@ if (isset($postdata ['key'])) {
 			if($status == 'success'){
 
 				$payment = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `payment_details` WHERE `id` = '$productInfo'"));
-				if($payment['amount'] == $amount){
+				if($payment && $payment['amount'] == $amount && $payment['payu_txnid'] === $txnid){
 					$amount=$postdata['amount'];
 					$bill_trans_ref_no=@$_POST['txnid'];
 					$decision='success';
@@ -73,6 +73,19 @@ if (isset($postdata ['key'])) {
 					
 					$sql2= "UPDATE payment_bills SET amount = '$amount', status = '$status' WHERE id = $udf5";
 					mysqli_query($conn, $sql2);
+
+                    // This callback also runs when the app does not call the Laravel response API.
+                    try {
+                        require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+                        $application = require dirname(__DIR__, 2) . '/bootstrap/app.php';
+                        $application->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+                        $application->make(\App\Services\MobilePayuClubmanPosting::class)->post(
+                            $payment['membership_no'], $txnid, (float) $amount
+                        );
+                    } catch (\Throwable $exception) {
+                        error_log('Clubman Payment Posting Failed (Mobile PayU WebView): ' . $exception->getMessage());
+                        $message = 'Payment was successful, but the Clubman update is pending. Please contact admin with your transaction ID.';
+                    }
 					
 					
 			    /* email sms sent */
@@ -336,4 +349,3 @@ body {
 </div>
 </body>
 </html>
-	

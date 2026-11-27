@@ -1,4 +1,19 @@
 @extends('layouts.admin')
+@section('styles')
+@parent
+<style>
+    .datatable-Payment .clubman-retry-form { display: inline-block; margin-left: 10px; vertical-align: middle; }
+    .datatable-Payment .clubman-retry {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 10px; border: 1px solid #cbd5e1; border-radius: 6px;
+        background: #fff; color: #334155; font-size: 12px; font-weight: 600;
+        line-height: 1.5; white-space: nowrap; cursor: pointer;
+    }
+    .datatable-Payment .clubman-retry:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .datatable-Payment .clubman-retry:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+    .datatable-Payment .clubman-retry:disabled { opacity: .65; cursor: wait; }
+</style>
+@endsection
 @section('content')
 @if(session('clubman_retry_error'))
     <div class="alert alert-danger">{{ session('clubman_retry_error') }}</div>
@@ -51,10 +66,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($payments as $key => $user)
-                    @foreach($user as $payment)                         
+                    @foreach($payments as $payment)
                     @php $gateway= basename(parse_url($payment->destination, PHP_URL_PATH)); @endphp                                                            
-                    @php $userDetails= \App\Models\User::select('*')->where('id', '=', $payment->paid_for_id)->first();@endphp
                     
                         <tr data-entry-id="{{ $payment->paid_for_id }}">
                             
@@ -63,7 +76,7 @@
                             </td>
                             
                             <td>
-                                {{ $userDetails->name ?? ''}} {{ $userDetails->user_code ?? '' }}
+                                {{ $payment->member_name ?? '' }} {{ $payment->member_code ?? '' }}
                             </td>
                             <td>
                                 @php
@@ -99,9 +112,9 @@
                                 {{ ['success' => 'Success', 'failure' => 'Failure'][$payment->clubman_status] ?? '-' }}
                                 @can('payment_edit')
                                     @if($payment->clubman_status === 'failure')
-                                        <form method="POST" action="{{ route('admin.payments.retryClubman', $payment->id) }}" class="d-inline" onsubmit="event.stopPropagation(); this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Retrying...';">
+                                        <form method="POST" action="{{ route('admin.payments.retryClubman', $payment->id) }}" class="clubman-retry-form" onsubmit="event.stopPropagation(); this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Retrying...';">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-warning" onclick="event.stopPropagation()">Retry</button>
+                                            <button type="submit" class="clubman-retry" aria-label="Retry Clubman posting for payment {{ $payment->id }}" onclick="event.stopPropagation()"><i class="fas fa-redo-alt" aria-hidden="true"></i> Retry</button>
                                         </form>
                                     @endif
                                 @endcan
@@ -114,11 +127,15 @@
 
                         </tr>
                     @endforeach
-                    @endforeach
                     
                 </tbody>
             </table>
         </div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap mt-3">
+            <span>Showing {{ $payments->firstItem() ?? 0 }}–{{ $payments->lastItem() ?? 0 }} of {{ $payments->total() }} payments</span>
+            {{ $payments->onEachSide(1)->links() }}
+        </div>
+        <small class="text-muted">Search applies to this page only.</small>
     </div>
 </div>
 
@@ -129,61 +146,22 @@
 @parent
 <script>
     $(function () {
-        let today = new Date()
-        today = today.toISOString().split('T')[0];
-  let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
-@can('payment_delete')
-  let deleteButtonTrans = '{{ trans('global.datatables.delete') }}'
-  let deleteButton = {
-    text: deleteButtonTrans,
-    url: "{{ route('admin.payments.massDestroy') }}",
-    className: 'btn-danger',
-    action: function (e, dt, node, config) {
-      var ids = $.map(dt.rows({ selected: true }).nodes(), function (entry) {
-          return $(entry).data('entry-id')
-      });
-
-      if (ids.length === 0) {
-        alert('{{ trans('global.datatables.zero_selected') }}')
-
-        return
-      }
-
-      if (confirm('{{ trans('global.areYouSure') }}')) {
-        $.ajax({
-          headers: {'x-csrf-token': _token},
-          method: 'POST',
-          url: config.url,
-          data: { ids: ids, _method: 'DELETE' }})
-          .done(function () { location.reload() })
-      }
-    }
-  }
-  dtButtons.push(deleteButton)
-@endcan
-
-  $.extend(true, $.fn.dataTable.defaults, {
-    orderCellsTop: true,
-    order: [[ 1, 'desc' ]],
-    pageLength: 100,
-    dom: 'Bfrtip',
-        buttons: [
-             {
-      extend: 'excel',
-      title: 'PayU Reports',
-      exportOptions: {
-            columns: ':visible:not(.notexport)'
-        }
-    },
-        ]
-  });
-  let table = $('.datatable-Payment:not(.ajaxTable)').DataTable();
-  $('a[data-toggle="tab"]').on('shown.bs.tab click', function(e){
-      $($.fn.dataTable.tables(true)).DataTable()
-          .columns.adjust();
-  });
-  
-})
-
+        $('.datatable-Payment:not(.ajaxTable)').DataTable({
+            orderCellsTop: true,
+            order: [],
+            paging: false,
+            info: false,
+            select: false,
+            columnDefs: [
+                { orderable: false, targets: 0 },
+                { orderable: false, searchable: false, targets: -1 }
+            ],
+            dom: 'frt',
+            buttons: []
+        });
+        $('a[data-toggle="tab"]').on('shown.bs.tab click', function () {
+            $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+        });
+    });
 </script>
 @endsection

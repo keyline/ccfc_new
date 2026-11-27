@@ -536,6 +536,7 @@
                                         </label>
                                     </div>
                                 </li>
+                                @if ($userData->user_code === 'B47CEO')
                                 <li>
                                     <div class="gateway-option">
                                         <input type="radio" name="paymentGatewayOptions" id="exampleRadios1"
@@ -545,6 +546,7 @@
                                         </label>
                                     </div>
                                 </li>
+                                @endif
                                 <li>
                                     <div class="gateway-option">
                                         <input type="radio" name="paymentGatewayOptions" id="exampleRadios4"

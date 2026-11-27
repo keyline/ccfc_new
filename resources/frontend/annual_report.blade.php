@@ -65,7 +65,7 @@
                         <div class="col-lg-12">
                             <div class="title-sec">
                                 <div class="title text-left">
-                                    Annual Report
+                                    23rd AGM Notice
                                 </div>
                             </div>
                         </div>
@@ -101,9 +101,9 @@
                                                 <img class="img-fluid" src="{{ asset('img//pdf_downloadicon.png') }}" alt="" />
                                             </div>
                                             <div class="newsletter_right">
-                                                <h3>Annual Report 2024-2025</h3>
+                                                <h3>Annual Report 2025-2026</h3>
                                             </div>
-                                            <a class="wholenewdivlink" href="{{ asset('pdf/CCFC-Annual-Report-2025.pdf') }}" target="_blank"></a>
+                                            <a class="wholenewdivlink" href="{{ asset('pdf/Annual_Report_2025-2026.pdf') }}" target="_blank"></a>
                                         </div>
                                     
                             </div>

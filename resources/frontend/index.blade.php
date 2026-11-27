@@ -61,7 +61,7 @@
             <!-- ********|| BANNER PART END ||******** -->
 
             <!-- ********|| ADVISE START ||******** -->
-            <section class="advise sticky-section">
+            <section class="advise sticky-section" style="display: none;">
 
 
                 <div class="container">
@@ -88,11 +88,11 @@
                                 <img class="img-fluid" src="{{ asset('img/istora-banner.jpeg') }}" alt="" />
                             </div>
                         </div>
-                       <!--  <div class="col-lg-6">
+                        <div class="col-lg-6">
                             <div class="advise-img">
                                 <img class="img-fluid" src="{{ asset('img/advise-2.jpg') }}" alt="" />
                             </div>
-                        </div> -->
+                        </div>
                     </div>
                 </div>
 

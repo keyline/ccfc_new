@@ -71,7 +71,7 @@
 
                 <script
         src="https://checkout.razorpay.com/v1/checkout.js"
-        data-key="{{ env('RAZORPAY_KEY') }}"
+        data-key="{{ config('services.razorpay.axis_key') }}"
         data-amount="{{ $order->amount }}"
         data-currency="{{ $order->currency }}"
         data-order_id="{{ $order->id }}"

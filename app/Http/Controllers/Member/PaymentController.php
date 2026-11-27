@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Auth;
 use Juspay\RequestOptions;
 use Juspay\Model\OrderSession;
 use Juspay\JuspayEnvironment;
@@ -54,6 +55,7 @@ class PaymentController extends Controller
         $user = $this->paymentUser();
 
         if ($user) {
+            abort_unless($user->user_code === 'B47CEO', 403, 'PayU is currently unavailable for this member.');
             $amount = $this->validatedPaymentAmount($request, $user, $clubmanMemberLookup, false, true);
 
             $customer = Customer::make()
@@ -98,15 +100,17 @@ class PaymentController extends Controller
             $clubmanPostingFailed = false;
 
             try {
-                app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
-                    $transaction->transaction_id,
-                    $user->user_code,
-                    $status['mihpayid'],
-                    (float) $status['amount'],
-                    $status['mihpayid'],
-                    'Online payment against outstanding',
-                    'PayU'
-                );
+                if ($transaction->clubman_status !== 'success') {
+                    app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                        $transaction->transaction_id,
+                        $user->user_code,
+                        (string) (($status['mihpayid'] ?? '') ?: ($status['id'] ?? '')),
+                        (float) $status['amount'],
+                        (string) (($status['mihpayid'] ?? '') ?: ($status['id'] ?? '')),
+                        'PayU payment against outstanding',
+                        'PayU'
+                    );
+                }
             } catch (\Throwable $e) {
                 $clubmanPostingFailed = true;
                 Log::error('Clubman Payment Posting Failed (PayU): ' . $e->getMessage());
@@ -181,15 +185,17 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
-                        (string) Session::get('hdfcTransactionId'),
-                        $user->user_code,
-                        $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
-                        (float) $status['amount'],
-                        $status['transactionid'] ?? $status['mihpayid'] ?? (string) $status['user'],
-                        'Online payment against outstanding',
-                        'HDFC VAS'
-                    );
+                    if ($status['status'] === 'success') {
+                        app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                            $status['transactionid'],
+                            $user->user_code,
+                            $status['transactionid'],
+                            (float) $status['amount'],
+                            $status['transactionid'],
+                            'HDFC VAS payment against outstanding',
+                            'HDFC VAS'
+                        );
+                    }
                 } catch (\Throwable $e) {
                     $clubmanPostingFailed = true;
                     Log::error('Clubman Payment Posting Failed (HDFC statusForHdfc): ' . $e->getMessage());
@@ -216,7 +222,7 @@ class PaymentController extends Controller
         // dd($request->all());
         $input = $request->all();
 
-        $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+        $api = $this->razorpayApi(false);
 
         // Process the payment callback logic here
         $payment = $api->payment->fetch($input['razorpay_payment_id']);
@@ -242,7 +248,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('axisTransactionId'))
                     ->update(
                         [
-                            'response' => $payment->toArray(),
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'successful',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -270,15 +276,17 @@ class PaymentController extends Controller
                 $clubmanPostingFailed = false;
 
                 try {
-                    app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
-                        (string) Session::get('axisTransactionId'),
-                        $user->user_code,
-                        $input['razorpay_payment_id'],
-                        (float) $amount,
-                        $input['razorpay_payment_id'],
-                        'Online payment against outstanding',
-                        'AXIS Razor Pay'
-                    );
+                    if ($payment->status === 'captured') {
+                        app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
+                            $payment->order_id,
+                            $user->user_code,
+                            $input['razorpay_payment_id'],
+                            (float) $amount,
+                            $input['razorpay_payment_id'],
+                            'AXIS Razor Pay payment against outstanding',
+                            'AXIS Razor Pay'
+                        );
+                    }
                 } catch (\Throwable $e) {
                     $clubmanPostingFailed = true;
                     Log::error('Clubman Payment Posting Failed (Razorpay legacy callback): ' . $e->getMessage());
@@ -314,7 +322,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('axisTransactionId'))
                     ->update(
                         [
-                            'response' => $payment,
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'failed',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -341,7 +349,7 @@ class PaymentController extends Controller
         if ($user) {
             $amount = $this->validatedPaymentAmount($request, $user, $clubmanMemberLookup, false, true);
 
-            $api = new Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+            $api = $this->razorpayApi(false);
 
             $order = $api->order->create([
                 'receipt' => 'ord_axis_' . Str::random(10), // Replace with your own unique identifier for the order
@@ -363,7 +371,7 @@ class PaymentController extends Controller
             'paid_for_id' => $user->id,
             'paid_for_type' => 'App\Models\User',
             'transaction_id' => $order->id,
-            'gateway'		=> 'AXIS Razor Pay',
+            'gateway'		=> 'AXIS',
             'body'			=> serialize($order),
             'destination'	=> route('member.axisstatus'),
             'hash'			=> '',
@@ -402,37 +410,41 @@ class PaymentController extends Controller
             $api = new Api(config('services.razorpay.key'), config('services.razorpay.secret'));
             $stage = 'gateway_order';
             $order = $api->order->create([
-            'receipt' => 'INV_' . rand(10000, 99999),
-            'amount' => (int) $amountInPaise,
-            'currency' => 'INR',
-            'payment_capture' => 1,
-            'notes' => [
-            'udf1' => $user->id, // User Defined Field 1
-            'udf2' => $user->user_code, // User Defined Field 2
-            'name' => $user->name,
-            'email' => $user->email,
-            // 'email'=> 'deblina@keylines.net',
-            'contact' => $user->phone_number_1,
-            // Add more UDFs as needed
-        ]
-        ]);
-        $stage = 'save_transaction';
-        // Store the order ID or other necessary details in your database for future reference
-        DB::table('payu_transactions')->insert([
-        'payment_source' => PaymentSource::fromRequest($request),
-        'paid_for_id' => $user->id,
-        'paid_for_type' => 'App\Models\User',
-        'transaction_id' => $order->id,
-        'gateway'		=> 'Razor Pay',
-        'body'			=> serialize($order),
-        'destination'	=> route('member.razorpaycallback'),
-        'hash'			=> '',
-        'response'		=> '',
-        'status'		=> 'pending',
-        'created_at'	=> Carbon::now('Asia/Kolkata'),
-        'updated_at'	=> Carbon::now('Asia/Kolkata'),
+                'receipt' => 'INV_' . rand(10000, 99999),
+                'amount' => (int) $amountInPaise,
+                'currency' => 'INR',
+                'payment_capture' => 1,
+                'notes' => [
+                    'udf1' => $user->id, // User Defined Field 1
+                    'udf2' => $user->user_code, // User Defined Field 2
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    // 'email'=> 'deblina@keylines.net',
+                    'contact' => $user->phone_number_1,
+                    // Add more UDFs as needed
+                ]
+            ]);
+            $orderId = $order['id'] ?? $order->id ?? null;
+            if (!$orderId) {
+                throw new \RuntimeException('Razorpay did not return an order id.');
+            }
 
-        ]);
+            $stage = 'save_transaction';
+            // Store the order ID or other necessary details in your database for future reference
+            DB::table('payu_transactions')->insert([
+                'payment_source' => PaymentSource::fromRequest($request),
+                'paid_for_id' => $user->id,
+                'paid_for_type' => 'App\Models\User',
+                'transaction_id' => $orderId,
+                'gateway'		=> 'Razor Pay',
+                'body'			=> json_encode($order->toArray()),
+                'destination'	=> route('member.razorpaycallback'),
+                'hash'			=> '',
+                'response'		=> '',
+                'status'		=> 'pending',
+                'created_at'	=> Carbon::now('Asia/Kolkata'),
+                'updated_at'	=> Carbon::now('Asia/Kolkata'),
+            ]);
 
 
 
@@ -535,7 +547,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('razorpayTransactionid'))
                     ->update(
                         [
-                            'response' => $payment->toArray(),
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'successful',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -576,7 +588,7 @@ class PaymentController extends Controller
                         $input['razorpay_payment_id'],
                         (float) $amount,
                         $input['razorpay_payment_id'],
-                        'Online payment against outstanding',
+                        'Razorpay payment against outstanding',
                         'Razor Pay'
                     );
                     // dd(['input' => $input, 'payment' => $payment->toArray(), 'amount' => $amount, 'clubmanResponse' => $clubmanResponse]);
@@ -616,7 +628,7 @@ class PaymentController extends Controller
                     ->where('transaction_id', Session::get('razorpayTransactionid'))
                     ->update(
                         [
-                            'response' => $payment,
+                            'response' => json_encode($payment->toArray()),
                             'status'	=> 'failed',
                             'updated_at' => Carbon::now('Asia/Kolkata'),
 
@@ -1091,8 +1103,8 @@ class PaymentController extends Controller
                             $response['order_id'],
                             (float) $amount,
                             $response['order_id'],
-                            'Online payment against outstanding',
-                            'HDFC SMART Pay'
+                            'HDFC SMART Pay payment against outstanding',
+                            'HDFC'
                         );
                     } catch (\Throwable $e) {
                         $clubmanPostingFailed = true;
@@ -1193,6 +1205,20 @@ class PaymentController extends Controller
         $userId = is_array($sessionMember) ? ($sessionMember['id'] ?? null) : $sessionMember;
 
         return $userId ? User::find($userId) : null;
+    }
+
+    private function razorpayApi(bool $useMemberCredentials = true): Api
+    {
+        $keyConfig = $useMemberCredentials ? 'services.razorpay.key' : 'services.razorpay.axis_key';
+        $secretConfig = $useMemberCredentials ? 'services.razorpay.secret' : 'services.razorpay.axis_secret';
+        $key = trim((string) config($keyConfig));
+        $secret = trim((string) config($secretConfig));
+
+        if ($key === '' || $secret === '') {
+            throw new \RuntimeException('Razorpay credentials are not configured.');
+        }
+
+        return new Api($key, $secret);
     }
 
     private function validatedPaymentAmount(

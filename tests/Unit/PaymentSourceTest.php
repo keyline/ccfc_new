@@ -38,6 +38,7 @@ class PaymentSourceTest extends TestCase
         $this->assertSame('-', PaymentSource::label(null));
         $this->assertSame('-', PaymentSource::label('legacy'));
         $this->assertSame('Quick Access', PaymentSource::label('quick_access'));
+        $this->assertSame('Mobile App', PaymentSource::label('mobile_app'));
     }
 
     private function request(array $data = []): Request

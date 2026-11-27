@@ -46,6 +46,7 @@ use App\Models\PaymentBill;
 use App\Models\PaymentDetail;
 use App\Models\Notification;
 use App\Models\UserNotification;
+use App\Services\ClubmanPaymentPosting;
 
 use Tzsk\Payu\Concerns\Attributes;
 use Tzsk\Payu\Concerns\Customer;
@@ -77,6 +78,27 @@ use DateTime;
 date_default_timezone_set("Asia/Kolkata");
 class ApiController extends Controller
 {
+    private function postMobilePaymentToClubman(User $user, string $transactionId, float $amount, string $gateway): bool
+    {
+        try {
+            app(ClubmanPaymentPosting::class)->postAndRecord(
+                $transactionId,
+                $user->user_code,
+                $transactionId,
+                $amount,
+                $transactionId,
+                $gateway . ' payment against outstanding',
+                $gateway
+            );
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('Clubman Payment Posting Failed (Mobile ' . $gateway . '): ' . $e->getMessage());
+
+            return true;
+        }
+    }
+
     /* signin */
     public function signinWithMobile(Request $request)
     {
@@ -2546,6 +2568,7 @@ class ApiController extends Controller
                 $expiry                     = date('d/m/Y H:i:s', $getTokenValue['data'][4]);
                 $checkUser                  = User::where('id', '=', $uId)->first();
                 if ($checkUser) {
+                    abort_unless($checkUser->user_code === 'B47CEO', 403, 'PayU is currently unavailable for this member.');
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
                         /******************* Insert into payment bill table  ********************/
                         $m_bill_data['membership_no']   = $checkUser->user_code;
@@ -2657,7 +2680,8 @@ class ApiController extends Controller
                                 'paid_for_id'           => $uId,
                                 'paid_for_type'         => 'App\Models\User',
                                 'transaction_id'        => $txn_id,
-                                'gateway'               => '',
+                                'payment_source'        => 'mobile_app',
+                                'gateway'               => 'PayU',
                                 'body'                  => '',
                                 'destination'           => 'https://ccfc1792.com/member/payment/status',
                                 'hash'                  => $hash,
@@ -2678,10 +2702,10 @@ class ApiController extends Controller
                                     app(\App\Services\ClubmanPaymentPosting::class)->postAndRecord(
                                         (string) $txn_id,
                                         (string) $user->user_code,
-                                        (string) ($payuResponse['mihpayid'] ?? ''),
+                                        (string) (($payuResponse['mihpayid'] ?? '') ?: ($payuResponse['id'] ?? '')),
                                         (float) $amount,
-                                        (string) ($payuResponse['mihpayid'] ?? ''),
-                                        'Online payment against outstanding',
+                                        (string) (($payuResponse['mihpayid'] ?? '') ?: ($payuResponse['id'] ?? '')),
+                                        'PayU payment against outstanding',
                                         'PayU'
                                     );
                                 } catch (\Throwable $exception) {
@@ -2839,7 +2863,10 @@ class ApiController extends Controller
                 $signature = $data['razorpay_signature'];
 
                 // ✅ Fetch Razorpay Payment Details
-                $api = new Api(env('RAZORPAY_KEY_NEW'), env('RAZORPAY_SECRET_NEW'));
+                $api = new Api(
+                    config('services.razorpay.key'),
+                    config('services.razorpay.secret')
+                );
                 $payment = $api->payment->fetch($payment_id);
                 $amount = $payment->amount / 100;
                 $status = $payment->status;
@@ -2870,6 +2897,7 @@ class ApiController extends Controller
                     'paid_for_id'       => $uId,
                     'paid_for_type'     => 'App\Models\User',
                     'transaction_id'    => $payment_id,
+                    'payment_source'    => 'mobile_app',
                     'gateway'           => 'Razorpay',
                     'body'              => '',
                     'destination'       => 'https://ccfc1792.com/member/payment/razorpaycallback',
@@ -2881,6 +2909,14 @@ class ApiController extends Controller
                 ];
 
                 DB::table('payu_transactions')->insert($postData);
+
+                $clubmanPostingFailed = $status === 'captured' && $this->postMobilePaymentToClubman(
+                    $checkUser,
+                    $payment_id,
+                    (float) $amount,
+                    'Razorpay'
+                );
+                $apiResponse['clubman_posting_failed'] = $clubmanPostingFailed;
 
                 // ✅ Send Email                
                 $mailData = [
@@ -2909,6 +2945,7 @@ class ApiController extends Controller
                     'paid_for_id'       => $uId,
                     'paid_for_type'     => 'App\Models\User',
                     'transaction_id'    => $uId . '-failed-' . time(), // Unique transaction ID
+                    'payment_source'    => 'mobile_app',
                     'gateway'           => 'Razorpay',
                     'body'              => '',
                     'destination'       => 'https://ccfc1792.com/member/payment/razorpaycallback',

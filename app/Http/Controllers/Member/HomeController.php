@@ -155,13 +155,13 @@ class HomeController extends Controller
     }
 
 
-    public function invoice(ClubmanMemberLookup $clubmanMemberLookup)
+    public function invoice(
+        ClubmanMemberLookup $clubmanMemberLookup,
+        ClubmanInvoiceLookup $clubmanInvoiceLookup,
+        ClubmanMemberProfileSync $profileSync
+    )
     {
         $user = $this->authenticatedMember();
-        $transactions = $this->cachedInvoiceTransactions($user);
-        $memberFinancials = $clubmanMemberLookup->cached($user);
-
-        $memberDue = null;
 
         if (trim((string) $user->email) === '') {
             try {
@@ -176,19 +176,10 @@ class HomeController extends Controller
             }
         }
 
-        $invoiceError = null;
+        $transactions = $this->invoiceTransactions($user, $clubmanInvoiceLookup);
+        $memberFinancials = $clubmanMemberLookup->cached($user);
+        $memberDue = null;
 
-        try {
-            $transactions = $clubmanInvoiceLookup->lookup($user);
-        } catch (\Throwable $exception) {
-            Log::warning('Unable to load Clubman invoices.', [
-                'member_id' => $user->id,
-                'member_code' => $user->user_code,
-                'error' => $exception->getMessage(),
-            ]);
-
-            $transactions = [];
-            $invoiceError = 'Invoice data is temporarily unavailable. Please try again shortly.';
         if (session()->has('tokenPayment.active_id')) {
             $memberDue = \App\Models\MemberDue::find(session()->get('tokenPayment.due_id'));
         }
@@ -202,7 +193,6 @@ class HomeController extends Controller
                 ? $memberDue->month_name . ' ' . $memberDue->year
                 : '',
         ]);
-    }
     }
 
     public function invoiceData(ClubmanInvoiceLookup $clubmanInvoiceLookup)

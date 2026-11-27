@@ -396,7 +396,7 @@ function razorpaySubmit(el) {
 		}
 
 		var options = {
-			key: "{{ env('RAZORPAY_KEY_NEW') }}",
+			key: "{{ config('services.razorpay.key') }}",
 			amount: amountInPaise,
 			currency: "INR",
 			name: "{{ env('APP_NAME') }}",
@@ -471,7 +471,7 @@ function razorpaySubmit(el) {
                     console.log("Razorpay order data:", data);
                     return data; // Return data for Razorpay options
                     const options = {
-                        key: "{{ env('RAZORPAY_KEY_NEW') }}",
+                        key: "{{ config('services.razorpay.key') }}",
                         amount: amountInPaise,
                         currency: "INR",
                         name: "{{ env('APP_NAME') }}",

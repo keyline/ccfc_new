@@ -73,9 +73,10 @@ class PayuTransactionSync
 
     public function reconcile(string $id): void
     {
-        $payment = PayuTransaction::withTrashed()->where('transaction_id', $id)->firstOrFail();
-        abort_unless(basename(parse_url($payment->destination, PHP_URL_PATH)) === 'status', 422, 'Not a PayU payment.');
-        $gateway = $payment->payment_source === 'mobile_app' || $payment->getRawOriginal('gateway') === 'PayU'
+        validator(['transaction' => $id], ['transaction' => 'required|string|max:255'])->validate();
+        $payment = PayuTransaction::withTrashed()->where('transaction_id', $id)->first();
+        abort_if($payment && basename(parse_url($payment->destination, PHP_URL_PATH)) !== 'status', 422, 'Not a PayU payment.');
+        $gateway = !$payment || $payment->payment_source === 'mobile_app' || $payment->getRawOriginal('gateway') === 'PayU'
             ? new PayuBiz(config('payu_mobile')) : $payment->gateway;
         if (!$gateway->key || !$gateway->salt()) {
             throw new \RuntimeException('PayU merchant key and salt are not configured.');
@@ -90,8 +91,20 @@ class PayuTransactionSync
             throw new \RuntimeException('PayU has not returned a transaction result.');
         }
         $response['amount'] = $response['amt'] ?? $response['amount'] ?? null;
+        abort_if(isset($response['txnid']) && $response['txnid'] !== $id, 422, 'PayU transaction ID mismatch.');
         $response['txnid'] = $id;
-        $this->save($id, $response);
+        $userId = null;
+        if (!$payment) {
+            // Match only member codes returned by PayU; never infer ownership from the transaction ID.
+            $codes = array_filter([$response['udf1'] ?? null, $response['productinfo'] ?? null], 'is_string');
+            $users = User::whereIn('user_code', $codes)->get();
+            if ($users->count() !== 1) {
+                throw new \RuntimeException('PayU verified the transaction, but its member code is missing, unknown or ambiguous. No payment was imported.');
+            }
+            $userId = $users->first()->id;
+            $this->pending($id, $userId, $response['amount']);
+        }
+        $this->save($id, $response, $userId);
     }
 
     private function save(string $id, array $data, ?int $userId = null): void

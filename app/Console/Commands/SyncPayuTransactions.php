@@ -29,8 +29,14 @@ class SyncPayuTransactions extends Command
 
         $failed = 0;
         if ($id && !DB::table('payu_transactions')->where('transaction_id', $id)->exists()) {
-            $this->error('Transaction is not registered locally.');
-            return 1;
+            try {
+                $sync->reconcile($id);
+                $this->info('PayU transaction verified and imported. Check Admin > Payments.');
+                return 0;
+            } catch (\Throwable $exception) {
+                $this->error($exception->getMessage());
+                return 1;
+            }
         }
         DB::table('payu_transactions')->where('destination', 'like', '%/member/payment/status')
             ->when($id, fn ($query) => $query->where('transaction_id', $id), function ($query) {

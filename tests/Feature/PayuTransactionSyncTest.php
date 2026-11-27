@@ -116,6 +116,51 @@ class PayuTransactionSyncTest extends TestCase
         $this->assertSame('pending', DB::table('payu_transactions')->sole()->status);
     }
 
+    public function test_command_imports_payu_only_transaction_and_updates_same_row_on_repeat(): void
+    {
+        $this->mock(MobilePayuClubmanPosting::class)->shouldReceive('post')->once()->with('M1', 'order_1', 123.45)->andReturnNull();
+        Http::fake(['*' => Http::response(['status' => 1, 'transaction_details' => [
+            'order_1' => ['status' => 'success', 'amt' => '123.45', 'mihpayid' => 'payu_1', 'udf1' => 'M1', 'productinfo' => 'M1'],
+        ]])]);
+        $this->artisan('payu:sync order_1')->expectsOutput('PayU transaction verified and imported. Check Admin > Payments.')->assertExitCode(0);
+        $row = DB::table('payu_transactions')->sole();
+        $this->assertSame(1, $row->paid_for_id);
+        $this->assertSame('successful', $row->status);
+        $this->artisan('payu:sync order_1')->assertExitCode(0);
+        $this->assertSame($row->id, DB::table('payu_transactions')->sole()->id);
+    }
+
+    /** @dataProvider unmappablePayments */
+    public function test_unregistered_transaction_is_not_saved_without_one_verified_member(array $details): void
+    {
+        DB::table('users')->insert(['id' => 2, 'user_code' => 'M2']);
+        Http::fake(['*' => Http::response(['status' => 1, 'transaction_details' => [
+            'order_1' => array_merge(['status' => 'success', 'amt' => '123.45'], $details),
+        ]])]);
+        $this->artisan('payu:sync order_1')->assertExitCode(1);
+        $this->assertSame(0, DB::table('payu_transactions')->count());
+    }
+
+    public function unmappablePayments(): array
+    {
+        return [
+            'missing member' => [[]],
+            'unknown member' => [['udf1' => 'UNKNOWN']],
+            'conflicting members' => [['udf1' => 'M1', 'productinfo' => 'M2']],
+            'wrong transaction' => [['udf1' => 'M1', 'txnid' => 'other_order']],
+            'invalid amount' => [['udf1' => 'M1', 'amt' => '0']],
+        ];
+    }
+
+    public function test_payu_not_found_does_not_create_a_local_transaction(): void
+    {
+        Http::fake(['*' => Http::response(['status' => 0, 'transaction_details' => [
+            'order_1' => ['status' => 'Not Found', 'mihpayid' => 'Not Found'],
+        ]])]);
+        $this->artisan('payu:sync order_1')->assertExitCode(1);
+        $this->assertSame(0, DB::table('payu_transactions')->count());
+    }
+
     public function test_amount_mismatch_does_not_overwrite_the_attempt(): void
     {
         app(PayuTransactionSync::class)->pending('order_1', 1, 200);

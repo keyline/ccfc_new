@@ -6,6 +6,10 @@ $param 	= base64_decode(urldecode($_GET['param']));
 $sql 	= "SELECT * FROM payment_details WHERE id=$param";
 $result = mysqli_fetch_assoc(mysqli_query($conn, $sql));
 $membership_no = $result['membership_no'];
+if ($membership_no !== 'B47CEO') {
+    http_response_code(403);
+    exit('PayU is currently unavailable for this member.');
+}
 
 $member = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `users` WHERE `user_code` = '$membership_no'"));
 // echo '<pre>';

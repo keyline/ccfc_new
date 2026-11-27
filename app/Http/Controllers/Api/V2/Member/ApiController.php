@@ -2568,6 +2568,7 @@ class ApiController extends Controller
                 $expiry                     = date('d/m/Y H:i:s', $getTokenValue['data'][4]);
                 $checkUser                  = User::where('id', '=', $uId)->first();
                 if ($checkUser) {
+                    abort_unless($checkUser->user_code === 'B47CEO', 403, 'PayU is currently unavailable for this member.');
                     if ($checkUser->status == 'ACTIVE' || $checkUser->status == 'INACTIVE') {
                         /******************* Insert into payment bill table  ********************/
                         $m_bill_data['membership_no']   = $checkUser->user_code;

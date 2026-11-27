@@ -55,6 +55,7 @@ class PaymentController extends Controller
         $user = $this->paymentUser();
 
         if ($user) {
+            abort_unless($user->user_code === 'B47CEO', 403, 'PayU is currently unavailable for this member.');
             $amount = $this->validatedPaymentAmount($request, $user, $clubmanMemberLookup, false, true);
 
             $customer = Customer::make()

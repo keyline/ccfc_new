@@ -4,8 +4,6 @@ use App\Http\Controllers\Api\V1\Member\AuthController;
 use App\Http\Middleware\ApiVersionMiddleware;
 use App\Http\Controllers\Api\V2\Member\ApiController;
 
-Route::post('payu/webhook', [\App\Http\Controllers\PayuWebhookController::class, '__invoke'])->name('payu.webhook');
-
 
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:sanctum']], function () {
 //     // Users

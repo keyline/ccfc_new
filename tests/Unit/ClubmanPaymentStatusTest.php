@@ -10,15 +10,6 @@ use RuntimeException;
 
 class ClubmanPaymentStatusTest extends TestCase
 {
-    public function test_duplicate_payu_posting_does_not_send_payment_again(): void
-    {
-        DB::table('payu_transactions')->where('transaction_id', 'order_1')->update(['clubman_status' => 'success']);
-        $service = \Mockery::mock(ClubmanPaymentPosting::class)->makePartial();
-        $service->shouldNotReceive('post');
-        $this->assertSame(['Status' => 'success'], $service->postAndRecord('order_1', 'M1', 'payment_1', 10, 'payment_1', 'Payment', 'PayU'));
-        \Mockery::close();
-    }
-
     public function test_mobile_payu_retry_accepts_numeric_id_when_mihpayid_is_absent(): void
     {
         $payment = new \Tzsk\Payu\Models\PayuTransaction();

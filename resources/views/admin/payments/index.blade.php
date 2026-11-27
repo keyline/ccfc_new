@@ -106,13 +106,7 @@
                             <td>
                                 {{ ( $gateway == 'status') ? $payment->response('status') : $payment->status }}
                             </td>
-                            @php
-                                $paymentDate = $payment->updated_at;
-                                if ($gateway === 'status' && \Carbon\Carbon::hasFormat($payment->response('addedon') ?? '', 'Y-m-d H:i:s')) {
-                                    $paymentDate = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $payment->response('addedon'), 'Asia/Kolkata');
-                                }
-                            @endphp
-                            <td data-order="{{ $paymentDate ? $paymentDate->format('Y-m-d H:i:s') : '' }}">{{ $paymentDate ? $paymentDate->format('Y-m-d h:i:s A') : '' }}</td>
+                            <td>{{ $payment->updated_at ?? '' }}</td>
                             <td>{{ \App\Services\PaymentSource::label($payment->payment_source) }}</td>
                             <td>
                                 {{ ['success' => 'Success', 'failure' => 'Failure'][$payment->clubman_status] ?? '-' }}
